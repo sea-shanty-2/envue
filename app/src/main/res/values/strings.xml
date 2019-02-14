@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Ensight</string>
+
+    <!-- related to facebook login -->
+    <string name="facebook_app_id">386299921934283</string>
+    <string name="fb_login_protocol_scheme">fb386299921934283</string>
+    <string name="profile_picture">Profile picture</string>
+    <string name="profile_name">Name placeholder</string>
+    <string name="log_out">Log out</string>
+    <string name="invalid_access_token">Invalid access token</string>
+    <string name="action_profile">Profile</string>
+    <string name="theme_switch">Theme switch</string>
+</resources>
