@@ -1,8 +1,10 @@
 package dk.cs.aau.ensight
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -25,17 +27,9 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
-            override fun onSuccess(result: LoginResult?) {
-                this@LoginActivity.onSuccess(result)
-            }
-
-            override fun onCancel() {
-                this@LoginActivity.onCancel()
-            }
-
-            override fun onError(error: FacebookException?) {
-                this@LoginActivity.onError(error)
-            }
+            override fun onSuccess(result: LoginResult?) = this@LoginActivity.onSuccess(result)
+            override fun onCancel() = this@LoginActivity.onCancel()
+            override fun onError(error: FacebookException?) = this@LoginActivity.onError(error)
         })
     }
 
@@ -74,6 +68,11 @@ class LoginActivity : AppCompatActivity() {
     }
 
     fun onError(exception: FacebookException?) {
-        exception?.localizedMessage?.let { Snackbar.make(container, it, Snackbar.LENGTH_LONG).show() }
+        exception?.localizedMessage?.let {
+            AlertDialog.Builder(this)
+                .setMessage(it)
+                .create()
+                .show()
+        }
     }
 }
