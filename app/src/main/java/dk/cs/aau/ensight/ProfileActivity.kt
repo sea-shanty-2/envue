@@ -36,7 +36,6 @@ class ProfileActivity : AppCompatActivity() {
             .into(profilePictureView)
 
         profileNameView.text = profileName
-
     }
 
 

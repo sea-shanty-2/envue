@@ -9,5 +9,10 @@
     <string name="log_out">Log out</string>
     <string name="invalid_access_token">Invalid access token</string>
     <string name="action_profile">Profile</string>
+    <string name="action_broadcast">Broadcast</string>
     <string name="theme_switch">Theme switch</string>
+
+    <string name="title_activity_broadcast">BroadcastActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>

@@ -1,0 +1,3 @@
+[submodule "yasea"]
+	path = yasea
+	url = https://github.com/anderslangballe/yasea.git
