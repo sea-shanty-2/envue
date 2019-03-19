@@ -16,8 +16,10 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity
                 android:name=".BroadcastActivity"
-                android:configChanges="orientation|keyboardHidden|screenSize"
+                android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
                 android:label="@string/title_activity_broadcast"
+                android:resizeableActivity="true"
+                android:supportsPictureInPicture="true"
                 android:theme="@style/FullscreenTheme">
         </activity>
 
@@ -32,6 +34,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
         <activity android:name=".LoginActivity"/>
         <activity android:name=".ProfileActivity"/>
         <activity
