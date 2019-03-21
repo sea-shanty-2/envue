@@ -51,6 +51,11 @@ class MainActivity : AppCompatActivity() {
 
             true
         }
+        R.id.action_player -> {
+            startActivity(Intent(this, PlayerActivity::class.java))
+
+            true
+        }
         else -> {
             // If we got here, the user's action was not recognized.
             // Invoke the superclass to handle it.

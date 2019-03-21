@@ -23,6 +23,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
@@ -39,7 +43,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     // facebook apps
-    implementation 'com.facebook.android:facebook-login:[4,5)'
+    implementation 'com.facebook.android:facebook-login:4.41.0'
     // end facebook apps
 
     // picasso (image processing)
@@ -47,7 +51,7 @@ dependencies {
     // end picasso
 
     // coroutines
-    def work_version = "1.0.0-beta05"
+    def work_version = "1.0.0"
     implementation "android.arch.work:work-runtime:$work_version"
     androidTestImplementation "android.arch.work:work-testing:$work_version"
     // end coroutines
@@ -60,4 +64,10 @@ dependencies {
     implementation 'com.apollographql.apollo:apollo-runtime:0.3.2'
     implementation "com.apollographql.apollo:apollo-android-support:0.3.2"
     // end graphql
+
+    // exoplayer
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.9.6'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.9.6'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.9.6'
+    // end exoplayer
 }

@@ -15,4 +15,9 @@
         android:icon="@drawable/ic_live_tv_48dp"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/action_player"
+        android:title="tmp"
+        app:showAsAction="ifRoom" />
+
 </menu>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent" xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageButton
+            android:id="@+id/exo_play"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_gravity="center"
+            android:padding="10dp"
+            android:scaleType="fitXY"
+            android:background="@null"
+            android:src="@drawable/ic_play_48dp" />
+
+    <ImageButton
+            android:id="@+id/exo_pause"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_gravity="center"
+            android:padding="10dp"
+            android:scaleType="fitXY"
+            android:background="@null"
+            android:src="@drawable/ic_pause_48dp" />
+
+    <ProgressBar
+            android:id="@+id/loading"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_gravity="center"/>
+</FrameLayout>
