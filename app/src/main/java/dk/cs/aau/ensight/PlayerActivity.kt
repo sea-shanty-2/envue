@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import android.view.WindowManager
-import android.widget.ProgressBar
+import android.widget.*
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.Player.EventListener
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView
@@ -17,18 +17,20 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.ExoPlayer
-
-
-
-
+import dk.cs.aau.ensight.chat.ChatAdapter
+import dk.cs.aau.ensight.chat.Message
+import kotlinx.android.synthetic.main.activity_player.view.*
 
 class PlayerActivity : AppCompatActivity(), EventListener {
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
+    private var editMessageView: EditText? = null
+    private var chatList: ListView? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
     private var loading: ProgressBar? = null
+    private var chatAdapter: ChatAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,16 +40,37 @@ class PlayerActivity : AppCompatActivity(), EventListener {
 
         playerView = findViewById(R.id.video_view)
         loading = findViewById(R.id.loading)
+        editMessageView = findViewById(R.id.editText)
+        chatList = findViewById(R.id.chat_view)
+
+        // Assign chat adapter
+        chatAdapter = ChatAdapter(this)
+        chatList?.adapter = chatAdapter
+
+        // Listen for local messages
+        findViewById<ImageButton>(R.id.sendMessage).setOnClickListener { addLocalMessage() }
+    }
+
+    private fun addLocalMessage() {
+        val messageView = findViewById<EditText>(R.id.editText)
+        val text = messageView?.text.toString()
+        if (!text.isEmpty()) {
+            addMessage(Message(text, true))
+            messageView.text.clear()
+        }
+    }
+
+    private fun addMessage(message: Message) {
+        chatAdapter?.add(message)
+        chatList?.setSelection(chatList?.let { it.count - 1 } ?: 0)
     }
 
     public override fun onStart() {
         super.onStart()
 
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
-        player = ExoPlayerFactory.newSimpleInstance(
-            DefaultRenderersFactory(this),
-            DefaultTrackSelector(adaptiveTrackSelection)
-        )
+        player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
+            DefaultTrackSelector(adaptiveTrackSelection))
 
         // Init the player
         player?.let { playerView?.player = it }
