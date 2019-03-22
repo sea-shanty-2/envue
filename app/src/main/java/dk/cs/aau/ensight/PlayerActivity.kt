@@ -18,10 +18,17 @@ import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.ExoPlayer
 import dk.cs.aau.ensight.chat.ChatAdapter
+import dk.cs.aau.ensight.chat.ChatListener
 import dk.cs.aau.ensight.chat.Message
+import dk.cs.aau.ensight.chat.MessageListener
 import kotlinx.android.synthetic.main.activity_player.view.*
+import okhttp3.WebSocket
 
-class PlayerActivity : AppCompatActivity(), EventListener {
+class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
+    override fun onMessage(message: String) {
+        addMessage(Message(message, false))
+    }
+
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
@@ -31,6 +38,7 @@ class PlayerActivity : AppCompatActivity(), EventListener {
     private var playbackPosition: Long = 0
     private var loading: ProgressBar? = null
     private var chatAdapter: ChatAdapter? = null
+    private var socket: WebSocket? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,13 +56,17 @@ class PlayerActivity : AppCompatActivity(), EventListener {
         chatList?.adapter = chatAdapter
 
         // Listen for local messages
-        findViewById<ImageButton>(R.id.sendMessage).setOnClickListener { addLocalMessage() }
+        findViewById<ImageButton>(R.id.sendMessage)?.setOnClickListener { addLocalMessage() }
+
+        // Initialize chat listener
+        socket = ChatListener.buildSocket(this)
     }
 
     private fun addLocalMessage() {
         val messageView = findViewById<EditText>(R.id.editText)
         val text = messageView?.text.toString()
         if (!text.isEmpty()) {
+            socket?.send(text)
             addMessage(Message(text, true))
             messageView.text.clear()
         }

@@ -5,13 +5,14 @@ import okhttp3.*
 import okio.ByteString
 import java.util.concurrent.TimeUnit
 
-private class ChatListener : WebSocketListener() {
+class ChatListener(private val messageListener: MessageListener) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
         output("Connected")
     }
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {
         output("Receiving $text")
+        text?.let { this.messageListener.onMessage(it) }
     }
 
     override fun onMessage(webSocket: WebSocket?, bytes: ByteString?) {
@@ -24,15 +25,15 @@ private class ChatListener : WebSocketListener() {
     companion object {
         private val NORMAL_CLOSURE_STATUS = 1000
 
-        fun buildSocket(): WebSocket {
+        fun buildSocket(messageListener: MessageListener): WebSocket {
             val client = OkHttpClient.Builder()
                 .readTimeout(10, TimeUnit.SECONDS)
                 .build()
             val request = Request.Builder()
-                .url("wss://envue.me/")
+                .url("ws://envue.me:8765")
                 .build()
 
-            return client.newWebSocket(request, ChatListener())
+            return client.newWebSocket(request, ChatListener(messageListener))
         }
     }
 
