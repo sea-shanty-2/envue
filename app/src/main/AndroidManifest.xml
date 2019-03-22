@@ -21,7 +21,6 @@
                 android:name=".BroadcastActivity"
                 android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
                 android:label="@string/title_activity_broadcast"
-                android:resizeableActivity="true"
                 android:theme="@style/FullscreenTheme">
         </activity>
 
