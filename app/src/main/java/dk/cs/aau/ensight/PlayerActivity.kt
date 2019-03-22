@@ -1,34 +1,51 @@
 package dk.cs.aau.ensight
 
 import android.net.Uri
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.support.v7.app.AppCompatActivity
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ListView
 import android.widget.ProgressBar
-import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.Player.EventListener
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView
-import com.google.android.exoplayer2.source.hls.HlsMediaSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
-import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.Player.EventListener
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.ui.SimpleExoPlayerView
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.util.Util
+import dk.cs.aau.ensight.chat.ChatAdapter
+import dk.cs.aau.ensight.chat.ChatListener
+import dk.cs.aau.ensight.chat.Message
+import dk.cs.aau.ensight.chat.MessageListener
+import okhttp3.WebSocket
 
 
+class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
+    override fun onMessage(message: String) {
+        val split = message.split(',')
+        runOnUiThread { addMessage(Message(split[1], split[0])) }
+    }
 
-
-
-class PlayerActivity : AppCompatActivity(), EventListener {
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
+    private var editMessageView: EditText? = null
+    private var chatList: ListView? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
     private var loading: ProgressBar? = null
+    private var chatAdapter: ChatAdapter? = null
+    private var socket: WebSocket? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,16 +55,48 @@ class PlayerActivity : AppCompatActivity(), EventListener {
 
         playerView = findViewById(R.id.video_view)
         loading = findViewById(R.id.loading)
+        editMessageView = findViewById(R.id.editText)
+        chatList = findViewById(R.id.chat_view)
+
+        // Listen for local messages
+        findViewById<EditText>(R.id.editText)?.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+                addLocalMessage()
+
+                return@OnKeyListener true
+            }
+            false
+        })
+
+        // Assign chat adapter
+        chatAdapter = ChatAdapter(this)
+        chatList?.adapter = chatAdapter
+
+        // Initialize chat listener
+        socket = ChatListener.buildSocket(this)
+    }
+
+    private fun addLocalMessage() {
+        val messageView = findViewById<EditText>(R.id.editText)
+        val text = messageView?.text.toString()
+        if (!text.isEmpty()) {
+            socket?.send(text)
+            addMessage(Message(text))
+            messageView.text.clear()
+        }
+    }
+
+    private fun addMessage(message: Message) {
+        chatAdapter?.add(message)
+        chatList?.setSelection(chatList?.let { it.count - 1 } ?: 0)
     }
 
     public override fun onStart() {
         super.onStart()
 
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
-        player = ExoPlayerFactory.newSimpleInstance(
-            DefaultRenderersFactory(this),
-            DefaultTrackSelector(adaptiveTrackSelection)
-        )
+        player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
+            DefaultTrackSelector(adaptiveTrackSelection))
 
         // Init the player
         player?.let { playerView?.player = it }
@@ -70,6 +119,11 @@ class PlayerActivity : AppCompatActivity(), EventListener {
             addListener(listener)
             playWhenReady = true
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        socket?.close(0, "Activity destroyed")
     }
 
     override fun onPause() {

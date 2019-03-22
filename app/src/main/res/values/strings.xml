@@ -15,4 +15,6 @@
     <string name="title_activity_broadcast">BroadcastActivity</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="chat">Chat</string>
+    <string name="write_a_message">Write a message</string>
 </resources>
