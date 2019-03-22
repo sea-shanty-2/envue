@@ -37,21 +37,20 @@ class ChatAdapter(internal var context: Context) : BaseAdapter() {
         val messageInflater = context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val message = messages[i]
 
-        if (message.belongsToCurrentUser) { // this message was sent by us so let's create a basic chat bubble on the right
+        if (message.author == null) {
             v = messageInflater.inflate(R.layout.own_message, null)
-            holder.messageBody = v?.findViewById<TextView>(R.id.message_body)
+            holder.messageBody = v?.findViewById(R.id.message_body)
             v?.tag = holder
-            holder.messageBody!!.text = message.text
-        } else { // this message was sent by someone else so let's create an advanced chat bubble on the left
+            holder.messageBody?.text = message.text
+        } else {
             v = messageInflater.inflate(R.layout.other_message, null)
             holder.avatar = v?.findViewById(R.id.avatar) as View
             holder.name = v.findViewById(R.id.name) as TextView
             holder.messageBody = v.findViewById(R.id.message_body) as TextView
             v.tag = holder
 
-            holder.name!!.text = "John"
-            holder.messageBody!!.text = message.text
-            val drawable = holder.avatar!!.background as GradientDrawable
+            holder.name?.text = message.author
+            holder.messageBody?.text = message.text
         }
 
         return v

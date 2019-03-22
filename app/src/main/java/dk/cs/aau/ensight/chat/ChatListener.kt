@@ -1,13 +1,14 @@
 package dk.cs.aau.ensight.chat
 
 import android.util.Log
+import com.facebook.Profile
 import okhttp3.*
 import okio.ByteString
-import java.util.concurrent.TimeUnit
 
 class ChatListener(private val messageListener: MessageListener) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
         output("Connected")
+        webSocket.send(Profile.getCurrentProfile().name)
     }
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {
@@ -16,6 +17,7 @@ class ChatListener(private val messageListener: MessageListener) : WebSocketList
     }
 
     override fun onMessage(webSocket: WebSocket?, bytes: ByteString?) {
+        output("Received message")
     }
 
     override fun onClosing(webSocket: WebSocket?, code: Int, reason: String?) {
@@ -27,7 +29,6 @@ class ChatListener(private val messageListener: MessageListener) : WebSocketList
 
         fun buildSocket(messageListener: MessageListener): WebSocket {
             val client = OkHttpClient.Builder()
-                .readTimeout(10, TimeUnit.SECONDS)
                 .build()
             val request = Request.Builder()
                 .url("ws://envue.me:8765")

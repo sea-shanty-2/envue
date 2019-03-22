@@ -1,32 +1,39 @@
 package dk.cs.aau.ensight
 
 import android.net.Uri
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.support.v7.app.AppCompatActivity
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.*
-import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.Player.EventListener
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView
-import com.google.android.exoplayer2.source.hls.HlsMediaSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
-import com.google.android.exoplayer2.util.Util
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ListView
+import android.widget.ProgressBar
+import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.Player.EventListener
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.ui.SimpleExoPlayerView
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.util.Util
 import dk.cs.aau.ensight.chat.ChatAdapter
 import dk.cs.aau.ensight.chat.ChatListener
 import dk.cs.aau.ensight.chat.Message
 import dk.cs.aau.ensight.chat.MessageListener
-import kotlinx.android.synthetic.main.activity_player.view.*
 import okhttp3.WebSocket
+
 
 class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     override fun onMessage(message: String) {
-        addMessage(Message(message, false))
+        val split = message.split(',')
+        runOnUiThread { addMessage(Message(split[1], split[0])) }
     }
 
     private var playerView: SimpleExoPlayerView? = null
@@ -51,12 +58,19 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
 
+        // Listen for local messages
+        findViewById<EditText>(R.id.editText)?.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+                addLocalMessage()
+
+                return@OnKeyListener true
+            }
+            false
+        })
+
         // Assign chat adapter
         chatAdapter = ChatAdapter(this)
         chatList?.adapter = chatAdapter
-
-        // Listen for local messages
-        findViewById<ImageButton>(R.id.sendMessage)?.setOnClickListener { addLocalMessage() }
 
         // Initialize chat listener
         socket = ChatListener.buildSocket(this)
@@ -67,7 +81,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         val text = messageView?.text.toString()
         if (!text.isEmpty()) {
             socket?.send(text)
-            addMessage(Message(text, true))
+            addMessage(Message(text))
             messageView.text.clear()
         }
     }
@@ -105,6 +119,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
             addListener(listener)
             playWhenReady = true
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        socket?.close(0, "Activity destroyed")
     }
 
     override fun onPause() {
