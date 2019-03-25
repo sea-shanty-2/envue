@@ -1,22 +1,21 @@
 package dk.cs.aau.ensight
 
 import android.Manifest
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
+import android.support.v7.app.AppCompatActivity
+import android.util.Base64
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Button
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkManager
 import com.facebook.AccessToken
-import dk.cs.aau.ensight.Workers.RefreshTokenWorker
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.TimeUnit
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 
 class MainActivity : AppCompatActivity() {
@@ -25,6 +24,19 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         if(!AccessToken.isCurrentAccessTokenActive()) {
             startActivity(Intent(this@MainActivity, LoginActivity::class.java))
+        }
+
+        try {
+            val info = packageManager.getPackageInfo("dk.cs.aau.ensight", PackageManager.GET_SIGNATURES)
+            for (signature in info.signatures) {
+                val md = MessageDigest.getInstance("SHA")
+                md.update(signature.toByteArray())
+                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT))
+            }
+        } catch (e: PackageManager.NameNotFoundException) {
+
+        } catch (e: NoSuchAlgorithmException) {
+
         }
 
         super.onCreate(savedInstanceState)

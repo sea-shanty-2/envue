@@ -76,4 +76,8 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.9.6'
     implementation 'com.android.support:cardview-v7:28.0.0'
     // end exoplayer
+
+    // gson
+    implementation 'com.google.code.gson:gson:2.8.5'
+    // end gson
 }
