@@ -11,10 +11,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.ListView
-import android.widget.ProgressBar
+import android.widget.*
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
@@ -58,53 +55,16 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
-        playerView = findViewById(R.id.video_view)
-        loading = findViewById(R.id.loading)
-        editMessageView = findViewById(R.id.editText)
-        chatList = findViewById(R.id.chat_view)
-
-        // Listen for local messages
-        findViewById<EditText>(R.id.editText)?.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-                addLocalMessage()
-
-                return@OnKeyListener true
-            }
-            false
-        })
-
-        // Create and assign chat adapter
+        // Create chat adapter
         chatAdapter = ChatAdapter(this)
-        chatList?.adapter = chatAdapter
 
         // Initialize chat listener
         socket = ChatListener.buildSocket(this)
-    }
 
-    private fun addLocalMessage() {
-        val messageView = findViewById<EditText>(R.id.editText)
-        val text = messageView?.text.toString()
-        if (!text.isEmpty()) {
-            socket?.send(Gson().toJson(MessagePacket(text)))
-            addMessage(Message(text))
-            messageView.text.clear()
-        }
-    }
-
-    private fun addMessage(message: Message) {
-        chatAdapter?.add(message)
-        chatList?.setSelection(chatList?.let { it.count - 1 } ?: 0)
-    }
-
-    public override fun onStart() {
-        super.onStart()
-
+        // Initialize player
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
         player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
             DefaultTrackSelector(adaptiveTrackSelection))
-
-        // Init the player
-        player?.let { playerView?.player = it }
 
         val defaultBandwidthMeter = DefaultBandwidthMeter()
         // Produces DataSource instances through which media data is loaded.
@@ -124,6 +84,53 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
             addListener(listener)
             playWhenReady = true
         }
+
+        bindContentView()
+    }
+
+    private fun bindContentView() {
+        setContentView(R.layout.activity_player)
+
+        playerView = findViewById(R.id.video_view)
+        loading = findViewById(R.id.loading)
+        editMessageView = findViewById(R.id.editText)
+        chatList = findViewById(R.id.chat_view)
+
+        // Listen for local messages
+        findViewById<EditText>(R.id.editText)?.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+                addLocalMessage()
+
+                return@OnKeyListener true
+            }
+            false
+        })
+
+        // Assign chat adapter
+        chatList?.adapter = chatAdapter
+
+        // Assign player view
+        player?.let { playerView?.player = it }
+
+        // Update player state
+        player?.let {
+            onPlayerStateChanged(it.playWhenReady, it.playbackState)
+        }
+    }
+
+    private fun addLocalMessage() {
+        val messageView = findViewById<EditText>(R.id.editText)
+        val text = messageView?.text.toString()
+        if (!text.isEmpty()) {
+            socket?.send(Gson().toJson(MessagePacket(text)))
+            addMessage(Message(text))
+            messageView.text.clear()
+        }
+    }
+
+    private fun addMessage(message: Message) {
+        chatAdapter?.add(message)
+        chatList?.setSelection(chatList?.let { it.count - 1 } ?: 0)
     }
 
     override fun onPause() {
@@ -136,6 +143,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         releasePlayer()
         socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
+
     private fun releasePlayer() {
         player?.let {
             playbackPosition = it.currentPosition
@@ -145,6 +153,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         }
 
         player = null
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        bindContentView()
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
