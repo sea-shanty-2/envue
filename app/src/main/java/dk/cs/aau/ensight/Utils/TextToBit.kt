@@ -9,10 +9,9 @@ import android.text.TextPaint
 import android.util.DisplayMetrics
 
 fun textToBitmap(text: String, dp: Int, context: Context): Bitmap {
-    val size = calculateSize(dp, context)
-    val bitmap: Bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_4444)
+    val bitmap: Bitmap = Bitmap.createBitmap(dp, dp, Bitmap.Config.ARGB_4444)
     val canvas = Canvas(bitmap)
-    val paint = generateTextPaint(text, size)
+    val paint = generateTextPaint(text, dp)
     val (xpos, ypos) = calculatePosition(canvas, paint)
 
     canvas.drawText(text, xpos, ypos, paint)
@@ -46,5 +45,5 @@ fun generateTextPaint(text: String, size: Int): TextPaint {
 
 fun calculateSize(dp: Int, context: Context): Int {
     var scale = context.resources.displayMetrics.density
-    return (dp * scale).toInt()
+    return (dp * scale + 0.5f).toInt()
 }
