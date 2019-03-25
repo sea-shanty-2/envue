@@ -40,14 +40,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     override fun onMessage(message: Message) {
         runOnUiThread {
             addMessage(message)
-
-            try {
-                val notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                val r = RingtoneManager.getRingtone(this, notification)
-                r.play()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
         }
     }
 

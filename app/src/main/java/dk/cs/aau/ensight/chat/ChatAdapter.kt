@@ -35,7 +35,6 @@ class ChatAdapter(internal var context: Context) : BaseAdapter() {
         return messages.count()
     }
 
-
     override fun getView(i: Int, convertView: View?, viewGroup: ViewGroup): View {
         val v: View?
         val holder = MessageViewHolder()
