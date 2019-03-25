@@ -13,22 +13,22 @@ fun textToBitmap(text: String, dp: Int, context: Context): Bitmap {
     val bitmap: Bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_4444)
     val canvas = Canvas(bitmap)
     val paint = generateTextPaint(text, size)
-    val (xpos, ypos) = calculatePosition(canvas, paint)
+    val (xPos, yPos) = calculatePosition(canvas, paint)
 
-    canvas.drawText(text, xpos, ypos, paint)
+    canvas.drawText(text, xPos, yPos, paint)
     canvas.density = DisplayMetrics.DENSITY_MEDIUM
     bitmap.density = DisplayMetrics.DENSITY_MEDIUM
 
     return bitmap
 }
 
-fun calculatePosition(canvas: Canvas, paint: TextPaint): Pair<Float, Float> {
-    val xpos: Float = (canvas.height / 2).toFloat()
-    val ypos: Float = canvas.width / 2 - (paint.descent() + paint.ascent()) / 2
-    return Pair(xpos, ypos)
+private fun calculatePosition(canvas: Canvas, paint: TextPaint): Pair<Float, Float> {
+    val xPos: Float = (canvas.height / 2).toFloat()
+    val yPos: Float = canvas.width / 2 - (paint.descent() + paint.ascent()) / 2
+    return Pair(xPos, yPos)
 }
 
-fun generateTextPaint(text: String, size: Int): TextPaint {
+private fun generateTextPaint(text: String, size: Int): TextPaint {
     val paint = TextPaint()
     val tempSize = 48f
     val bounds = Rect()
@@ -44,7 +44,7 @@ fun generateTextPaint(text: String, size: Int): TextPaint {
     return paint
 }
 
-fun calculateSize(dp: Int, context: Context): Int {
+private fun calculateSize(dp: Int, context: Context): Int {
     val scale = context.resources.displayMetrics.density
     return (dp * scale).toInt()
 }
