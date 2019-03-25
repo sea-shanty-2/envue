@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
@@ -25,10 +27,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import dk.cs.aau.ensight.chat.ChatAdapter
-import dk.cs.aau.ensight.chat.ChatListener
-import dk.cs.aau.ensight.chat.Message
-import dk.cs.aau.ensight.chat.MessageListener
+import dk.cs.aau.ensight.chat.*
 import dk.cs.aau.ensight.chat.packets.MessagePacket
 import okhttp3.WebSocket
 
@@ -37,26 +36,28 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     override fun onMessage(message: Message) {
         runOnUiThread {
             addMessage(message)
+            this.chatAdapter?.notifyDataSetChanged()
         }
     }
 
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
-    private var chatList: ListView? = null
+    private var chatList: RecyclerView? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
     private var loading: ProgressBar? = null
-    private var chatAdapter: ChatAdapter? = null
+    private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
+    private var messages: ArrayList<Message> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
         // Create chat adapter
-        chatAdapter = ChatAdapter(this)
+        chatAdapter = MessageListAdapter(this, messages)
 
         // Initialize chat listener
         socket = ChatListener.buildSocket(this)
@@ -106,8 +107,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
             false
         })
 
-        // Assign chat adapter
-        chatList?.adapter = chatAdapter
+        // Assign chat adapter and layout manager
+        val linearManager = LinearLayoutManager(this)
+        chatList?.apply {
+            adapter = chatAdapter
+            layoutManager = linearManager
+        }
 
         // Assign player view
         player?.let { playerView?.player = it }
@@ -123,14 +128,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         val text = messageView?.text.toString()
         if (!text.isEmpty()) {
             socket?.send(Gson().toJson(MessagePacket(text)))
-            addMessage(Message(text))
+            onMessage(Message(text))
             messageView.text.clear()
         }
     }
 
     private fun addMessage(message: Message) {
-        chatAdapter?.add(message)
-        chatList?.setSelection(chatList?.let { it.count - 1 } ?: 0)
+        this.messages.add(message)
     }
 
     override fun onPause() {
