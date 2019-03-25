@@ -15,7 +15,7 @@
             android:elevation="2dp"
             android:textSize="18sp"
             android:layout_alignParentEnd="true"
-            android:text="Placeholder"
+            android:text="@string/placeholder"
     />
 
 </RelativeLayout>

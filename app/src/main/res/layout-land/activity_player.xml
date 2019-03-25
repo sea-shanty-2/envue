@@ -20,11 +20,15 @@
                   android:weightSum="1.0"
                   android:baselineAligned="false">
         <android.support.v7.widget.RecyclerView android:id="@+id/chat_view"
-                  android:divider="#fff"
-                  android:layout_weight=".5"
-                  android:layout_width="0dip"
-                  android:layout_height="wrap_content"
-                  android:padding="5dp"
+                                                android:divider="#fff"
+                                                android:layout_weight=".5"
+                                                android:layout_width="0dip"
+                                                android:layout_height="wrap_content"
+                                                android:padding="5dp"
+                                                android:requiresFadingEdge="vertical"
+                                                android:fadingEdgeLength="50dp"
+                                                android:fillViewport="false"
+                                                android:fadingEdge="horizontal"
         />
     </LinearLayout>
 </FrameLayout>

@@ -45,7 +45,7 @@
                         android:ems="10"
                         android:hint="@string/write_a_message"
                         android:inputType="textCapSentences"
-                        android:imeOptions="actionSend"
+                        android:imeOptions="actionDone"
                         android:singleLine="true"
                         android:text="" />
 

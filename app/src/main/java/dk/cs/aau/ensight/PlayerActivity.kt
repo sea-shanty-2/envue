@@ -40,6 +40,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         }
     }
 
+    private fun scrollToBottom() {
+        // this.chatList?.smoothScrollToPosition(this.chatAdapter?.itemCount?.let { it - 1 } ?: -1)
+    }
+
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
@@ -97,30 +101,75 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
 
-        // Listen for local messages
-        findViewById<EditText>(R.id.editText)?.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-                addLocalMessage()
-
-                return@OnKeyListener true
-            }
-            false
-        })
-
         // Assign chat adapter and layout manager
-        val linearManager = LinearLayoutManager(this)
+        val chatLayoutManager = LinearLayoutManager(this)
         chatList?.apply {
             adapter = chatAdapter
-            layoutManager = linearManager
+            layoutManager = chatLayoutMan
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            ager
+        }
+
+        // Assign send button
+        findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
+            addLocalMessage()
         }
 
         // Assign player view
         player?.let { playerView?.player = it }
 
         // Update player state
-        player?.let {
-            onPlayerStateChanged(it.playWhenReady, it.playbackState)
-        }
+        player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
+
+        // Ensure chat is scrolled to bottom
+        this.scrollToBottom()
     }
 
     private fun addLocalMessage() {

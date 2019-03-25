@@ -44,7 +44,7 @@ class MessageListAdapter(private val context: Context, private val messageList: 
 
     private fun setAnimation(itemView: View, position: Int) {
         if (position > lastPosition) {
-            val animation = AnimationUtils.loadAnimation(context, android.R.anim.slide_in_left)
+            val animation = AnimationUtils.loadAnimation(context, android.R.anim.fade_in)
             itemView.startAnimation(animation)
             lastPosition = position
         }
