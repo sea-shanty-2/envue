@@ -19,8 +19,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
         //setContentView(R.layout.activity_map)
 
         var options = MapboxMapOptions().apply {
-            //
-
+            rotateGesturesEnabled(false)
         }
 
         var mapView = MapView(this, options)
