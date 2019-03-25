@@ -1,9 +1,13 @@
 package dk.cs.aau.ensight
 
+import android.content.res.Configuration
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
@@ -23,17 +27,28 @@ import com.google.android.exoplayer2.ui.SimpleExoPlayerView
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import com.google.gson.Gson
 import dk.cs.aau.ensight.chat.ChatAdapter
 import dk.cs.aau.ensight.chat.ChatListener
 import dk.cs.aau.ensight.chat.Message
 import dk.cs.aau.ensight.chat.MessageListener
+import dk.cs.aau.ensight.chat.packets.MessagePacket
 import okhttp3.WebSocket
 
 
 class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
-    override fun onMessage(message: String) {
-        val split = message.split(',')
-        runOnUiThread { addMessage(Message(split[1], split[0])) }
+    override fun onMessage(message: Message) {
+        runOnUiThread {
+            addMessage(message)
+
+            try {
+                val notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                val r = RingtoneManager.getRingtone(this, notification)
+                r.play()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private var playerView: SimpleExoPlayerView? = null
@@ -51,8 +66,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
-        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
-
         playerView = findViewById(R.id.video_view)
         loading = findViewById(R.id.loading)
         editMessageView = findViewById(R.id.editText)
@@ -68,7 +81,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
             false
         })
 
-        // Assign chat adapter
+        // Create and assign chat adapter
         chatAdapter = ChatAdapter(this)
         chatList?.adapter = chatAdapter
 
@@ -80,7 +93,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         val messageView = findViewById<EditText>(R.id.editText)
         val text = messageView?.text.toString()
         if (!text.isEmpty()) {
-            socket?.send(text)
+            socket?.send(Gson().toJson(MessagePacket(text)))
             addMessage(Message(text))
             messageView.text.clear()
         }
@@ -121,11 +134,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        socket?.close(0, "Activity destroyed")
-    }
-
     override fun onPause() {
         super.onPause()
         player?.playWhenReady = false
@@ -134,6 +142,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     override fun onStop() {
         super.onStop()
         releasePlayer()
+        socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
     private fun releasePlayer() {
         player?.let {
