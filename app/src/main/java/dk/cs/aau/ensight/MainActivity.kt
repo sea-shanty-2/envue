@@ -56,6 +56,11 @@ class MainActivity : AppCompatActivity() {
 
             true
         }
+        R.id.action_map -> {
+            startActivity(Intent(this, MapActivity::class.java))
+
+            true
+        }
         else -> {
             // If we got here, the user's action was not recognized.
             // Invoke the superclass to handle it.

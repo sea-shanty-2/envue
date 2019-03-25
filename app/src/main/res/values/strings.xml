@@ -17,4 +17,5 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="chat">Chat</string>
     <string name="write_a_message">Write a message</string>
+    <string name="map">Map</string>
 </resources>
