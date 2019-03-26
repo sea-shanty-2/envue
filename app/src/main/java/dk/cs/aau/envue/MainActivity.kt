@@ -50,6 +50,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
 
+        /*
+        ///
+        /// Working API example
+        ///
+
         val okHttpClient = OkHttpClient.Builder().build()
         val apolloCient = ApolloClient.builder().serverUrl(BASE_URL).okHttpClient(okHttpClient).build()
 
@@ -78,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
 
-        })
+        })*/
 
     }
 
