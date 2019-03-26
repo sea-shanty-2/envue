@@ -64,7 +64,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     fun onCancel() {
-        Snackbar.make(container, "Canceled", Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(container, "Cancelled", Snackbar.LENGTH_SHORT).show()
     }
 
     fun onError(exception: FacebookException?) {
