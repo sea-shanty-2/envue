@@ -36,7 +36,7 @@ class ChatListener(private val messageListener: MessageListener) : WebSocketList
     }
 
     companion object {
-        val NORMAL_CLOSURE_STATUS = 1000
+        const val NORMAL_CLOSURE_STATUS = 1000
 
         fun buildSocket(messageListener: MessageListener): WebSocket {
             val client = OkHttpClient.Builder()

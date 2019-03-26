@@ -37,11 +37,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         runOnUiThread {
             addMessage(message)
             this.chatAdapter?.notifyDataSetChanged()
+            scrollToBottom()
         }
     }
 
     private fun scrollToBottom() {
-        // this.chatList?.smoothScrollToPosition(this.chatAdapter?.itemCount?.let { it - 1 } ?: -1)
+        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it )}
     }
 
     private var playerView: SimpleExoPlayerView? = null
@@ -59,6 +60,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
+
+        // Prevent dimming
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Create chat adapter
         chatAdapter = MessageListAdapter(this, messages)
@@ -102,59 +106,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         chatList = findViewById(R.id.chat_view)
 
         // Assign chat adapter and layout manager
-        val chatLayoutManager = LinearLayoutManager(this)
+        val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         chatList?.apply {
             adapter = chatAdapter
-            layoutManager = chatLayoutMan
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            ager
+            layoutManager = chatLayoutManager
         }
 
         // Assign send button

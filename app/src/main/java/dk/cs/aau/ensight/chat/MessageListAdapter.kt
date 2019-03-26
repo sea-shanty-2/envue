@@ -9,11 +9,16 @@ import android.view.animation.AnimationUtils
 import dk.cs.aau.ensight.R
 
 
-class MessageListAdapter(private val context: Context, private val messageList: List<Message>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MessageListAdapter(private val context: Context, private val messageList: List<Message>,
+                         private val streamerView: Boolean = false) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var lastPosition = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = when (viewType) {
-        VIEW_TYPE_MESSAGE_RECEIVED -> ReceivedMessageHolder(LayoutInflater.from(parent.context).inflate(R.layout.other_message, parent, false))
+        VIEW_TYPE_MESSAGE_RECEIVED -> if (streamerView) {
+            ReceivedMessageHolder(LayoutInflater.from(parent.context).inflate(R.layout.viewer_message, parent, false))
+        } else {
+            ReceivedMessageHolder(LayoutInflater.from(parent.context).inflate(R.layout.other_message, parent, false))
+        }
         else -> SentMessageHolder(LayoutInflater.from(parent.context).inflate(R.layout.own_message, parent, false))
     }
 

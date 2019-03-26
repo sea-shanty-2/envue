@@ -1,15 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                tools:context="dk.cs.aau.ensight.BroadcastActivity">
-
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:id="@+id/parent_view"
+             android:background="#000000">
     <net.ossrs.yasea.SrsCameraView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/camera_view"
-            app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            android:id="@+id/camera_view"/>
 
-</RelativeLayout>
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:orientation="horizontal"
+                  android:weightSum="1"
+                  android:baselineAligned="false"
+                  android:gravity="end">
+        <android.support.v7.widget.RecyclerView android:id="@+id/chat_view"
+                                                android:divider="#fff"
+                                                android:layout_weight=".4"
+                                                android:layout_width="0dip"
+                                                android:layout_height="wrap_content"
+                                                android:padding="5dp"
+                                                android:requiresFadingEdge="vertical"
+                                                android:fadingEdgeLength="50dp"
+                                                android:fillViewport="false"
+                                                android:fadingEdge="horizontal"
+                                                android:layout_gravity="end"/>
+    </LinearLayout>
+
+</FrameLayout>
