@@ -1,6 +1,5 @@
-package dk.cs.aau.ensight
+package dk.cs.aau.envue
 
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -15,7 +14,7 @@ import com.facebook.FacebookCallback
 import com.facebook.FacebookException
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
-import dk.cs.aau.ensight.Workers.RefreshTokenWorker
+import dk.cs.aau.envue.workers.RefreshTokenWorker
 import kotlinx.android.synthetic.main.activity_login.*
 import java.util.concurrent.TimeUnit
 

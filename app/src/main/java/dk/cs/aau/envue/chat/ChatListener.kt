@@ -1,19 +1,23 @@
-package dk.cs.aau.ensight.chat
+package dk.cs.aau.envue.chat
 
 import android.util.Log
 import com.facebook.Profile
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import dk.cs.aau.ensight.chat.packets.HandshakePacket
+import dk.cs.aau.envue.chat.packets.HandshakePacket
 import okhttp3.*
 import okio.ByteString
 
 class ChatListener(private val messageListener: MessageListener) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
         output("Connected")
-        webSocket.send(Gson().toJson(HandshakePacket(Profile.getCurrentProfile().name,
-            Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString())))
+        webSocket.send(Gson().toJson(
+            HandshakePacket(
+                Profile.getCurrentProfile().name,
+                Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString()
+            )
+        ))
     }
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {
@@ -22,7 +26,13 @@ class ChatListener(private val messageListener: MessageListener) : WebSocketList
             val jsonObj = JsonParser().parse(it) as JsonObject
 
             when (jsonObj.get("type").asString) {
-                "message" -> this.messageListener.onMessage(Message(jsonObj.get("message").asString, jsonObj.get("author").asString, jsonObj.get("avatar").asString))
+                "message" -> this.messageListener.onMessage(
+                    Message(
+                        jsonObj.get("message").asString,
+                        jsonObj.get("author").asString,
+                        jsonObj.get("avatar").asString
+                    )
+                )
             }
         }
     }

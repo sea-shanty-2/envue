@@ -1,16 +1,15 @@
-package dk.cs.aau.ensight
+package dk.cs.aau.envue
 
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
-import android.widget.CompoundButton
 import com.facebook.Profile
 import com.facebook.login.LoginManager
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_profile.*
-import dk.cs.aau.ensight.Transformers.CircleTransform
+import dk.cs.aau.envue.transformers.CircleTransform
 
 class ProfileActivity : AppCompatActivity() {
 

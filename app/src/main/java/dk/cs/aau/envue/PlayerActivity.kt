@@ -1,16 +1,12 @@
-package dk.cs.aau.ensight
+package dk.cs.aau.envue
 
 import android.content.res.Configuration
-import android.media.Ringtone
-import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.Log
-import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
@@ -27,8 +23,11 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import dk.cs.aau.ensight.chat.*
-import dk.cs.aau.ensight.chat.packets.MessagePacket
+import dk.cs.aau.envue.chat.ChatListener
+import dk.cs.aau.envue.chat.Message
+import dk.cs.aau.envue.chat.MessageListAdapter
+import dk.cs.aau.envue.chat.MessageListener
+import dk.cs.aau.envue.chat.packets.MessagePacket
 import okhttp3.WebSocket
 
 

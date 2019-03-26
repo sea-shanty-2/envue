@@ -1,4 +1,4 @@
-package dk.cs.aau.ensight
+package dk.cs.aau.envue
 
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -9,15 +9,13 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
-import android.widget.Button
-import android.widget.ProgressBar
 import android.widget.Toast
 import com.facebook.Profile
 import com.github.faucamp.simplertmp.RtmpHandler
-import dk.cs.aau.ensight.chat.ChatListener
-import dk.cs.aau.ensight.chat.Message
-import dk.cs.aau.ensight.chat.MessageListAdapter
-import dk.cs.aau.ensight.chat.MessageListener
+import dk.cs.aau.envue.chat.ChatListener
+import dk.cs.aau.envue.chat.Message
+import dk.cs.aau.envue.chat.MessageListAdapter
+import dk.cs.aau.envue.chat.MessageListener
 import net.ossrs.yasea.SrsEncodeHandler
 import net.ossrs.yasea.SrsPublisher
 import okhttp3.WebSocket
