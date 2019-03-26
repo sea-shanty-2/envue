@@ -12,17 +12,20 @@ import android.util.Base64
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import com.apollographql.apollo.ApolloClient
 import com.facebook.AccessToken
 import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.OkHttpClient
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE = 42
+    private val BASE_URL="http://envue.me:8000/graphql"
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        if(!AccessToken.isCurrentAccessTokenActive()) {
+        if (!AccessToken.isCurrentAccessTokenActive()) {
             startActivity(Intent(this@MainActivity, LoginActivity::class.java))
         }
 
@@ -42,6 +45,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
+
+        val okHttpClient = OkHttpClient.Builder().build()
+        val apolloCient = ApolloClient.builder().serverUrl(BASE_URL).okHttpClient(okHttpClient).build()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
