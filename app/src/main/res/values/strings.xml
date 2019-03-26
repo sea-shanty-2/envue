@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Ensight</string>
+    <string name="app_name">Envue</string>
 
     <!-- related to facebook login -->
     <string name="facebook_app_id">386299921934283</string>

@@ -1,4 +1,4 @@
-package dk.cs.aau.ensight.chat
+package dk.cs.aau.envue.chat
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
-import dk.cs.aau.ensight.R
+import dk.cs.aau.envue.R
 
 
 class MessageListAdapter(private val context: Context, private val messageList: List<Message>,
@@ -15,11 +15,29 @@ class MessageListAdapter(private val context: Context, private val messageList: 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = when (viewType) {
         VIEW_TYPE_MESSAGE_RECEIVED -> if (streamerView) {
-            ReceivedMessageHolder(LayoutInflater.from(parent.context).inflate(R.layout.viewer_message, parent, false))
+            ReceivedMessageHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.viewer_message,
+                    parent,
+                    false
+                )
+            )
         } else {
-            ReceivedMessageHolder(LayoutInflater.from(parent.context).inflate(R.layout.other_message, parent, false))
+            ReceivedMessageHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.other_message,
+                    parent,
+                    false
+                )
+            )
         }
-        else -> SentMessageHolder(LayoutInflater.from(parent.context).inflate(R.layout.own_message, parent, false))
+        else -> SentMessageHolder(
+            LayoutInflater.from(parent.context).inflate(
+                R.layout.own_message,
+                parent,
+                false
+            )
+        )
     }
 
     override fun getItemCount(): Int {

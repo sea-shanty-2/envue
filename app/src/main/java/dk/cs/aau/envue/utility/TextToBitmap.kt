@@ -1,4 +1,4 @@
-package dk.cs.aau.ensight.utility
+package dk.cs.aau.envue.utility
 
 import android.content.Context
 import android.graphics.Bitmap

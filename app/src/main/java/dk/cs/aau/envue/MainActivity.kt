@@ -1,4 +1,4 @@
-package dk.cs.aau.ensight
+package dk.cs.aau.envue
 
 import android.Manifest
 import android.content.Intent
@@ -7,12 +7,16 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Base64
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
 import com.facebook.AccessToken
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
@@ -30,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         try {
-            val info = packageManager.getPackageInfo("dk.cs.aau.ensight", PackageManager.GET_SIGNATURES)
+            val info = packageManager.getPackageInfo("dk.cs.aau.envue", PackageManager.GET_SIGNATURES)
             for (signature in info.signatures) {
                 val md = MessageDigest.getInstance("SHA")
                 md.update(signature.toByteArray())
@@ -48,6 +52,34 @@ class MainActivity : AppCompatActivity() {
 
         val okHttpClient = OkHttpClient.Builder().build()
         val apolloCient = ApolloClient.builder().serverUrl(BASE_URL).okHttpClient(okHttpClient).build()
+
+        val accountsQuery = AccountsQuery.Builder().first(5).build()
+        apolloCient.query(accountsQuery).enqueue(object: ApolloCall.Callback<AccountsQuery.Data>() {
+
+            override fun onResponse(response: Response<AccountsQuery.Data>) {
+               runOnUiThread {
+
+                   response.data()
+                       ?.accounts()
+                       ?.page()
+                       ?.items()
+                       ?.forEach {
+                           AlertDialog.Builder(this@MainActivity)
+                               .setMessage(it.fullName())
+                               .create()
+                               .show()
+                       }
+
+
+               }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+        })
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
