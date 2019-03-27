@@ -1,4 +1,4 @@
-package dk.cs.aau.ensight
+package dk.cs.aau.envue
 
 import org.junit.Test
 

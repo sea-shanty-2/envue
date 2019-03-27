@@ -9,7 +9,7 @@ apply plugin: 'com.apollographql.android'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "dk.cs.aau.ensight"
+        applicationId "dk.cs.aau.envue"
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 1

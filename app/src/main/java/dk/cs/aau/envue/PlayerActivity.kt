@@ -1,14 +1,12 @@
-package dk.cs.aau.ensight
+package dk.cs.aau.envue
 
 import android.content.res.Configuration
-import android.media.Ringtone
-import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
-import android.view.KeyEvent
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
@@ -25,11 +23,11 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import dk.cs.aau.ensight.chat.ChatAdapter
-import dk.cs.aau.ensight.chat.ChatListener
-import dk.cs.aau.ensight.chat.Message
-import dk.cs.aau.ensight.chat.MessageListener
-import dk.cs.aau.ensight.chat.packets.MessagePacket
+import dk.cs.aau.envue.chat.ChatListener
+import dk.cs.aau.envue.chat.Message
+import dk.cs.aau.envue.chat.MessageListAdapter
+import dk.cs.aau.envue.chat.MessageListener
+import dk.cs.aau.envue.chat.packets.MessagePacket
 import okhttp3.WebSocket
 
 
@@ -37,26 +35,36 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     override fun onMessage(message: Message) {
         runOnUiThread {
             addMessage(message)
+            this.chatAdapter?.notifyDataSetChanged()
+            scrollToBottom()
         }
+    }
+
+    private fun scrollToBottom() {
+        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it )}
     }
 
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
-    private var chatList: ListView? = null
+    private var chatList: RecyclerView? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
     private var loading: ProgressBar? = null
-    private var chatAdapter: ChatAdapter? = null
+    private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
+    private var messages: ArrayList<Message> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
+        // Prevent dimming
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         // Create chat adapter
-        chatAdapter = ChatAdapter(this)
+        chatAdapter = MessageListAdapter(this, messages)
 
         // Initialize chat listener
         socket = ChatListener.buildSocket(this)
@@ -96,26 +104,26 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
 
-        // Listen for local messages
-        findViewById<EditText>(R.id.editText)?.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-                addLocalMessage()
+        // Assign chat adapter and layout manager
+        val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
+        chatList?.apply {
+            adapter = chatAdapter
+            layoutManager = chatLayoutManager
+        }
 
-                return@OnKeyListener true
-            }
-            false
-        })
-
-        // Assign chat adapter
-        chatList?.adapter = chatAdapter
+        // Assign send button
+        findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
+            addLocalMessage()
+        }
 
         // Assign player view
         player?.let { playerView?.player = it }
 
         // Update player state
-        player?.let {
-            onPlayerStateChanged(it.playWhenReady, it.playbackState)
-        }
+        player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
+
+        // Ensure chat is scrolled to bottom
+        this.scrollToBottom()
     }
 
     private fun addLocalMessage() {
@@ -123,14 +131,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         val text = messageView?.text.toString()
         if (!text.isEmpty()) {
             socket?.send(Gson().toJson(MessagePacket(text)))
-            addMessage(Message(text))
+            onMessage(Message(text))
             messageView.text.clear()
         }
     }
 
     private fun addMessage(message: Message) {
-        chatAdapter?.add(message)
-        chatList?.setSelection(chatList?.let { it.count - 1 } ?: 0)
+        this.messages.add(message)
     }
 
     override fun onPause() {

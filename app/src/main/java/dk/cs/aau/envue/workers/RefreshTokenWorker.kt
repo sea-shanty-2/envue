@@ -1,16 +1,14 @@
-package dk.cs.aau.ensight.Workers
+package dk.cs.aau.envue.workers
 
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.app.AlertDialog
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.facebook.AccessToken
-import com.facebook.login.LoginManager
-import dk.cs.aau.ensight.LoginActivity
-import dk.cs.aau.ensight.R
+import dk.cs.aau.envue.LoginActivity
+import dk.cs.aau.envue.R
 
 
 class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
