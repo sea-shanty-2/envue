@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getTargetContext()
-        assertEquals("dk.cs.aau.ensight", appContext.packageName)
+        assertEquals("dk.cs.aau.envue", appContext.packageName)
     }
 }

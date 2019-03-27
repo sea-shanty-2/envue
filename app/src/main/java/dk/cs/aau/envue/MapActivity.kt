@@ -1,4 +1,4 @@
-package dk.cs.aau.ensight
+package dk.cs.aau.envue
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -8,13 +8,12 @@ import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.*
-import com.mapbox.mapboxsdk.style.expressions.Expression
 import com.mapbox.mapboxsdk.style.layers.HeatmapLayer
-import dk.cs.aau.ensight.Utils.textToBitmap
 import com.mapbox.mapboxsdk.style.layers.CircleLayer
 import com.mapbox.mapboxsdk.style.expressions.Expression.*
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import dk.cs.aau.envue.utility.textToBitmap
 import java.net.MalformedURLException
 import java.net.URL
 
