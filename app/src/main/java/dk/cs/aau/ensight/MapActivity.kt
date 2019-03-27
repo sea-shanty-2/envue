@@ -35,23 +35,30 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Mapbox.getInstance(this, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
-        //setContentView(R.layout.activity_map)
 
+        // Set mapbox instance, with access token
+        Mapbox.getInstance(this, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
+
+        // Mapbox view options
         var options = MapboxMapOptions().apply {
             rotateGesturesEnabled(false)
         }
 
+        // Create mapview with options
         var mapView = MapView(this, options)
         mapView.id = R.id.mapView
         mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this)
-        setContentView(mapView)
+        mapView.getMapAsync(this) // Fragment mapper
+        setContentView(mapView) // Sets view to mapview
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
         mMap = mapboxMap
+
+        // Set style of map. Use style loader in this context.
         mMap?.setStyle(Style.MAPBOX_STREETS, this)
+
+        // TODO: Load markers from database.
         addMarker(LatLng(50.0, 50.0), "\uD83D\uDE1A", 50)
         mMap?.setOnMarkerClickListener(this)
     }
@@ -68,6 +75,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
     }
 
     private fun addEarthquakeSource(loadedMapStyle: Style) {
+        // TODO: Remove. Is temporary data for debugging.
         try {
             var tmp = GeoJsonSource(EARTHQUAKE_SOURCE_ID, URL(EARTHQUAKE_SOURCE_URL))
             loadedMapStyle.addSource(tmp)
