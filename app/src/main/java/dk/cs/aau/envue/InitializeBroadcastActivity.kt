@@ -11,12 +11,10 @@ class InitializeBroadcastActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_initialize_broadcast)
-        setSupportActionBar(toolbar)
 
-        start_broadcast.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+        startBroadcastButton.setOnClickListener { view ->
+            Snackbar.make(view, "nibber", 2)
                 .setAction("Action", null).show()
         }
     }
-
 }

@@ -6,6 +6,8 @@
     <color name="black">#000</color>
     <color name="otherMessage">#48b3ff</color>
     <color name="white">#ffffffff</color>
+
+    <!-- Envue color palette, change values as needed -->
     <color name="envue_very_dark">#3D315B</color>
     <color name="envue_dark">#444B6E</color>
     <color name="envue_neutral">#708B75</color>

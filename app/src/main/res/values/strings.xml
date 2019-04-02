@@ -20,6 +20,7 @@
     <string name="send">SEND</string>
     <string name="placeholder">Placeholder</string>
     <string name="chatter_avatar">Chatter avatar</string>
+    <string name="placeholder_name">John Doe</string>
 
 
     <!-- Initialize Broadcast activity -->
