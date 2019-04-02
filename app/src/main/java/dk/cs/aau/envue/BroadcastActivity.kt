@@ -1,7 +1,12 @@
 package dk.cs.aau.envue
 
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -23,7 +28,9 @@ import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.net.SocketException
-
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlin.math.sign
 
 
 /**
@@ -31,13 +38,87 @@ import java.net.SocketException
  * status bar and navigation/system bar) with user interaction.
  */
 class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEncodeHandler.SrsEncodeListener,
-    MessageListener {
+    MessageListener, SensorEventListener {
     private var publisher: SrsPublisher? = null
-    private val tag = "ENVUE-BROADCAST"
+    private val TAG = "ENVUE-BROADCAST"
     private var chatList: RecyclerView? = null
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
+    private var sensorManager: SensorManager? = null
+    private var sensor: Sensor? = null
+    private var accelerationArray: MutableList<Pair<FloatArray, Long>> = mutableListOf()
+    private val lock = ReentrantLock()
+    private val x = 0
+    private val y = 1
+    private val z = 2
+    private val threshold = 1f
+    private val curveSmoothingConstant = 20
+    private var thread: Thread? = null
+    private var running = true
+
+    fun calculateDirectionChanges(): Double {
+        var arrayCopy: List<FloatArray> = listOf()
+
+        lock.withLock {
+            arrayCopy = accelerationArray.map { (values, _) -> values.clone() }
+            accelerationArray.removeAll { true }
+        }
+
+        if (arrayCopy.isEmpty()) return 0.0 // No data. Assume the worst.
+
+        // Has to assign accelerationArray copy to another variable to ensure smart cast is available.
+        val sampleArray = arrayCopy.takeLast(100)
+
+        val lastIndex = sampleArray.lastIndex
+        var cd = 0
+
+        if (sampleArray[lastIndex][x] != sampleArray[lastIndex/2][y]
+            || sampleArray[lastIndex][y] != sampleArray[lastIndex/2][y]
+            || sampleArray[lastIndex][z] != sampleArray[lastIndex/2][z]) {
+            for (i in 0..(lastIndex - 3)) {
+                val sgn1 = sgn(sampleArray[i], sampleArray[i+1])
+                val sgn2 = sgn(sampleArray[i+1], sampleArray[i+2])
+                if (!(sgn1 contentEquals sgn2)) {
+                    cd++
+                }
+            }
+        }
+
+        // Divides with ten to smooth curve.
+        return 1 - Math.tanh(cd.toDouble() / curveSmoothingConstant)
+    }
+
+    private fun sgn(arrayp: FloatArray, arrayq: FloatArray): FloatArray {
+        val xDiff = arrayp[x] - arrayq[x]
+        val yDiff = arrayp[y] - arrayq[y]
+        val zDiff = arrayp[z] - arrayq[z]
+
+        // Ensure difference is above threshold to ensure small shakes aren't registered.
+        val xSign = if (Math.abs(xDiff) > threshold) sign(xDiff) else 0f
+        val ySign = if (Math.abs(yDiff) > threshold) sign(yDiff) else 0f
+        val zSign = if (Math.abs(zDiff) > threshold) sign(zDiff) else 0f
+
+        return floatArrayOf(xSign, ySign, zSign)
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        return //TODO do something? Maybe no care
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event != null) {
+            var values: FloatArray = event.values.clone()
+            val date = event.timestamp
+
+            // Round to third decimal place.
+            values = values.map { Math.round(it * 100) / 100f }.toFloatArray()
+
+            lock.withLock {
+                accelerationArray.add(Pair(values, date))
+            }
+        }
+    }
 
     override fun onMessage(message: Message) {
         runOnUiThread {
@@ -74,7 +155,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onRtmpVideoFpsChanged(fps: Double) {
-        Log.i(tag, "FPS: $fps")
+        Log.i(TAG, "FPS: $fps")
     }
 
     override fun onRtmpVideoBitrateChanged(bitrate: Double) {
@@ -156,6 +237,24 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
 
         messages.add(Message("this is a test to see how well the chat works", "test"))
+
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensor =  sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+        setThread()
+        Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
+    }
+
+    fun setThread() {
+        thread = Thread(Runnable {
+            while(true){
+                lock.withLock { if (!running) return@Runnable }
+                Thread.sleep(5000)
+                val tmp = calculateDirectionChanges()
+                // TODO: Send value to server.
+                Log.d(TAG, "Stability: $tmp")
+            }
+        })
+        thread?.start()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -165,14 +264,24 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     override fun onResume() {
         super.onResume()
+        lock.withLock {
+            running = true
+            if (thread?.isAlive == false) thread?.start()
+        }
+        sensor?.also { accelerometer ->
+            sensorManager?.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+        }
     }
 
     override fun onPause() {
         super.onPause()
+        lock.withLock { running = false }
+        sensorManager?.unregisterListener(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        lock.withLock { running = false }
         this.publisher?.stopPublish()
         this.socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
