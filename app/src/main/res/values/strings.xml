@@ -20,6 +20,11 @@
     <string name="send">SEND</string>
     <string name="placeholder">Placeholder</string>
     <string name="chatter_avatar">Chatter avatar</string>
-    <string name="placeholder_name">John Doe</string>
+
+
+    <!-- Initialize Broadcast activity -->
     <string name="title_activity_initialize_broadcast">InitializeBroadcastActivity</string>
+    <string name="start_broadcast_button_text">GO</string>
+    <string name="initialize_broadcast_header">UwU what\'s this?</string>
+    <string name="initialize_broadcast_other_placeholder">Other?</string>
 </resources>
