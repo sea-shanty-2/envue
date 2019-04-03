@@ -41,6 +41,16 @@ class MainActivity : AppCompatActivity() {
         } catch (e: NoSuchAlgorithmException) {
 
         }
+/*
+        val BASE_URL = "envue.me/api"
+
+        val okHttpClient = OkHttpClient.Builder().build()
+
+        val apolloClient = ApolloClient.builder()
+            .serverUrl(BASE_URL)
+            .okHttpClient(okHttpClient)
+            .build()*/
+
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
