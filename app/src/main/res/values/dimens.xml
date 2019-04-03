@@ -1,3 +1,4 @@
 <resources>
     <dimen name="start_broadcast_button_margin">16dp</dimen>
+    <dimen name="none">0dp</dimen>
 </resources>
