@@ -8,8 +8,8 @@ import android.graphics.Rect
 import android.text.TextPaint
 import android.util.DisplayMetrics
 
-fun textToBitmap(text: String, dp: Int, context: Context) {
-    textToBitmap(text, dp, context, false)
+fun textToBitmap(text: String, dp: Int, context: Context): Bitmap {
+    return textToBitmap(text, dp, context, false)
 }
 
 fun textToBitmap(text: String, dp: Int, context: Context, toScale: Boolean): Bitmap {
