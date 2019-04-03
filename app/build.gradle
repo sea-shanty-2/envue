@@ -66,8 +66,8 @@ dependencies {
     // end yasea
 
     // graphql
-    implementation 'com.apollographql.apollo:apollo-runtime:0.3.2'
-    implementation "com.apollographql.apollo:apollo-android-support:0.3.2"
+    implementation 'com.apollographql.apollo:apollo-runtime:0.3.1'
+    implementation "com.apollographql.apollo:apollo-android-support:0.3.1"
     // end graphql
 
     // exoplayer
