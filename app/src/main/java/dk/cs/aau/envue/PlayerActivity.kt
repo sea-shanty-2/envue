@@ -4,10 +4,13 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.PersistableBundle
+import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
 import com.google.android.exoplayer2.DefaultRenderersFactory
@@ -28,6 +31,7 @@ import dk.cs.aau.envue.chat.Message
 import dk.cs.aau.envue.chat.MessageListAdapter
 import dk.cs.aau.envue.chat.MessageListener
 import dk.cs.aau.envue.chat.packets.MessagePacket
+import kotlinx.android.synthetic.main.activity_player.*
 import okhttp3.WebSocket
 
 
@@ -41,7 +45,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     }
 
     private fun scrollToBottom() {
-        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it )}
+        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
     private var playerView: SimpleExoPlayerView? = null
@@ -71,13 +75,17 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
 
         // Initialize player
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
-        player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
-            DefaultTrackSelector(adaptiveTrackSelection))
+        player = ExoPlayerFactory.newSimpleInstance(
+            DefaultRenderersFactory(this),
+            DefaultTrackSelector(adaptiveTrackSelection)
+        )
 
         val defaultBandwidthMeter = DefaultBandwidthMeter()
         // Produces DataSource instances through which media data is loaded.
-        val dataSourceFactory = DefaultDataSourceFactory(this,
-            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter)
+        val dataSourceFactory = DefaultDataSourceFactory(
+            this,
+            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
+        )
 
         // Create media source
         val hlsUrl = "http://envue.me/live/ThomasAndersen.m3u8"
@@ -98,7 +106,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
 
     private fun bindContentView() {
         setContentView(R.layout.activity_player)
-
         playerView = findViewById(R.id.video_view)
         loading = findViewById(R.id.loading)
         editMessageView = findViewById(R.id.editText)
@@ -115,6 +122,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
             addLocalMessage()
         }
+
+        // Creates fragments for EmojiReactionsFragment
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        val fragment = EmojiReactionActivity()
+        fragmentTransaction.replace(R.id.fragment_container, fragment)
+        fragmentTransaction.commit()
 
         // Assign player view
         player?.let { playerView?.player = it }
