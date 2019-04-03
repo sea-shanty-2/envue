@@ -70,26 +70,33 @@
             android:layout_width="409dp"
             android:layout_height="295dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="281dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <LinearLayout
-                android:id="@+id/linearLayout"
-                android:layout_width="408dp"
-                android:layout_height="65dp"
-                android:layout_marginTop="230dp"
-                android:layout_marginEnd="1dp"
-                android:orientation="horizontal"
+
+            <ListView
+                android:id="@+id/broadcastCategoryListView"
+                android:layout_width="393dp"
+                android:layout_height="279dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:footerDividersEnabled="false"
+                android:headerDividersEnabled="false"
+                android:scrollbars="none"
+                android:divider="@null"
+                android:dividerHeight="0dp"
+                android:fadingEdge="horizontal"
+                android:fadingEdgeLength="30dp"
+                android:fillViewport="false"
+                android:requiresFadingEdge="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-
-            </LinearLayout>
+                app:layout_constraintTop_toTopOf="parent" />
         </android.support.constraint.ConstraintLayout>
 
     </android.support.constraint.ConstraintLayout>

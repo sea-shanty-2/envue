@@ -9,9 +9,11 @@ import android.support.text.emoji.bundled.BundledEmojiCompatConfig
 import android.support.text.emoji.widget.EmojiTextView
 import android.support.v7.app.AppCompatActivity
 import android.widget.LinearLayout
+import android.widget.ListView
 import android.widget.TextView
 import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.utility.EmojiIcon
+import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
 import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
 
 
@@ -33,54 +35,18 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             Array<EmojiIcon>::class.java
         )
 
-        // Create initial LinearLayout
-        val layout: LinearLayout = findViewById(R.id.linearLayout)
-
-        // Load five emojis into the horizontal stack
-        for (i in 1..5) {
-            val emoji = allEmojis[i]
-            layout.addView(makeEmojiButton(emoji.char))
-        }
-
-    }
-
-
-    private fun makeEmojiButton(unicode: String): EmojiTextView {
-        // Layout parameters for parent element (LinearLayout)
-        val buttonParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.MATCH_PARENT)
-        buttonParams.weight = 1f
-
-        // Create the TextView
-        val emoji = EmojiTextView(this).apply {
-            layoutParams = buttonParams
-            textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-            textSize = 36f
-            alpha = 1f
-            text = unicode
-            setTextColor(Color.BLACK)
-        }
-
-        // Enlarge\shrink when pressed
-        emoji.setOnClickListener {
-
-            val startSize = if (emoji.isSelected) 42f else 36f
-            val endSize = if (emoji.isSelected) 36f else 42f
-
-            val animationDuration: Long = 300 // Animation duration in ms
-
-            val animator = ValueAnimator.ofFloat(startSize, endSize)
-            animator.duration = animationDuration
-
-            animator.addUpdateListener { valueAnimator ->
-                emoji.textSize = valueAnimator.animatedValue as Float
+        var emojiRows = ArrayList<ArrayList<EmojiIcon>>()
+        for (i in 0 until allEmojis.size) {
+            if (i % 5 == 0) {
+                emojiRows.add(ArrayList())
             }
-
-            animator.start()
-            emoji.isSelected = !emoji.isSelected
+            emojiRows.last().add(allEmojis[i])
         }
 
-        return emoji
+        val adapter = BroadcastCategoryListAdapter(this, emojiRows)
+
+        val listView = findViewById<ListView>(R.id.broadcastCategoryListView).apply {
+            this.adapter = adapter
+        }
     }
 }
