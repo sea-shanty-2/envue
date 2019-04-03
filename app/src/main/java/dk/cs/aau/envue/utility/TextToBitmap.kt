@@ -8,8 +8,12 @@ import android.graphics.Rect
 import android.text.TextPaint
 import android.util.DisplayMetrics
 
-fun textToBitmap(text: String, dp: Int, context: Context): Bitmap {
-    val size = calculateSize(dp, context)
+fun textToBitmap(text: String, dp: Int, context: Context) {
+    textToBitmap(text, dp, context, false)
+}
+
+fun textToBitmap(text: String, dp: Int, context: Context, toScale: Boolean): Bitmap {
+    val size = if (toScale == true) calculateSize(dp, context) else dp
     val bitmap: Bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_4444)
     val canvas = Canvas(bitmap)
     val paint = generateTextPaint(text, size)
