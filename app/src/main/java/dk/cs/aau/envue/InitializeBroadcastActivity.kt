@@ -1,34 +1,22 @@
 package dk.cs.aau.envue
 
+import android.animation.ValueAnimator
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.support.annotation.RequiresApi
 import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
-import android.support.text.emoji.EmojiSpan
 import android.support.text.emoji.bundled.BundledEmojiCompatConfig
-import android.support.text.emoji.widget.EmojiButton
 import android.support.text.emoji.widget.EmojiTextView
 import android.support.v7.app.AppCompatActivity
-import android.widget.Button
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import dk.cs.aau.envue.utility.textToBitmap
-
-import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
-import android.animation.ValueAnimator
-import android.util.JsonReader
 import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.utility.EmojiIcon
-import java.io.FileReader
-import java.io.Reader
+import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
 
 
 class InitializeBroadcastActivity : AppCompatActivity() {
 
-    @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_initialize_broadcast)
@@ -59,23 +47,22 @@ class InitializeBroadcastActivity : AppCompatActivity() {
 
     private fun makeEmojiButton(unicode: String): EmojiTextView {
         // Layout parameters for parent element (LinearLayout)
-        var buttonParams = LinearLayout.LayoutParams(
+        val buttonParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.MATCH_PARENT)
         buttonParams.weight = 1f
 
         // Create the TextView
-        var emoji = EmojiTextView(this)
-        emoji.layoutParams = buttonParams;
+        val emoji = EmojiTextView(this).apply {
+            layoutParams = buttonParams
+            textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+            textSize = 36f
+            alpha = 1f
+            text = unicode
+            setTextColor(Color.BLACK)
+        }
 
-        // Set styling
-        emoji.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-        emoji.textSize = 36f
-        emoji.alpha = 1f
-        emoji.setTextColor(Color.BLACK)
-        emoji.text = unicode
-
-        // Enlarge/shrink when pressed
+        // Enlarge\shrink when pressed
         emoji.setOnClickListener {
 
             val startSize = if (emoji.isSelected) 42f else 36f
