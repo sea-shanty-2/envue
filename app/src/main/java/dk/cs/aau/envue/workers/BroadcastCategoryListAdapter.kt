@@ -3,13 +3,16 @@ package dk.cs.aau.envue.workers
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.support.text.emoji.widget.EmojiTextView
+import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.LinearLayout
 import android.widget.TextView
+import dk.cs.aau.envue.CircularTextView
 import dk.cs.aau.envue.R
 import dk.cs.aau.envue.utility.EmojiIcon
 
@@ -48,13 +51,14 @@ public class BroadcastCategoryListAdapter(private val context: Context,
         buttonParams.weight = 1f
 
         // Create the TextView
-        val emoji = EmojiTextView(context).apply {
+        val emoji = CircularTextView(context).apply {
             layoutParams = buttonParams
             textAlignment = TextView.TEXT_ALIGNMENT_CENTER
             textSize = 36f
             alpha = 1f
             text = unicode
-            setTextColor(Color.BLACK)
+            setTextColor(Color.BLACK)  // Makes bitmap (the emoji) non-transparent
+            setSelectionMarkerColor(R.color.white)
         }
 
         // Enlarge\shrink when pressed
@@ -73,7 +77,9 @@ public class BroadcastCategoryListAdapter(private val context: Context,
             }
 
             animator.start()
-            emoji.isSelected = !emoji.isSelected
+            emoji.apply {
+                isSelected = !isSelected
+            }
         }
 
         return emoji

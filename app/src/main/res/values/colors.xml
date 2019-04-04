@@ -2,15 +2,15 @@
 <resources>
 
 
-    <color name="black_overlay">#66000000</color>
-    <color name="black">#000</color>
-    <color name="otherMessage">#48b3ff</color>
-    <color name="white">#ffffffff</color>
+    <color type="color" name="black_overlay">#66000000</color>
+    <color type="color" name="black">#000</color>
+    <color type="color" name="otherMessage">#48b3ff</color>
+    <color type="color" name="white">#ffffffff</color>
 
     <!-- Envue color palette, change values as needed -->
-    <color name="envue_very_dark">#3D315B</color>
-    <color name="envue_dark">#444B6E</color>
-    <color name="envue_neutral">#708B75</color>
-    <color name="envue_light">#9AB87A</color>
-    <color name="envue_very_light">#F8F991</color>
+    <color type="color" name="envue_very_dark">#3D315B</color>
+    <color type="color" name="envue_dark">#444B6E</color>
+    <color type="color" name="envue_neutral">#708B75</color>
+    <color type="color" name="envue_light">#9AB87A</color>
+    <color type="color" name="envue_very_light">#F8F991</color>
 </resources>
