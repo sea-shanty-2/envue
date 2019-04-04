@@ -164,7 +164,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     override fun onDestroy() {
         super.onDestroy()
-        stopStream()
+
+        this.publisher?.apply {
+            stopPublish()
+            stopRecord()
+        }
+
+        this.socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
     override fun onPause() {
@@ -177,16 +183,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         this.publisher?.resumeRecord()
     }
 
-    private fun stopStream() {
-        this.publisher?.apply {
-            stopPublish()
-            stopRecord()
-            stopCamera()
-        }
-
-        this.socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
-    }
-
     override fun onBackPressed() {
         AlertDialog.Builder(this)
             .setTitle("Confirmation")
@@ -195,7 +191,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             .setPositiveButton(android.R.string.yes
             ) { _, _ ->
                 finish()
-
+                
                 super.onBackPressed()
             }
             .setNegativeButton(android.R.string.no, null).show()
