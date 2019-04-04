@@ -7,6 +7,7 @@ import android.support.text.emoji.EmojiCompat
 import android.support.text.emoji.bundled.BundledEmojiCompatConfig
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.widget.EditText
 import android.widget.ListView
 import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.utility.EmojiIcon
@@ -38,8 +39,8 @@ class InitializeBroadcastActivity : AppCompatActivity() {
     }
 
     /** Loads emojis from a JSON file provided by the resource id.
-      * Emojis are loaded directly into a list adapter used by the
-      * broadcast category list view. */
+     * Emojis are loaded directly into a list adapter used by the
+     * broadcast category list view. */
     private fun loadEmojis(resourceId: Int) {
         val allEmojis = GsonBuilder().create().fromJson(
             resources.openRawResource(resourceId).bufferedReader(),
@@ -61,18 +62,27 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
     }
 
-    /** Returns all the emojis selected by the user. */
+    /** Returns all the emojis selected by the user.
+     * Includes emojis chosen in the grid view as well
+     * as emojis searched by the user. */
     private fun getSelectedCategories(): List<String> {
-        val emojiIcons = (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
+        val gridViewEmojis = (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
             .getAllEmojis()
             .filter {it.isSelected}
             .map {it.getEmoji()}
 
-        return emojiIcons.map {it.char}
+        val searchedEmojis = (findViewById<EditText>(R.id.emojiSearchField)).text.toString().run {
+            emojiStringToArray(this)
+        }
+        return if (searchedEmojis.isEmpty()) {
+            gridViewEmojis.map {it.char}
+        } else {
+            gridViewEmojis.map {it.char}.plus(searchedEmojis)
+        }
     }
 
     /** Starts the broadcast after processing selected categories
-      * if all checks pass. */
+     * if all checks pass. */
     private fun startBroadcast(view: View) {
         if (!isOnlyEmojis(emojiSearchField.text.toString())) {
             Snackbar.make(
@@ -81,7 +91,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
-        Snackbar.make(view, " and ".join(emojiStringToArray(emojiSearchField.text.toString())), Snackbar.LENGTH_LONG).show()
+        Snackbar.make(view, " and ".join(selectedEmojis), Snackbar.LENGTH_LONG).show()  // For testing
         //startActivity(Intent(this, BroadcastActivity::class.java))
     }
 
@@ -107,12 +117,12 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         for (i in 0 until emojiString.length) {
             if (accumulator.isNotEmpty()) {
                 accumulator += emojiString[i]
-                arr.add(accumulator)
+                arr.add(accumulator.toString())
                 accumulator = ""
             } else {
                 accumulator = emojiString[i].toString()
                 if (isOnlyEmojis(accumulator)) {
-                    arr.add(accumulator)
+                    arr.add(accumulator.toString())
                     accumulator = ""
                 }
             }
