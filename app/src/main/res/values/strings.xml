@@ -29,4 +29,5 @@
     <string name="initialize_broadcast_header">UwU what\'s this?</string>
     <string name="initialize_broadcast_other_placeholder">Other?</string>
     <string name="search_for_emoji_text">Search for an emoji...</string>
+    <string name="illegal_char_in_search_for_emoji_field">Emojis only! 😡</string>
 </resources>
