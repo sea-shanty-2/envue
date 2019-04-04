@@ -1,18 +1,12 @@
 package dk.cs.aau.envue
 
-import android.animation.ValueAnimator
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
 import android.support.text.emoji.bundled.BundledEmojiCompatConfig
-import android.support.text.emoji.widget.EmojiTextView
 import android.support.v7.app.AppCompatActivity
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.ListView
-import android.widget.TextView
 import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter

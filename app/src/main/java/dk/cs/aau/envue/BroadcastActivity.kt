@@ -23,6 +23,10 @@ import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.net.SocketException
+import android.content.DialogInterface
+import android.support.v7.app.AlertDialog
+
+
 
 
 
@@ -38,6 +42,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
+    private var rtmpHandler: RtmpHandler? = null
+    private var encodeHandler: SrsEncodeHandler? = null
 
     override fun onMessage(message: Message) {
         runOnUiThread {
@@ -126,13 +132,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         // Initialize publisher
         this.publisher = SrsPublisher(this.findViewById(R.id.camera_view))
-        val rtmpHandler = RtmpHandler(this)
-        val srsEncodeHandler = SrsEncodeHandler(this)
+        rtmpHandler = RtmpHandler(this)
+        encodeHandler = SrsEncodeHandler(this)
         this.publisher?.apply {
-            setEncodeHandler(srsEncodeHandler)
+            setEncodeHandler(encodeHandler)
             setRtmpHandler(rtmpHandler)
             setRecordHandler(null)
-            setPreviewResolution(1280, 720)
+            setPreviewResolution(640, 360)
             setOutputResolution(1280, 720)
             setVideoHDMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)
@@ -154,26 +160,40 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
-
-        messages.add(Message("this is a test to see how well the chat works", "test"))
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        // TODO: Implement orientation change
-    }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        this.publisher?.stopPublish()
+
+        this.publisher?.apply {
+            stopPublish()
+            stopRecord()
+        }
+
         this.socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        this.publisher?.pauseRecord()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        this.publisher?.resumeRecord()
+    }
+
+    override fun onBackPressed() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmation")
+            .setMessage("Are you sure you want to stop the stream?")
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(android.R.string.yes
+            ) { _, _ ->
+                finish()
+                
+                super.onBackPressed()
+            }
+            .setNegativeButton(android.R.string.no, null).show()
     }
 }
