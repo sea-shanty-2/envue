@@ -30,6 +30,14 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             startActivity(Intent(this, BroadcastActivity::class.java))
         }
 
+        emojiSearchField.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                emojiSearchField.hint = ""
+            } else {
+                emojiSearchField.hint = resources.getString(R.string.search_for_emoji_text)
+            }
+        }
+
         loadEmojis(R.raw.emojis)
     }
 

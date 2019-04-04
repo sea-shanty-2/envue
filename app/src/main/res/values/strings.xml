@@ -28,4 +28,5 @@
     <string name="start_broadcast_button_text">GO</string>
     <string name="initialize_broadcast_header">UwU what\'s this?</string>
     <string name="initialize_broadcast_other_placeholder">Other?</string>
+    <string name="search_for_emoji_text">Search for an emoji...</string>
 </resources>

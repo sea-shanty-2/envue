@@ -18,7 +18,24 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/EmojiRowsConstraintLayout">
+            app:layout_constraintTop_toBottomOf="@+id/emojiRowsConstraintLayout">
+
+            <EditText
+                android:id="@+id/emojiSearchField"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:textAlignment="center"
+                android:textSize="16dp"
+                android:textColorHint="@color/envue_light"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:hint="@string/search_for_emoji_text"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <FrameLayout
                 android:layout_width="wrap_content"
@@ -34,15 +51,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <android.support.design.widget.FloatingActionButton
-                    android:id="@+id/startBroadcastButton"
-                    android:layout_width="88dp"
-                    android:layout_height="103dp"
-                    android:src="@android:color/transparent"
-                    android:elevation="0dp"
-                    app:elevation="0dp"
-                    app:backgroundTint="@color/envue_light" />
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -53,7 +61,19 @@
                     android:textColor="@color/white"
                     android:textSize="36sp"
                     android:textStyle="bold"
-                    android:typeface="monospace" />
+                    android:typeface="monospace"
+                    tools:layout_editor_absoluteX="183dp"
+                    tools:layout_editor_absoluteY="83dp" />
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/startBroadcastButton"
+                    android:layout_width="88dp"
+                    android:layout_height="103dp"
+                    android:src="@android:color/transparent"
+                    android:elevation="0dp"
+                    app:elevation="0dp"
+                    app:backgroundTint="@color/envue_light" />
+
             </FrameLayout>
         </android.support.constraint.ConstraintLayout>
 
@@ -84,7 +104,7 @@
         </android.support.constraint.ConstraintLayout>
 
         <android.support.constraint.ConstraintLayout
-            android:id="@+id/EmojiRowsConstraintLayout"
+            android:id="@+id/emojiRowsConstraintLayout"
             android:layout_width="415dp"
             android:layout_height="298dp"
             android:layout_marginEnd="8dp"
