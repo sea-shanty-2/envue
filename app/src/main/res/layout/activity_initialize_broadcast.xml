@@ -7,43 +7,60 @@
     android:layout_height="match_parent"
     tools:context=".InitializeBroadcastActivity">
 
-    <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/start_broadcast_button_margin">
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/startBroadcastButton"
-            android:layout_width="212dp"
-            android:layout_height="133dp"
-            android:src="@android:color/transparent"
-            app:backgroundTint="@color/envue_light" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:elevation="16dp"
-            android:text="@string/start_broadcast_button_text"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="36sp"
-            android:textStyle="bold"
-            android:typeface="monospace" />
-    </FrameLayout>
-
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="576dp"
+        android:layout_height="match_parent"
         app:layout_anchorGravity="top|left">
 
         <android.support.constraint.ConstraintLayout
-            android:id="@+id/constraintLayout"
             android:layout_width="413dp"
-            android:layout_height="121dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="216dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/EmojiRowsConstraintLayout">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="@dimen/start_broadcast_button_margin"
+                android:layout_marginStart="262dp"
+                android:layout_marginTop="582dp"
+                android:layout_marginEnd="264dp"
+                android:layout_marginBottom="67dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/startBroadcastButton"
+                    android:layout_width="88dp"
+                    android:layout_height="103dp"
+                    android:src="@android:color/transparent"
+                    android:elevation="0dp"
+                    app:elevation="0dp"
+                    app:backgroundTint="@color/envue_light" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:elevation="16dp"
+                    android:text="@string/start_broadcast_button_text"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="36sp"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+            </FrameLayout>
+        </android.support.constraint.ConstraintLayout>
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/windowTitleConstraintLayout"
+            android:layout_width="414dp"
+            android:layout_height="132dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -67,8 +84,9 @@
         </android.support.constraint.ConstraintLayout>
 
         <android.support.constraint.ConstraintLayout
-            android:layout_width="409dp"
-            android:layout_height="295dp"
+            android:id="@+id/EmojiRowsConstraintLayout"
+            android:layout_width="415dp"
+            android:layout_height="298dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -84,15 +102,15 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
-                android:footerDividersEnabled="false"
-                android:headerDividersEnabled="false"
-                android:scrollbars="none"
                 android:divider="@null"
                 android:dividerHeight="0dp"
                 android:fadingEdge="horizontal"
                 android:fadingEdgeLength="30dp"
                 android:fillViewport="false"
+                android:footerDividersEnabled="false"
+                android:headerDividersEnabled="false"
                 android:requiresFadingEdge="vertical"
+                android:scrollbars="none"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

@@ -1,6 +1,7 @@
 package dk.cs.aau.envue
 
 import android.animation.ValueAnimator
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -25,16 +26,20 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         EmojiCompat.init(BundledEmojiCompatConfig(this))
 
         startBroadcastButton.setOnClickListener { view ->
-            Snackbar.make(view, "nibber", 2)
-                .setAction("Action", null).show()
+            val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
+            startActivity(Intent(this, BroadcastActivity::class.java))
         }
 
-        // Load all emojis from local file
+        loadEmojis(R.raw.emojis)
+    }
+
+    private fun loadEmojis(resourceId: Int) {
         val allEmojis = GsonBuilder().create().fromJson(
-            resources.openRawResource(R.raw.emojis).bufferedReader(),
+            resources.openRawResource(resourceId).bufferedReader(),
             Array<EmojiIcon>::class.java
         )
 
+        // Wrap all unicodes in EmojiIcon objects in rows of 5
         var emojiRows = ArrayList<ArrayList<EmojiIcon>>()
         for (i in 0 until allEmojis.size) {
             if (i % 5 == 0) {
@@ -43,10 +48,20 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             emojiRows.last().add(allEmojis[i])
         }
 
-        val adapter = BroadcastCategoryListAdapter(this, emojiRows)
+        // Provide an item adapter to the ListView
+        findViewById<ListView>(R.id.broadcastCategoryListView).apply {
+            this.adapter = BroadcastCategoryListAdapter(this.context, emojiRows)
+        }
+    }
 
-        val listView = findViewById<ListView>(R.id.broadcastCategoryListView).apply {
-            this.adapter = adapter
+    private fun getSelectedCategories(): List<String> {
+        val emojiIcons = (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
+            .getAllEmojis()
+            .filter {it.isSelected}
+            .map {it.getEmoji()}
+
+        return emojiIcons.map {
+            it.char
         }
     }
 }

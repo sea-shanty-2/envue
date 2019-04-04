@@ -1,24 +1,49 @@
 package dk.cs.aau.envue
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.support.text.emoji.widget.EmojiTextView
 import android.support.v4.content.ContextCompat
-import android.util.AttributeSet
+import android.widget.TextView
+import dk.cs.aau.envue.utility.EmojiIcon
 
 
-class CircularTextView : EmojiTextView {
+class CircularTextView(context: Context,
+                       private val emojiIcon: EmojiIcon) : EmojiTextView(context) {
+
     private var strokeWidth: Float = 0f
-    internal var strokeColor: Int = R.color.white
-    internal var solidColor: Int = R.color.white
 
-    constructor(context: Context) : super(context) {}
+    init {
+        // Set visual properties
+        alpha = 1f
+        textSize = 36f
+        text = emojiIcon.char
+        textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+        setTextColor(Color.BLACK)  // Makes bitmap (the emoji) non-transparent
 
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {}
 
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {}
+        // Mark as selected when pressed
+        setOnClickListener {
+
+            val startSize = if (isSelected) 42f else 36f
+            val endSize = if (isSelected) 36f else 42f
+
+            // Start the font-size animation
+            ValueAnimator.ofFloat(startSize, endSize).apply {
+                addUpdateListener { valueAnimator ->
+                    textSize = valueAnimator.animatedValue as Float }
+                duration = 300
+                start()
+            }
+
+            apply {
+                isSelected = !isSelected
+            }
+        }
+    }
 
 
     override fun draw(canvas: Canvas) {
@@ -53,14 +78,7 @@ class CircularTextView : EmojiTextView {
         super.draw(canvas)
     }
 
-    fun setStrokeWidth(dp: Int) {
-        val scale = context.resources.displayMetrics.density
-        strokeWidth = dp * scale
-
-    }
-
-    fun setSelectionMarkerColor(resourceId: Int) {
-        strokeColor = resourceId
-        solidColor = resourceId
+    fun getEmoji(): EmojiIcon {
+        return emojiIcon
     }
 }

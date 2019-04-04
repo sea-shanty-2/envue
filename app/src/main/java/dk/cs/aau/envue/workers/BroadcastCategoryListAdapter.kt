@@ -37,19 +37,35 @@ class BroadcastCategoryListAdapter(private val context: Context,
         if (emojiRows.isEmpty()) {  // Eagerly load all emojis to (per-activity persistent) storage
 
             for (emojiIconRow in dataSource) {
-                emojiRows.add(inflater.inflate(R.layout.broadcast_category_row, parent, false).apply{
-                    emojiIconRow.forEach {
-                        this.findViewById<LinearLayout>(R.id.linearLayout)
-                            .addView(makeEmojiButton(it.char))  // Make a view for each of the provided unicodes (each 'it')
+                val constraintLayout = inflater.inflate(R.layout.broadcast_category_row, parent, false)
+                emojiRows.add(
+                    constraintLayout.apply {
+                        // Make a view for each of the provided unicodes, add them to the linear layout
+                        emojiIconRow.forEach {
+                            this.findViewById<LinearLayout>(R.id.linearLayout)
+                                .addView(makeEmojiButton(it))
+                        }
                     }
-                })
+                )
             }
         }
 
         return emojiRows[position]
     }
 
-    private fun makeEmojiButton(unicode: String): EmojiTextView {
+    fun getAllEmojis(): ArrayList<CircularTextView> {
+        val all = ArrayList<CircularTextView>()
+        for (emojiRow in emojiRows) {
+            val emojiRowLayout = emojiRow.findViewById<LinearLayout>(R.id.linearLayout)
+            for (i in 0 until emojiRowLayout.childCount) {
+                all.add(emojiRowLayout.getChildAt(i) as CircularTextView)
+            }
+        }
+
+        return all
+    }
+
+    private fun makeEmojiButton(emojiIcon: EmojiIcon): EmojiTextView {
         // Layout parameters for parent element (LinearLayout)
         val buttonParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -57,33 +73,8 @@ class BroadcastCategoryListAdapter(private val context: Context,
         buttonParams.weight = 1f
 
         // Create the TextView
-        val emoji = CircularTextView(context).apply {
+        val emoji = CircularTextView(context, emojiIcon).apply {
             layoutParams = buttonParams
-            textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-            textSize = 36f
-            alpha = 1f
-            text = unicode
-            setTextColor(Color.BLACK)  // Makes bitmap (the emoji) non-transparent
-            setSelectionMarkerColor(R.color.white)
-        }
-
-        // Enlarge\shrink when pressed
-        emoji.setOnClickListener {
-
-            val startSize = if (emoji.isSelected) 42f else 36f
-            val endSize = if (emoji.isSelected) 36f else 42f
-
-            // Start the font-size animation
-            ValueAnimator.ofFloat(startSize, endSize).apply {
-                addUpdateListener { valueAnimator ->
-                    emoji.textSize = valueAnimator.animatedValue as Float }
-                duration = 300
-                start()
-            }
-
-            emoji.apply {
-                isSelected = !isSelected
-            }
         }
 
         return emoji
