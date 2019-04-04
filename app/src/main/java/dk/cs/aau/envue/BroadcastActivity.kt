@@ -178,8 +178,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun stopStream() {
-        Log.i("STREAM", "stop")
-
         this.publisher?.apply {
             stopPublish()
             stopRecord()
