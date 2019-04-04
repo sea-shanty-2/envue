@@ -4,13 +4,10 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.os.PersistableBundle
-import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
 import com.google.android.exoplayer2.DefaultRenderersFactory
@@ -31,7 +28,6 @@ import dk.cs.aau.envue.chat.Message
 import dk.cs.aau.envue.chat.MessageListAdapter
 import dk.cs.aau.envue.chat.MessageListener
 import dk.cs.aau.envue.chat.packets.MessagePacket
-import kotlinx.android.synthetic.main.activity_player.*
 import okhttp3.WebSocket
 
 
@@ -125,7 +121,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
 
         // Creates fragments for EmojiReactionsFragment
         val fragmentTransaction = supportFragmentManager.beginTransaction()
-        val fragment = EmojiReactionActivity()
+        val fragment = EmojiReactionFragment()
         fragmentTransaction.replace(R.id.fragment_container, fragment)
         fragmentTransaction.commit()
 

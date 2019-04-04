@@ -19,26 +19,35 @@ class DynamicAnimation {
 
         var emojiCopy = emoji
         val startingPoints = getRandomWidth(parent, emoji.width)
-        val randomYStartCoordinate = (random.nextInt(400 - 100) + 100).toFloat()
+        val parentHeight = parent.height / 4
+        val randomYStartCoordinate = (random.nextInt(parentHeight -emoji.height)+ emoji.height).toFloat()
 
+        //Says in which direction the animation should go. fromY coordinate toY coordinate
         val animation = TranslateAnimation(0f, 0f, -randomYStartCoordinate, -parent.height.toFloat())
+
         animation.duration = (random.nextInt(3000 - 1500) + 1500).toLong()
+
+        //nothing important
         if (random.nextInt(100) == 3) {
             emojiCopy = createimages(activity, R.drawable.yes)
         }
 
-        val drawEmojionLayout = CreateEmoji().apply {
+        val drawEmoji = CreateEmoji().apply {
             attachTo(parent)
             with(activity)
             create(startingPoints, emojiCopy)
         }
 
-        val animationGroup = animationFadeOut(animation, drawEmojionLayout)
+        val animationGroup = animationFadeOut(animation, drawEmoji)
 
-        drawEmojionLayout.applyAnimation(animationGroup)
+        drawEmoji.applyAnimation(animationGroup)
 
     }
 
+    /**
+     * @param animation will be grouped to a fadeOut animation that happens 500ms before the animation ends
+     * @return AnimationSet
+     */
     private fun animationFadeOut(animation: TranslateAnimation, emoji: CreateEmoji): AnimationSet {
         val out = AlphaAnimation(1.0f, 0.0f)
         out.duration = animation.duration - 500
@@ -62,8 +71,10 @@ class DynamicAnimation {
 
     private fun getRandomWidth(parent: ViewGroup, emojiWidth: Int): IntArray {
         val width = parent.width - emojiWidth
+        val moveEmojiToRight = parent.width - (parent.width / 6) - emojiWidth
         val height = parent.height
-        val x = random.nextInt(width - emojiWidth) + emojiWidth
+        
+        val x = random.nextInt(width - moveEmojiToRight) + moveEmojiToRight
 
         return intArrayOf(x, height)
     }

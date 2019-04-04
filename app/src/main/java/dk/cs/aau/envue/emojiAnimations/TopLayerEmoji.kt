@@ -2,6 +2,7 @@ package dk.cs.aau.envue.emojiAnimations
 
 import android.app.Activity
 import android.graphics.Bitmap
+import android.support.v4.app.FragmentActivity
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.animation.Animation
@@ -10,12 +11,12 @@ import android.widget.ImageView
 import java.lang.ref.WeakReference
 
 class CreateEmoji {
-    private var weakActivity: WeakReference<Activity>? = null
+    private var weakActivity: WeakReference<FragmentActivity>? = null
     private var weakRootView: WeakReference<ViewGroup>? = null
     private var createdOttLayer: FrameLayout? = null
 
 
-    fun with(weakReferenceActivity: Activity): CreateEmoji {
+    fun with(weakReferenceActivity: FragmentActivity): CreateEmoji {
         weakActivity = WeakReference(weakReferenceActivity)
         return this
     }
