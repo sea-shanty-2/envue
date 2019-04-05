@@ -1,6 +1,5 @@
 package dk.cs.aau.envue
 
-import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
@@ -9,10 +8,16 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.EditText
 import android.widget.ListView
+import com.apollographql.apollo.ApolloClient
 import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
 import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
+import okhttp3.OkHttpClient
+import android.util.Log
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
 
 
 class InitializeBroadcastActivity : AppCompatActivity() {
@@ -35,7 +40,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         loadEmojis(R.raw.emojis, R.id.broadcastCategoryListView)
-
+        theFunThing()
     }
 
     /** Loads emojis from a JSON file provided by the resource id.
@@ -149,5 +154,31 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         return joined.removeSuffix(this)
+    }
+
+    fun theFunThing() {
+        val baseUrl = resources.getString(R.string.graphql_base_url)
+        val okHttpClient = OkHttpClient.Builder().build()
+        val apolloClient = ApolloClient.builder()
+            .serverUrl(baseUrl)
+            .okHttpClient(okHttpClient)
+            .build()
+
+        val activeQuery = AccountsQuery.builder().first(5).build()
+        val TAG = "InitializeBroadcast"
+        val testCall: ApolloCall<AccountsQuery.Data> = apolloClient.query(activeQuery)
+        var data: AccountsQuery.Data? = null
+        testCall.enqueue(object : ApolloCall.Callback<AccountsQuery.Data>() {
+            override fun onResponse(response: Response<AccountsQuery.Data>){
+                Log.d(TAG, "Did shit")
+                var d = response.data()
+                this@InitializeBroadcastActivity.runOnUiThread {
+                    findViewById<EditText>(R.id.emojiSearchField).hint = d.toString()
+                }
+            }
+            override fun onFailure(e: ApolloException){
+                Log.d(TAG, e.message)
+            }
+        })
     }
 }
