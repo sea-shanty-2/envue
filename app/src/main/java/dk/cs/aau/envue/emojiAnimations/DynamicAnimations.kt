@@ -11,6 +11,8 @@ import android.view.animation.AnimationSet
 import android.view.animation.TranslateAnimation
 import dk.cs.aau.envue.R
 import dk.cs.aau.envue.random
+import android.support.v4.os.HandlerCompat.postDelayed
+import android.os.Handler
 
 
 class DynamicAnimation {
@@ -20,11 +22,10 @@ class DynamicAnimation {
         var emojiCopy = emoji
         val startingPoints = getRandomWidth(parent, emoji.width)
         val parentHeight = parent.height / 6
-        val randomYStartCoordinate = (random.nextInt(parentHeight -emoji.height)+ emoji.height).toFloat()
+        val randomYStartCoordinate = (random.nextInt(parentHeight - emoji.height) + emoji.height).toFloat()
 
         //Says in which direction the animation should go. fromY coordinate toY coordinate
         val animation = TranslateAnimation(0f, 0f, -randomYStartCoordinate, -parent.height.toFloat())
-
         animation.duration = (random.nextInt(3000 - 1500) + 1500).toLong()
 
         //nothing important
@@ -59,13 +60,19 @@ class DynamicAnimation {
         }
 
         animationGroup.setAnimationListener(object : Animation.AnimationListener {
+
             override fun onAnimationStart(animation: Animation) {}
             override fun onAnimationEnd(animation: Animation) {
-                emoji.destroy()
+                val testTimer = Handler()
+                testTimer.postDelayed(Runnable {
+                    emoji.destroy()
+                }, 2000)
+
             }
 
             override fun onAnimationRepeat(animation: Animation) {}
         })
+
         return animationGroup
     }
 
