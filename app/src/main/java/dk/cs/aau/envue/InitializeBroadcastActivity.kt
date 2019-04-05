@@ -34,14 +34,14 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             }
         }
 
-        loadEmojis(R.raw.emojis)
+        loadEmojis(R.raw.emojis, R.id.broadcastCategoryListView)
 
     }
 
     /** Loads emojis from a JSON file provided by the resource id.
      * Emojis are loaded directly into a list adapter used by the
      * broadcast category list view. */
-    private fun loadEmojis(resourceId: Int) {
+    fun loadEmojis(resourceId: Int, targetResourceId: Int) {
         val allEmojis = GsonBuilder().create().fromJson(
             resources.openRawResource(resourceId).bufferedReader(),
             Array<EmojiIcon>::class.java
@@ -57,7 +57,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         // Provide an item adapter to the ListView
-        findViewById<ListView>(R.id.broadcastCategoryListView).apply {
+        findViewById<ListView>(targetResourceId).apply {
             this.adapter = BroadcastCategoryListAdapter(this.context, emojiRows)
         }
     }
@@ -91,6 +91,12 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
+        if (selectedEmojis.isEmpty()) {
+            Snackbar.make(
+                view, resources.getString(R.string.no_categories_chosen), Snackbar.LENGTH_LONG).show()
+            return
+        }
+
         Snackbar.make(view, " and ".join(selectedEmojis), Snackbar.LENGTH_LONG).show()  // For testing
         //startActivity(Intent(this, BroadcastActivity::class.java))
     }
