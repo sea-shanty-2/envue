@@ -19,7 +19,7 @@ class DynamicAnimation {
 
         var emojiCopy = emoji
         val startingPoints = getRandomWidth(parent, emoji.width)
-        val parentHeight = parent.height / 4
+        val parentHeight = parent.height / 6
         val randomYStartCoordinate = (random.nextInt(parentHeight -emoji.height)+ emoji.height).toFloat()
 
         //Says in which direction the animation should go. fromY coordinate toY coordinate
@@ -73,7 +73,7 @@ class DynamicAnimation {
         val width = parent.width - emojiWidth
         val moveEmojiToRight = parent.width - (parent.width / 6) - emojiWidth
         val height = parent.height
-        
+
         val x = random.nextInt(width - moveEmojiToRight) + moveEmojiToRight
 
         return intArrayOf(x, height)

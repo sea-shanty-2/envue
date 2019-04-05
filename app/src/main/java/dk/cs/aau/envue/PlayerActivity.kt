@@ -121,7 +121,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
 
         // Creates fragments for EmojiReactionsFragment
         val fragmentTransaction = supportFragmentManager.beginTransaction()
-        val fragment = EmojiReactionFragment()
+        val fragment = EmojiFragment()
         fragmentTransaction.replace(R.id.fragment_container, fragment)
         fragmentTransaction.commit()
 
