@@ -11,6 +11,11 @@
             app:controller_layout_id="@layout/player_controls"
             android:layout_gravity="center"
             android:background="@color/black">
+        <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/fragment_container">
+        </FrameLayout>
     </com.google.android.exoplayer2.ui.SimpleExoPlayerView>
 
     <android.support.v7.widget.CardView
@@ -47,7 +52,7 @@
                         android:inputType="textCapSentences"
                         android:imeOptions="actionDone"
                         android:singleLine="true"
-                        android:text="" />
+                        android:text=""/>
 
 
                 <Button
