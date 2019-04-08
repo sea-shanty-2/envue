@@ -31,14 +31,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             startBroadcast(view)
         }
 
-        emojiSearchField.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                emojiSearchField.hint = ""
-            } else {
-                emojiSearchField.hint = resources.getString(R.string.search_for_emoji_text)
-            }
-        }
-
         loadEmojis(R.raw.emojis, R.id.broadcastCategoryListView)
         theFunThing()
     }
@@ -112,24 +104,12 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             .filter {it.isSelected}
             .map {it.getEmoji()}
 
-        val searchedEmojis = (findViewById<EditText>(R.id.emojiSearchField)).text.toString().run {
-            emojiStringToArray(this)
-        }
-        return if (searchedEmojis.isEmpty()) {
-            gridViewEmojis.map {it.char}
-        } else {
-            gridViewEmojis.map {it.char}.plus(searchedEmojis)
-        }
+        return gridViewEmojis.map {it.char}
     }
 
     /** Starts the broadcast after processing selected categories
      * if all checks pass. */
     private fun startBroadcast(view: View) {
-        if (!isOnlyEmojis(emojiSearchField.text.toString())) {
-            Snackbar.make(
-                view, resources.getString(R.string.illegal_char_in_search_for_emoji_field), Snackbar.LENGTH_LONG).show()
-            return
-        }
 
         val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
         if (selectedEmojis.isEmpty()) {
@@ -172,9 +152,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             override fun onResponse(response: Response<AccountsQuery.Data>){
                 Log.d(TAG, "Did shit")
                 var d = response.data()
-                this@InitializeBroadcastActivity.runOnUiThread {
-                    findViewById<EditText>(R.id.emojiSearchField).hint = d.toString()
-                }
+                Log.d(TAG, "SUCCESS: ${d.toString()}")
             }
             override fun onFailure(e: ApolloException){
                 Log.d(TAG, e.message)
