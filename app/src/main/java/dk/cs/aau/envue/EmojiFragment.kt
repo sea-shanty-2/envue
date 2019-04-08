@@ -10,6 +10,7 @@ import dk.cs.aau.envue.utility.textToBitmap
 import java.util.*
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
+import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import com.google.gson.Gson
 import dk.cs.aau.envue.chat.Message
@@ -17,20 +18,18 @@ import dk.cs.aau.envue.chat.MessageListener
 import dk.cs.aau.envue.chat.packets.MessagePacket
 import dk.cs.aau.envue.emojiAnimations.EmojiListener
 import okhttp3.WebSocket
+import android.system.Os.shutdown
+import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator.build
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 
 val random = Random()
 
-class EmojiFragment : Fragment(),MessageListener {
+class EmojiFragment : Fragment() {
     private var messages: ArrayList<Message> = ArrayList()
-
-
-    override fun onMessage(message: Message) {
-            this.messages.add(message)
-    }
-
     private var animation = DynamicAnimation()
-    private var socket: WebSocket? = null
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_emoji_reaction,container,false)
@@ -39,34 +38,25 @@ class EmojiFragment : Fragment(),MessageListener {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val currentActivity = requireActivity()
-
         val button = view?.findViewById(R.id.startAnimation) as Button
         button.setOnClickListener {
-            socket = EmojiListener.buildSocket(this)
             localEmoji(currentActivity.findViewById(R.id.animation_holder), currentActivity)
+            beginEmojiAnimation("\uD83D\uDE09",currentActivity)
 
         }
     }
 
-    fun startEmojiAnimation(emojiBitMap: Bitmap, fragmentActivity: FragmentActivity) {
+    fun beginEmojiAnimation(emojiUniCode: String, fragmentActivity: FragmentActivity) {
+        val emoji = textToBitmap(emojiUniCode,64, fragmentActivity)
+
         val container = fragmentActivity.findViewById<ViewGroup>(R.id.animation_holder)
-        animation.play(fragmentActivity, container, emojiBitMap)
+        animation.play(fragmentActivity, container, emoji)
     }
 
     ///Just for testing purposes, the actual functionality will be to use StartEmojiAnimation
     fun localEmoji(view: View,activity: FragmentActivity?) {
         val emojiUniCode = "\uD83D\uDE09"
-        if (!emojiUniCode.isEmpty()) {
-            socket?.send(Gson().toJson(MessagePacket(emojiUniCode)))
-            onMessage(Message(emojiUniCode))
-        }
-        startEmojiAnimation(textToBitmap("\uD83D\uDE09", 64, view.context),activity!!)
+        //startEmojiAnimation(textToBitmap("\uD83D\uDE09", 64, view.context),activity!!)
     }
 
-
-
-    override fun onDestroy() {
-        super.onDestroy()
-        this.socket?.close(EmojiListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
-    }
 }

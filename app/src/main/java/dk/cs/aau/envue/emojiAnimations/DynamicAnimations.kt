@@ -66,7 +66,7 @@ class DynamicAnimation {
                 val testTimer = Handler()
                 testTimer.postDelayed(Runnable {
                     emoji.destroy()
-                }, 2000)
+                }, 100)
 
             }
 

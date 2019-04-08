@@ -148,6 +148,12 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         chatList = findViewById(R.id.chat_view)
 
+        // Creates fragments for EmojiReactionsFragment
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        val fragment = EmojiFragment()
+        fragmentTransaction.replace(R.id.fragment_container, fragment)
+        fragmentTransaction.commit()
+
         // Assign chat adapter and layout manager
         val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         chatList?.apply {

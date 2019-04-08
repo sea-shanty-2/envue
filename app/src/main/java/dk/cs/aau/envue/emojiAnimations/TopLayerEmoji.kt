@@ -1,8 +1,6 @@
 package dk.cs.aau.envue.emojiAnimations
 
-import android.app.Activity
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.support.v4.app.FragmentActivity
 import android.view.Gravity
 import android.view.ViewGroup
@@ -51,7 +49,6 @@ class CreateEmoji {
 
         val ottLayer = FrameLayout(activity!!)
         ottLayer.addView(imageView)
-        ottLayer.setBackgroundColor(Color.parseColor("#FF0000"))
         attachingView?.addView(ottLayer)
         createdOttLayer = ottLayer
     }
