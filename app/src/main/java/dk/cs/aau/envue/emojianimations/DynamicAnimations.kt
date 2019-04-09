@@ -1,4 +1,4 @@
-package dk.cs.aau.envue.emojiAnimations
+package dk.cs.aau.envue.emojianimations
 
 import android.app.Activity
 import android.graphics.Bitmap
@@ -11,7 +11,6 @@ import android.view.animation.AnimationSet
 import android.view.animation.TranslateAnimation
 import dk.cs.aau.envue.R
 import dk.cs.aau.envue.random
-import android.support.v4.os.HandlerCompat.postDelayed
 import android.os.Handler
 
 
