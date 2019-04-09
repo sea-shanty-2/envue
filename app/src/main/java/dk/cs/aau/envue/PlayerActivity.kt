@@ -41,7 +41,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     }
 
     private fun scrollToBottom() {
-        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it )}
+        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
     private var playerView: SimpleExoPlayerView? = null
@@ -71,13 +71,17 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
 
         // Initialize player
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
-        player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
-            DefaultTrackSelector(adaptiveTrackSelection))
+        player = ExoPlayerFactory.newSimpleInstance(
+            DefaultRenderersFactory(this),
+            DefaultTrackSelector(adaptiveTrackSelection)
+        )
 
         val defaultBandwidthMeter = DefaultBandwidthMeter()
         // Produces DataSource instances through which media data is loaded.
-        val dataSourceFactory = DefaultDataSourceFactory(this,
-            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter)
+        val dataSourceFactory = DefaultDataSourceFactory(
+            this,
+            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
+        )
 
         // Create media source
         val hlsUrl = "http://envue.me/live/ThomasAndersen.m3u8"
@@ -98,7 +102,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
 
     private fun bindContentView() {
         setContentView(R.layout.activity_player)
-
         playerView = findViewById(R.id.video_view)
         loading = findViewById(R.id.loading)
         editMessageView = findViewById(R.id.editText)
@@ -115,6 +118,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
             addLocalMessage()
         }
+
+        // Creates fragments for EmojiReactionsFragment
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        val fragment = EmojiFragment()
+        fragmentTransaction.replace(R.id.fragment_container, fragment)
+        fragmentTransaction.commit()
 
         // Assign player view
         player?.let { playerView?.player = it }
