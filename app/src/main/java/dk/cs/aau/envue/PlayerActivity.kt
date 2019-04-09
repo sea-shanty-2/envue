@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentActivity
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -38,7 +40,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     }
 
     override fun onReaction(reaction: String) {
-        // TODO: Implement
+        emojiFragment?.begin(reaction,this)
     }
 
     private fun scrollToBottom() {

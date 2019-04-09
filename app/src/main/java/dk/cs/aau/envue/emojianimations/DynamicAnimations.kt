@@ -16,7 +16,7 @@ import android.os.Handler
 
 class DynamicAnimation {
 
-    fun play(activity: FragmentActivity, parent: ViewGroup, emoji: Bitmap) {
+    fun play(activity: Activity, parent: ViewGroup, emoji: Bitmap) {
 
         var emojiCopy = emoji
         val startingPoints = getRandomWidth(parent, emoji.width)

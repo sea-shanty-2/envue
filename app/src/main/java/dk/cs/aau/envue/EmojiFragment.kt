@@ -1,5 +1,6 @@
 package dk.cs.aau.envue
 
+import android.app.Activity
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -24,18 +25,18 @@ class EmojiFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val currentActivity = requireActivity()
-        val button = view?.findViewById(R.id.startAnimation) as Button
-        button.setOnClickListener {
-            begin("\uD83D\uDE09",currentActivity)
-
-        }
+        //val currentActivity = requireActivity()
+        //val button = view?.findViewById(R.id.startAnimation) as Button
+        //button.setOnClickListener {
+        //    begin("\uD83D\uDE09",currentActivity)
+//
+        //}
     }
 
-    fun begin(emojiUniCode: String, fragmentActivity: FragmentActivity) {
-        val emoji = textToBitmap(emojiUniCode,64, fragmentActivity)
+    fun begin(emojiUniCode: String, Activity: Activity) {
+        val emoji = textToBitmap(emojiUniCode,64, Activity)
 
-        val container = fragmentActivity.findViewById<ViewGroup>(R.id.animation_holder)
-        animation.play(fragmentActivity, container, emoji)
+        val container = Activity.findViewById<ViewGroup>(R.id.animation_holder)
+        animation.play(Activity, container, emoji)
     }
 }
