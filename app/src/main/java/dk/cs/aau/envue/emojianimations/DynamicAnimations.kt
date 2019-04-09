@@ -3,13 +3,11 @@ package dk.cs.aau.envue.emojianimations
 import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.support.v4.app.FragmentActivity
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.TranslateAnimation
-import dk.cs.aau.envue.R
 import dk.cs.aau.envue.random
 import android.os.Handler
 
@@ -17,31 +15,22 @@ import android.os.Handler
 class DynamicAnimation {
 
     fun play(activity: Activity, parent: ViewGroup, emoji: Bitmap) {
-
-        var emojiCopy = emoji
         val startingPoints = getRandomWidth(parent, emoji.width)
         val parentHeight = parent.height / 6
         val randomYStartCoordinate = (random.nextInt(parentHeight - emoji.height) + emoji.height).toFloat()
 
-        //Says in which direction the animation should go. fromY coordinate toY coordinate
+        // Says in which direction the animation should go. fromY coordinate toY coordinate
         val animation = TranslateAnimation(0f, 0f, -randomYStartCoordinate, -parent.height.toFloat())
         animation.duration = (random.nextInt(3000 - 1500) + 1500).toLong()
-
-        //nothing important
-        if (random.nextInt(100) == 3) {
-            emojiCopy = createimages(activity, R.drawable.yes)
-        }
 
         val drawEmoji = CreateEmoji().apply {
             attachTo(parent)
             with(activity)
-            create(startingPoints, emojiCopy)
+            create(startingPoints, emoji)
         }
 
         val animationGroup = animationFadeOut(animation, drawEmoji)
-
         drawEmoji.applyAnimation(animationGroup)
-
     }
 
     /**
@@ -58,15 +47,13 @@ class DynamicAnimation {
             fillAfter = true
         }
 
-        animationGroup.setAnimationListener(object : Animation.AnimationListener {
-
+        animationGroup.setAnimationListener(object: Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation) {}
             override fun onAnimationEnd(animation: Animation) {
                 val testTimer = Handler()
-                testTimer.postDelayed(Runnable {
+                testTimer.postDelayed({
                     emoji.destroy()
                 }, 100)
-
             }
 
             override fun onAnimationRepeat(animation: Animation) {}
@@ -83,9 +70,5 @@ class DynamicAnimation {
         val x = random.nextInt(width - moveEmojiToRight) + moveEmojiToRight
 
         return intArrayOf(x, height)
-    }
-
-    private fun createimages(activity: Activity, imageResId: Int): Bitmap {
-        return BitmapFactory.decodeResource(activity.resources, imageResId)
     }
 }

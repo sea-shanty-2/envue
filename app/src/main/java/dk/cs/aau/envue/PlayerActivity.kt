@@ -40,7 +40,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     }
 
     override fun onReaction(reaction: String) {
-        emojiFragment?.begin(reaction,this)
+        runOnUiThread {
+            emojiFragment?.begin(reaction,this@PlayerActivity)
+        }
     }
 
     private fun scrollToBottom() {

@@ -36,6 +36,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
+    private var emojiFragment: EmojiFragment? = null
 
     override fun onMessage(message: Message) {
         runOnUiThread {
@@ -46,7 +47,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onReaction(reaction: String) {
-        // TODO: Implement
+        runOnUiThread {
+            emojiFragment?.begin(reaction,this@BroadcastActivity)
+        }
     }
 
     private fun scrollToBottom() {
@@ -152,9 +155,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         // Creates fragments for EmojiReactionsFragment
         val fragmentTransaction = supportFragmentManager.beginTransaction()
-        val fragment = EmojiFragment()
-        fragmentTransaction.replace(R.id.fragment_container, fragment)
-        fragmentTransaction.commit()
+        emojiFragment = EmojiFragment()
+        emojiFragment?.let {
+            fragmentTransaction.replace(R.id.fragment_container, it)
+            fragmentTransaction.commit()
+        }
 
         // Assign chat adapter and layout manager
         val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
