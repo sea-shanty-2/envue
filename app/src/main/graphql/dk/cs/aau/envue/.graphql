@@ -1,7 +1,12 @@
-query Accounts($first:Int!) {
-  accounts {
-    page(first: $first) {
-      items {fullName}
+query ActiveBroadcastLocationQuery {
+  broadcasts {
+    active{
+      items{
+        location {
+          latitude
+          longitude
+        }
+      }
     }
   }
 }

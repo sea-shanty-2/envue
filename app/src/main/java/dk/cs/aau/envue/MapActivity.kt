@@ -2,6 +2,12 @@ package dk.cs.aau.envue
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
+import com.mapbox.geojson.GeoJson
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.annotations.IconFactory
 import com.mapbox.mapboxsdk.annotations.Marker
@@ -14,6 +20,7 @@ import com.mapbox.mapboxsdk.style.expressions.Expression.*
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import dk.cs.aau.envue.utility.textToBitmap
+import okhttp3.OkHttpClient
 import java.net.MalformedURLException
 import java.net.URL
 
@@ -24,6 +31,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
     private val HEATMAP_LAYER_ID = "earthquakes-heat"
     private val HEATMAP_LAYER_SOURCE = "earthquakes"
     private val CIRCLE_LAYER_ID = "earthquakes-circle"
+    private val TAG = "MapActivity"
 
     override fun onStyleLoaded(style: Style) {
         addEarthquakeSource(style)
@@ -73,8 +81,53 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
         return
     }
 
+    fun setHeatmap(list : List<ActiveBroadcastLocationQuery.Item>?){
+        var a = list?.last()?.location() as GeoJson
+
+        Log.d(TAG, "Got locations")
+    }
+
     private fun addEarthquakeSource(loadedMapStyle: Style) {
-        // TODO: Remove. Is temporary data for debugging.
+       // TODO: Remove. Is temporary data for debugging.
+        val BASE_URL = "http://172.25.11.190/"
+
+        val okHttpClient = OkHttpClient.Builder().build()
+
+        val apolloClient = ApolloClient.builder()
+            .serverUrl(BASE_URL)
+            .okHttpClient(okHttpClient)
+            .build()
+
+        val activeQuery: ActiveBroadcastLocationQuery = ActiveBroadcastLocationQuery.builder().build()
+
+        val testCall: ApolloCall<ActiveBroadcastLocationQuery.Data> = apolloClient.query(activeQuery)
+        var data: ActiveBroadcastLocationQuery.Data? = null
+
+        testCall.enqueue(object : ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
+            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>){
+                Log.d(TAG, "Did shit")
+
+                var d = response.data()
+                var b = d?.broadcasts()
+                var a = b?.active()
+                var i = a?.items()
+
+                this@MapActivity.runOnUiThread(object : Runnable {
+                    override fun run() {
+                        setHeatmap(null)
+                    }
+                })
+
+            }
+
+            override fun onFailure(e: ApolloException){
+                Log.d(TAG, e.message)
+            }
+        })
+
+        //var dat = testCall.execute()
+
+
         try {
             var tmp = GeoJsonSource(EARTHQUAKE_SOURCE_ID, URL(EARTHQUAKE_SOURCE_URL))
             loadedMapStyle.addSource(tmp)
