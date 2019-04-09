@@ -23,21 +23,22 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import dk.cs.aau.envue.chat.ChatListener
-import dk.cs.aau.envue.chat.Message
-import dk.cs.aau.envue.chat.MessageListAdapter
-import dk.cs.aau.envue.chat.MessageListener
+import dk.cs.aau.envue.chat.*
 import dk.cs.aau.envue.chat.packets.MessagePacket
 import okhttp3.WebSocket
 
 
-class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
+class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, ReactionListener {
     override fun onMessage(message: Message) {
         runOnUiThread {
             addMessage(message)
             this.chatAdapter?.notifyDataSetChanged()
             scrollToBottom()
         }
+    }
+
+    override fun onReaction(reaction: String) {
+        // TODO: Implement
     }
 
     private fun scrollToBottom() {
@@ -55,6 +56,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
+    private var emojiFragment: EmojiFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,7 +69,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         chatAdapter = MessageListAdapter(this, messages)
 
         // Initialize chat listener
-        socket = ChatListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this)
 
         // Initialize player
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
@@ -121,9 +123,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
 
         // Creates fragments for EmojiReactionsFragment
         val fragmentTransaction = supportFragmentManager.beginTransaction()
-        val fragment = EmojiFragment()
-        fragmentTransaction.replace(R.id.fragment_container, fragment)
-        fragmentTransaction.commit()
+        emojiFragment = EmojiFragment()
+        emojiFragment?.let {
+            fragmentTransaction.replace(R.id.fragment_container, it)
+            fragmentTransaction.commit()
+        }
 
         // Assign player view
         player?.let { playerView?.player = it }
@@ -157,7 +161,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     override fun onStop() {
         super.onStop()
         releasePlayer()
-        socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+        socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
     private fun releasePlayer() {

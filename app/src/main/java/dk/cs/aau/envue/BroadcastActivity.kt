@@ -12,10 +12,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import com.facebook.Profile
 import com.github.faucamp.simplertmp.RtmpHandler
-import dk.cs.aau.envue.chat.ChatListener
-import dk.cs.aau.envue.chat.Message
-import dk.cs.aau.envue.chat.MessageListAdapter
-import dk.cs.aau.envue.chat.MessageListener
+import dk.cs.aau.envue.chat.*
 import net.ossrs.yasea.SrsEncodeHandler
 import net.ossrs.yasea.SrsPublisher
 import okhttp3.WebSocket
@@ -31,7 +28,8 @@ import java.net.SocketException
  * status bar and navigation/system bar) with user interaction.
  */
 class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEncodeHandler.SrsEncodeListener,
-    MessageListener {
+    MessageListener, ReactionListener {
+
     private var publisher: SrsPublisher? = null
     private val tag = "ENVUE-BROADCAST"
     private var chatList: RecyclerView? = null
@@ -45,6 +43,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             this.chatAdapter?.notifyDataSetChanged()
             scrollToBottom()
         }
+    }
+
+    override fun onReaction(reaction: String) {
+        // TODO: Implement
     }
 
     private fun scrollToBottom() {
@@ -144,7 +146,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         chatAdapter = MessageListAdapter(this, messages, streamerView = true)
 
         // Initialize chat listener
-        socket = ChatListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this)
 
         chatList = findViewById(R.id.chat_view)
 
@@ -180,6 +182,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     override fun onDestroy() {
         super.onDestroy()
         this.publisher?.stopPublish()
-        this.socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+        this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 }

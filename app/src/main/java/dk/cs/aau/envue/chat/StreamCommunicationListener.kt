@@ -9,7 +9,8 @@ import dk.cs.aau.envue.chat.packets.HandshakePacket
 import okhttp3.*
 import okio.ByteString
 
-class ChatListener(private val messageListener: MessageListener) : WebSocketListener() {
+class StreamCommunicationListener(private val messageListener: MessageListener,
+                                  private val reactionListener: ReactionListener) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
         output("Connected")
         webSocket.send(Gson().toJson(
@@ -33,6 +34,7 @@ class ChatListener(private val messageListener: MessageListener) : WebSocketList
                         jsonObj.get("avatar").asString
                     )
                 )
+                "reaction" -> this.reactionListener.onReaction(jsonObj.get("reaction").asString)
             }
         }
     }
@@ -48,14 +50,14 @@ class ChatListener(private val messageListener: MessageListener) : WebSocketList
     companion object {
         const val NORMAL_CLOSURE_STATUS = 1000
 
-        fun buildSocket(messageListener: MessageListener): WebSocket {
+        fun buildSocket(messageListener: MessageListener, reactionListener: ReactionListener): WebSocket {
             val client = OkHttpClient.Builder()
                 .build()
             val request = Request.Builder()
                 .url("ws://envue.me:8765")
                 .build()
 
-            return client.newWebSocket(request, ChatListener(messageListener))
+            return client.newWebSocket(request, StreamCommunicationListener(messageListener, reactionListener))
         }
     }
 
