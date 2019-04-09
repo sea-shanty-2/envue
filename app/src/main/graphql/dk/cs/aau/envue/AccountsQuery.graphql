@@ -1,28 +1,10 @@
 query AccountsQuery($after: String, $first: Int, $before: String, $last: Int) {
   accounts {
     page(after: $after, first: $first, before: $before, last: $last) {
-      edges {
-        cursor
-        node {
-          id
-          firstName
-          lastName
-          fullName
-        }
-      }
       items {
         id
-        firstName
-        lastName
-        fullName
+        displayName
       }
-      pageInfo {
-        endCursor
-        hasNextPage
-        hasPreviousPage
-        startCursor
-      }
-      totalCount
     }
   }
 }
