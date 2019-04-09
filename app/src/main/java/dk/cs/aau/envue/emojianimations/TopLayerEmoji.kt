@@ -1,4 +1,4 @@
-package dk.cs.aau.envue.emojiAnimations
+package dk.cs.aau.envue.emojianimations
 
 import android.graphics.Bitmap
 import android.support.v4.app.FragmentActivity
