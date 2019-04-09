@@ -16,7 +16,8 @@ class StreamCommunicationListener(private val messageListener: MessageListener,
         webSocket.send(Gson().toJson(
             HandshakePacket(
                 Profile.getCurrentProfile().name,
-                Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString()
+                Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
+                "test"
             )
         ))
     }
