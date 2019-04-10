@@ -34,7 +34,7 @@ class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : Wor
                 .token(AccessToken.getCurrentAccessToken().token)
                 .build()
 
-            GatewayClient.apolloClient.query(query).enqueue(object: ApolloCall.Callback<GatewayAuthenticationQuery.Data>() {
+            GatewayClient.query(query).enqueue(object: ApolloCall.Callback<GatewayAuthenticationQuery.Data>() {
                 override fun onResponse(response: Response<GatewayAuthenticationQuery.Data>) {
                     val token = response.data()?.authenticate()?.facebook()
 
