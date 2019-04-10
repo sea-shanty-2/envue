@@ -90,7 +90,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         )
 
         // Create media source
-        val hlsUrl = "http://envue.me/live/ThomasAndersen.m3u8"
+        val hlsUrl = "https://envue.me/live/ThomasAndersen.m3u8"
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
