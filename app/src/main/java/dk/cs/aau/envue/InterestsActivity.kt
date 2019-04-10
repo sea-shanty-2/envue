@@ -7,39 +7,75 @@ import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
 import android.support.text.emoji.bundled.BundledEmojiCompatConfig
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ListView
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
 import com.facebook.Profile
 import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
+import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
+
 
 import kotlinx.android.synthetic.main.activity_interests.*
+import okhttp3.OkHttpClient
 
 class InterestsActivity : AppCompatActivity() {
-    companion object {
-        internal val INTERESTS_RESPONSE_KEY = "interests"
-    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_interests)
+        setContentView(R.layout.activity_initialize_broadcast)
+        // Modify layout
+        this.initializeBroadcastHeader.text = resources.getString(R.string.interests_dialog_title)
+        this.startBroadcastButtonText.text = resources.getString(R.string.interests_dialog_possitive)
+
         EmojiCompat.init(BundledEmojiCompatConfig(this))
 
-        setInterestsButton.setOnClickListener { view ->
+        startBroadcastButton.setOnClickListener { view ->
             setInterests(view)
         }
 
-        interestsEmojiSearchField.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                interestsEmojiSearchField.hint = ""
-            } else {
-                interestsEmojiSearchField.hint = resources.getString(R.string.search_for_emoji_text)
-            }
-        }
+        val currentInterests: CharSequence? = intent.getCharSequenceExtra(resources.getString(R.string.current_interests_key))
+        if (!currentInterests.isNullOrBlank())
+            selectCurrentInterests(currentInterests)
 
-        loadEmojis(R.raw.emojis, R.id.interestsCategoryListView)
+        loadEmojis(R.raw.emojis, R.id.broadcastCategoryListView)
 
+    }
+
+    /** Starts the broadcast after processing selected categories
+     * if all checks pass. */
+    private fun setInterests(view: View) {
+        val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
+
+        //Snackbar.make(view, " and ".join(selectedEmojis), Snackbar.LENGTH_LONG).show()  // For testing
+
+        val data = Intent().putExtra(resources.getString(R.string.interests_response_key), "".join(selectedEmojis))
+        //startActivity(Intent(this, BroadcastActivity::class.java))
+        setResult(Activity.RESULT_OK, data)
+        finish()
+    }
+
+    /** Returns all the emojis selected by the user.
+     * Includes emojis chosen in the grid view as well
+     * as emojis searched by the user. */
+    private fun getSelectedCategories(): List<String> {
+        val gridViewEmojis = (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
+            .getAllEmojis()
+            .filter {it.isSelected}
+            .map {it.getEmoji()}
+
+        return gridViewEmojis.map {it.char}
+    }
+
+    /** Pre-selects the users current interests */
+    private fun selectCurrentInterests(selected: CharSequence){
+        // TODO: Implement this
     }
 
     /** Loads emojis from a JSON file provided by the resource id.
@@ -63,44 +99,6 @@ class InterestsActivity : AppCompatActivity() {
         // Provide an item adapter to the ListView
         findViewById<ListView>(targetResourceId).apply {
             this.adapter = BroadcastCategoryListAdapter(this.context, emojiRows)
-        }
-    }
-
-    /** Starts the broadcast after processing selected categories
-     * if all checks pass. */
-    private fun setInterests(view: View) {
-        if (!isOnlyEmojis(interestsEmojiSearchField.text.toString())) {
-            Snackbar.make(
-                view, resources.getString(R.string.illegal_char_in_search_for_emoji_field), Snackbar.LENGTH_LONG).show()
-            return
-        }
-
-        val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
-
-        //Snackbar.make(view, " and ".join(selectedEmojis), Snackbar.LENGTH_LONG).show()  // For testing
-
-        val data = Intent().putExtra(INTERESTS_RESPONSE_KEY, " ".join(selectedEmojis))
-        //startActivity(Intent(this, BroadcastActivity::class.java))
-        setResult(Activity.RESULT_OK, data)
-        finish()
-    }
-
-    /** Returns all the emojis selected by the user.
-     * Includes emojis chosen in the grid view as well
-     * as emojis searched by the user. */
-    private fun getSelectedCategories(): List<String> {
-        val gridViewEmojis = (findViewById<ListView>(R.id.interestsCategoryListView).adapter as BroadcastCategoryListAdapter)
-            .getAllEmojis()
-            .filter {it.isSelected}
-            .map {it.getEmoji()}
-
-        val searchedEmojis = (findViewById<EditText>(R.id.interestsEmojiSearchField)).text.toString().run {
-            emojiStringToArray(this)
-        }
-        return if (searchedEmojis.isEmpty()) {
-            gridViewEmojis.map {it.char}
-        } else {
-            gridViewEmojis.map {it.char}.plus(searchedEmojis)
         }
     }
 

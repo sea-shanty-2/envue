@@ -68,24 +68,11 @@
             android:layout_margin="16dp"
     />
 
-
-    <TextView
-            android:text="@string/dummy_content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/interestsButton"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:id="@+id/testView"
-    />
-
     <Button
-            android:text="@string/dummy_button"
+            android:text="Notification test"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/testView"
+            android:layout_below="@id/interestsButton"
             android:id="@+id/testButton"
             android:layout_margin="16dp"
     />

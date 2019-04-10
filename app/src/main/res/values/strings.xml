@@ -31,6 +31,8 @@
     <string name="interests_dialog_title">Select Interests</string>
     <string name="interests_dialog_possitive">OK</string>
     <string name="interests_dialog_negative">Cancel</string>
+    <string name="interests_response_key">INTERESTS_RESPONSE_KEY</string>
+    <string name="current_interests_key">CURRENT_INTERESTS_KEY</string>
 
     <!-- Initialize Broadcast activity -->
     <string name="title_activity_initialize_broadcast">InitializeBroadcastActivity</string>
