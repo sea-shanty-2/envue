@@ -23,7 +23,7 @@ import dk.cs.aau.envue.type.LocationInputType
 
 class InitializeBroadcastActivity : AppCompatActivity() {
 
-    var _allEmojis = ArrayList<EmojiIcon>()
+    private var _allEmojis = ArrayList<EmojiIcon>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,58 +39,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         loadEmojis(R.raw.emojis, R.id.broadcastCategoryListView)
     }
 
-    /** Loads emojis from a JSON file provided by the resource id.
-     * Emojis are loaded directly into a list adapter used by the
-     * broadcast category list view. */
-    fun loadEmojis(resourceId: Int, targetResourceId: Int) {
-
-        // Load all emojis into local storage
-        _allEmojis = _allEmojis.plus(GsonBuilder().create().fromJson(
-            resources.openRawResource(resourceId).bufferedReader(),
-            Array<EmojiIcon>::class.java
-        )) as ArrayList
-
-
-        // Wrap all unicodes in EmojiIcon objects in rows of 5
-        var emojiRows = ArrayList<ArrayList<EmojiIcon>>()
-        for (i in 0 until _allEmojis.size) {
-            if (i % 5 == 0) {
-                emojiRows.add(ArrayList())
-            }
-            emojiRows.last().add(_allEmojis[i])
-        }
-
-        // Provide an item adapter to the ListView
-        findViewById<ListView>(targetResourceId).apply {
-            this.adapter = BroadcastCategoryListAdapter(this.context, emojiRows)
-        }
-    }
-
-    /** Returns all the emojis selected by the user.
-     * Includes emojis chosen in the grid view as well
-     * as emojis searched by the user. */
-    private fun getSelectedCategories(): List<EmojiIcon> {
-        val gridViewEmojis = (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
-            .getAllEmojis()
-            .filter {it.isSelected}
-            .map {it.getEmoji()}
-
-        return gridViewEmojis
-    }
-
-    /** Starts the broadcast after processing selected categories
-     * if all checks pass. */
-    private fun startBroadcast(view: View) {
-
-        val selectedEmojiIcons = getSelectedCategories()  // TODO: Do something with this
-        if (selectedEmojiIcons.isEmpty()) {
-            Snackbar.make(
-                view, resources.getString(R.string.no_categories_chosen), Snackbar.LENGTH_LONG).show()
-            return
-        }
-
-        startActivity(Intent(this, BroadcastActivity::class.java))
-    }
 
     /** Returns a string of elements in the provided list joined by the origin string. */
     fun <T> String.join(other: Iterable<T>): String {
@@ -105,6 +53,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
 
         return joined.removeSuffix(this)
     }
+
 
     /** Creates a broadcaster object and stores it in stable storage
      * on the Envue database. */
@@ -125,6 +74,8 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         })
     }
 
+
+    /** Creates a one-hot vector of selected emojis */
     private fun getCategoryVector(selectedEmojis: List<EmojiIcon>): DoubleArray {
         val categoryVector = _allEmojis.map { 0.0 }.toDoubleArray()
         for (emojiIcon in selectedEmojis) {
@@ -133,5 +84,57 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         return categoryVector
+    }
+
+
+    /** Loads emojis from a JSON file provided by the resource id.
+     * Emojis are loaded directly into a list adapter used by the
+     * broadcast category list view. */
+    private fun loadEmojis(resourceId: Int, targetResourceId: Int) {
+
+        // Load all emojis into local storage
+        _allEmojis = _allEmojis.plus(GsonBuilder().create().fromJson(
+            resources.openRawResource(resourceId).bufferedReader(),
+            Array<EmojiIcon>::class.java
+        )) as ArrayList
+
+
+        // Wrap all unicodes in EmojiIcon objects in rows of 5
+        val emojiRows = ArrayList<ArrayList<EmojiIcon>>()
+        for (i in 0 until _allEmojis.size) {
+            if (i % 5 == 0) {
+                emojiRows.add(ArrayList())
+            }
+            emojiRows.last().add(_allEmojis[i])
+        }
+
+        // Provide an item adapter to the ListView
+        findViewById<ListView>(targetResourceId).apply {
+            this.adapter = BroadcastCategoryListAdapter(this.context, emojiRows)
+        }
+    }
+
+
+    /** Returns all the emojis selected by the user.
+     * Includes emojis chosen in the grid view as well
+     * as emojis searched by the user. */
+    private fun getSelectedCategories(): List<EmojiIcon> =
+        (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
+            .getAllEmojis()
+            .filter {it.isSelected}
+            .map {it.getEmoji()}
+
+
+    /** Starts the broadcast after processing selected categories
+     * if all checks pass. */
+    private fun startBroadcast(view: View) {
+        val selectedEmojiIcons = getSelectedCategories()  // TODO: Do something with this
+        if (selectedEmojiIcons.isEmpty()) {
+            Snackbar.make(
+                view, resources.getString(R.string.no_categories_chosen), Snackbar.LENGTH_LONG).show()
+            return
+        }
+
+        startActivity(Intent(this, BroadcastActivity::class.java))
     }
 }

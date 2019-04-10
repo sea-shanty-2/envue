@@ -143,7 +143,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             setEncodeHandler(encodeHandler)
             setRtmpHandler(rtmpHandler)
             setRecordHandler(null)
-            setPreviewResolution(640, 360)
+            setPreviewResolution(1280, 720)
             setOutputResolution(1280, 720)
             setVideoHDMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)
