@@ -4,8 +4,6 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -27,6 +25,7 @@ import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
 import dk.cs.aau.envue.chat.*
 import dk.cs.aau.envue.chat.packets.MessagePacket
+import dk.cs.aau.envue.chat.packets.ReactionPacket
 import okhttp3.WebSocket
 
 
@@ -53,6 +52,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
     private var chatList: RecyclerView? = null
+    private var reactionList: RecyclerView? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
@@ -112,6 +112,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         loading = findViewById(R.id.loading)
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
+        reactionList = findViewById(R.id.reaction_view)
+
+        // Assign reaction adapter and layout manager
+        val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
+        reactionList?.apply {
+            adapter = ReactionListAdapter(listOf("❤", "\uD83D\uDC4D"))
+            layoutManager = reactionLayoutManager
+        }
 
         // Assign chat adapter and layout manager
         val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
@@ -141,6 +149,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
 
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
+    }
+
+    private fun addReaction(reaction: String) {
+        onReaction(reaction)
+        socket?.send(Gson().toJson(ReactionPacket(reaction)))
     }
 
     private fun addLocalMessage() {

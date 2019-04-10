@@ -8,7 +8,7 @@ import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.R
 import dk.cs.aau.envue.transformers.CircleTransform
 
-class ReceivedMessageHolder internal constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
+class ReceivedMessageHolder internal constructor(itemView: View): RecyclerView.ViewHolder(itemView) {
     private var messageText: TextView = itemView.findViewById(R.id.message_body)
     private var nameText: TextView = itemView.findViewById(R.id.name)
     private var avatar: ImageView = itemView.findViewById(R.id.avatarPicture)
