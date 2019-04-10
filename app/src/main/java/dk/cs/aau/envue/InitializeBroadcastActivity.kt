@@ -174,7 +174,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         val location = LocationInputType.builder().latitude(latitude).longitude(longitude).build()
         val broadcast = BroadcastInputType.builder().categories(category.toList()).location(location).build()
         val broadcastCreateMutation = BroadcastCreateMutation.builder().broadcast(broadcast).build()
-        GatewayClient.apolloClient.mutate(broadcastCreateMutation).enqueue(object: ApolloCall.Callback<BroadcastCreateMutation.Data>() {
+        GatewayClient.mutate(broadcastCreateMutation).enqueue(object: ApolloCall.Callback<BroadcastCreateMutation.Data>() {
 
             override fun onResponse(response: Response<BroadcastCreateMutation.Data>) {
                 Log.d("Test", response.data()?.broadcasts()?.create())
