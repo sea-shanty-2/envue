@@ -22,6 +22,12 @@
     <string name="chatter_avatar">Chatter avatar</string>
     <string name="placeholder_name">John Doe</string>
 
+    <!-- Interests -->
+    <string name="current_interests">Current Interests</string>
+    <string name="interests_button">Change Interests</string>
+    <string name="interests_dialog_title">Select Interests</string>
+    <string name="interests_dialog_possitive">OK</string>
+    <string name="interests_dialog_negative">Cancel</string>
 
     <!-- Initialize Broadcast activity -->
     <string name="title_activity_initialize_broadcast">InitializeBroadcastActivity</string>
@@ -31,4 +37,11 @@
     <string name="search_for_emoji_text">Search for an emoji...</string>
     <string name="illegal_char_in_search_for_emoji_field">Emojis only! 😡</string>
     <string name="no_categories_chosen">You must select at least 1 category!</string>
+    <string name="title_activity_interests">InterestsActivity</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Envue</string>
+    <string name="notification_channel_id">"Envue"</string>
+    <string name="notification_channel_description">Envue notification channel</string>
+
 </resources>
