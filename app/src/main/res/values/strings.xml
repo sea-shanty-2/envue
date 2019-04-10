@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Envue</string>
 
+    <!-- server URI -->
+    <string name="graphql_base_url">https://envue.me/api</string>
+
     <!-- related to facebook login -->
     <string name="facebook_app_id">386299921934283</string>
     <string name="fb_login_protocol_scheme">fb386299921934283</string>

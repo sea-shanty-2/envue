@@ -1,6 +1,5 @@
 package dk.cs.aau.envue
 
-import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
@@ -9,10 +8,16 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.EditText
 import android.widget.ListView
+import com.apollographql.apollo.ApolloClient
 import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
 import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
+import okhttp3.OkHttpClient
+import android.util.Log
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
 
 
 class InitializeBroadcastActivity : AppCompatActivity() {
@@ -26,16 +31,8 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             startBroadcast(view)
         }
 
-        emojiSearchField.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                emojiSearchField.hint = ""
-            } else {
-                emojiSearchField.hint = resources.getString(R.string.search_for_emoji_text)
-            }
-        }
-
         loadEmojis(R.raw.emojis, R.id.broadcastCategoryListView)
-
+        theFunThing()
     }
 
     /** Loads emojis from a JSON file provided by the resource id.
@@ -62,47 +59,8 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
     }
 
-    /** Returns all the emojis selected by the user.
-     * Includes emojis chosen in the grid view as well
-     * as emojis searched by the user. */
-    private fun getSelectedCategories(): List<String> {
-        val gridViewEmojis = (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
-            .getAllEmojis()
-            .filter {it.isSelected}
-            .map {it.getEmoji()}
-
-        val searchedEmojis = (findViewById<EditText>(R.id.emojiSearchField)).text.toString().run {
-            emojiStringToArray(this)
-        }
-        return if (searchedEmojis.isEmpty()) {
-            gridViewEmojis.map {it.char}
-        } else {
-            gridViewEmojis.map {it.char}.plus(searchedEmojis)
-        }
-    }
-
-    /** Starts the broadcast after processing selected categories
-     * if all checks pass. */
-    private fun startBroadcast(view: View) {
-        if (!isOnlyEmojis(emojiSearchField.text.toString())) {
-            Snackbar.make(
-                view, resources.getString(R.string.illegal_char_in_search_for_emoji_field), Snackbar.LENGTH_LONG).show()
-            return
-        }
-
-        val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
-        if (selectedEmojis.isEmpty()) {
-            Snackbar.make(
-                view, resources.getString(R.string.no_categories_chosen), Snackbar.LENGTH_LONG).show()
-            return
-        }
-
-        Snackbar.make(view, " and ".join(selectedEmojis), Snackbar.LENGTH_LONG).show()  // For testing
-        //startActivity(Intent(this, BroadcastActivity::class.java))
-    }
-
     /** Returns true if the string consists of only emojis or is empty, otherwise false. */
-    private fun isOnlyEmojis(str: String): Boolean {  // LMFAO REGEX
+    fun isOnlyEmojis(str: String): Boolean {  // LMFAO REGEX
         return str.matches(Regex("(?:[\uD83C\uDF00-\uD83D\uDDFF]|[\uD83E\uDD00-\uD83E\uDDFF]|" +
                 "[\uD83D\uDE00-\uD83D\uDE4F]|[\uD83D\uDE80-\uD83D\uDEFF]|" +
                 "[\u2600-\u26FF]\uFE0F?|[\u2700-\u27BF]\uFE0F?|\u24C2\uFE0F?|" +
@@ -117,7 +75,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
     }
 
     /** Separates a string of (only!) emojis into an array list of individual emojis. */
-    private fun emojiStringToArray(emojiString: String): ArrayList<String> {
+    fun emojiStringToArray(emojiString: String): ArrayList<String> {
         val arr = ArrayList<String>()
         var accumulator = ""
         for (i in 0 until emojiString.length) {
@@ -137,6 +95,33 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         return arr
     }
 
+    /** Returns all the emojis selected by the user.
+     * Includes emojis chosen in the grid view as well
+     * as emojis searched by the user. */
+    private fun getSelectedCategories(): List<String> {
+        val gridViewEmojis = (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
+            .getAllEmojis()
+            .filter {it.isSelected}
+            .map {it.getEmoji()}
+
+        return gridViewEmojis.map {it.char}
+    }
+
+    /** Starts the broadcast after processing selected categories
+     * if all checks pass. */
+    private fun startBroadcast(view: View) {
+
+        val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
+        if (selectedEmojis.isEmpty()) {
+            Snackbar.make(
+                view, resources.getString(R.string.no_categories_chosen), Snackbar.LENGTH_LONG).show()
+            return
+        }
+
+        Snackbar.make(view, " and ".join(selectedEmojis), Snackbar.LENGTH_LONG).show()  // For testing
+        //startActivity(Intent(this, BroadcastActivity::class.java))
+    }
+
     /** Returns a string of elements in the provided list joined by the origin string. */
     fun <T> String.join(other: Iterable<T>): String {
         var joined = ""
@@ -149,5 +134,29 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         return joined.removeSuffix(this)
+    }
+
+    fun theFunThing() {
+        val baseUrl = resources.getString(R.string.graphql_base_url)
+        val okHttpClient = OkHttpClient.Builder().build()
+        val apolloClient = ApolloClient.builder()
+            .serverUrl(baseUrl)
+            .okHttpClient(okHttpClient)
+            .build()
+
+        val activeQuery = AccountsQuery.builder().first(5).build()
+        val TAG = "InitializeBroadcast"
+        val testCall: ApolloCall<AccountsQuery.Data> = apolloClient.query(activeQuery)
+        var data: AccountsQuery.Data? = null
+        testCall.enqueue(object : ApolloCall.Callback<AccountsQuery.Data>() {
+            override fun onResponse(response: Response<AccountsQuery.Data>){
+                Log.d(TAG, "Did shit")
+                var d = response.data()
+                Log.d(TAG, "SUCCESS: ${d.toString()}")
+            }
+            override fun onFailure(e: ApolloException){
+                Log.d(TAG, e.message)
+            }
+        })
     }
 }
