@@ -6,7 +6,6 @@ import android.support.text.emoji.EmojiCompat
 import android.support.text.emoji.bundled.BundledEmojiCompatConfig
 import android.support.v7.app.AppCompatActivity
 import android.view.View
-import android.widget.EditText
 import android.widget.ListView
 import com.apollographql.apollo.ApolloClient
 import com.google.gson.GsonBuilder
@@ -25,16 +24,16 @@ import dk.cs.aau.envue.type.LocationInputType
 
 class InitializeBroadcastActivity : AppCompatActivity() {
 
+    var _allEmojis = ArrayList<EmojiIcon>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_initialize_broadcast)
         EmojiCompat.init(BundledEmojiCompatConfig(this))
 
         startBroadcastButton.setOnClickListener { view ->
-            // TODO: Fetch the geo-position
-
-            val category = ArrayList<Double>()
-            createBroadcaster(100.0, 20.0, category)
+            // TODO: Fetch the exact geo-position
+            createBroadcaster(100.0, 20.0, category=getCategoryVector(getSelectedCategories()))
             startBroadcast(view)
         }
 
@@ -46,18 +45,21 @@ class InitializeBroadcastActivity : AppCompatActivity() {
      * Emojis are loaded directly into a list adapter used by the
      * broadcast category list view. */
     fun loadEmojis(resourceId: Int, targetResourceId: Int) {
-        val allEmojis = GsonBuilder().create().fromJson(
+
+        // Load all emojis into local storage
+        _allEmojis.plus(GsonBuilder().create().fromJson(
             resources.openRawResource(resourceId).bufferedReader(),
             Array<EmojiIcon>::class.java
-        )
+        ))
+
 
         // Wrap all unicodes in EmojiIcon objects in rows of 5
         var emojiRows = ArrayList<ArrayList<EmojiIcon>>()
-        for (i in 0 until allEmojis.size) {
+        for (i in 0 until _allEmojis.size) {
             if (i % 5 == 0) {
                 emojiRows.add(ArrayList())
             }
-            emojiRows.last().add(allEmojis[i])
+            emojiRows.last().add(_allEmojis[i])
         }
 
         // Provide an item adapter to the ListView
@@ -105,27 +107,27 @@ class InitializeBroadcastActivity : AppCompatActivity() {
     /** Returns all the emojis selected by the user.
      * Includes emojis chosen in the grid view as well
      * as emojis searched by the user. */
-    private fun getSelectedCategories(): List<String> {
+    private fun getSelectedCategories(): List<EmojiIcon> {
         val gridViewEmojis = (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
             .getAllEmojis()
             .filter {it.isSelected}
             .map {it.getEmoji()}
 
-        return gridViewEmojis.map {it.char}
+        return gridViewEmojis
     }
 
     /** Starts the broadcast after processing selected categories
      * if all checks pass. */
     private fun startBroadcast(view: View) {
 
-        val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
-        if (selectedEmojis.isEmpty()) {
+        val selectedEmojiIcons = getSelectedCategories()  // TODO: Do something with this
+        if (selectedEmojiIcons.isEmpty()) {
             Snackbar.make(
                 view, resources.getString(R.string.no_categories_chosen), Snackbar.LENGTH_LONG).show()
             return
         }
 
-        Snackbar.make(view, " and ".join(selectedEmojis), Snackbar.LENGTH_LONG).show()  // For testing
+        Snackbar.make(view, " and ".join(selectedEmojiIcons.map { it.char }), Snackbar.LENGTH_LONG).show()  // For testing
         //startActivity(Intent(this, BroadcastActivity::class.java))
     }
 
@@ -167,10 +169,10 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         })
     }
 
-    private fun createBroadcaster(latitude: Double, longitude: Double, category: ArrayList<Double>) {
+    private fun createBroadcaster(latitude: Double, longitude: Double, category: DoubleArray) {
 
         val location = LocationInputType.builder().latitude(latitude).longitude(longitude).build()
-        val broadcast = BroadcastInputType.builder().categories(category).location(location).build()
+        val broadcast = BroadcastInputType.builder().categories(category.toList()).location(location).build()
         val broadcastCreateMutation = BroadcastCreateMutation.builder().broadcast(broadcast).build()
         GatewayClient.apolloClient.mutate(broadcastCreateMutation).enqueue(object: ApolloCall.Callback<BroadcastCreateMutation.Data>() {
 
@@ -182,5 +184,15 @@ class InitializeBroadcastActivity : AppCompatActivity() {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
         })
+    }
+
+    private fun getCategoryVector(selectedEmojis: List<EmojiIcon>): DoubleArray {
+        val categoryVector = _allEmojis.map { 0.0 }.toDoubleArray()
+        for (emojiIcon in selectedEmojis) {
+            val i = _allEmojis.indexOf(emojiIcon)
+            categoryVector[i] = 1.0
+        }
+
+        return categoryVector
     }
 }
