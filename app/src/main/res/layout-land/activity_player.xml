@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:id="@+id/parent_view"
@@ -12,10 +13,16 @@
             android:layout_height="match_parent"
             app:controller_layout_id="@layout/player_controls"
             android:layout_gravity="center">
-    </com.google.android.exoplayer2.ui.SimpleExoPlayerView>
 
-    <LinearLayout android:layout_width="match_parent"
+        <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/fragment_container">
+        </FrameLayout>
+    </com.google.android.exoplayer2.ui.SimpleExoPlayerView>
+    <LinearLayout android:layout_width="fill_parent"
                   android:layout_height="match_parent"
+                  android:gravity="end"
                   android:orientation="horizontal"
                   android:weightSum="1.0"
                   android:baselineAligned="false">
@@ -24,6 +31,7 @@
                                                 android:layout_weight=".5"
                                                 android:layout_width="0dip"
                                                 android:layout_height="wrap_content"
+
                                                 android:padding="5dp"
                                                 android:requiresFadingEdge="vertical"
                                                 android:fadingEdgeLength="50dp"

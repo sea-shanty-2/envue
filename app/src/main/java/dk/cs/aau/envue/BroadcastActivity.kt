@@ -12,10 +12,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import com.facebook.Profile
 import com.github.faucamp.simplertmp.RtmpHandler
-import dk.cs.aau.envue.chat.ChatListener
-import dk.cs.aau.envue.chat.Message
-import dk.cs.aau.envue.chat.MessageListAdapter
-import dk.cs.aau.envue.chat.MessageListener
+import dk.cs.aau.envue.chat.*
 import net.ossrs.yasea.SrsEncodeHandler
 import net.ossrs.yasea.SrsPublisher
 import okhttp3.WebSocket
@@ -35,7 +32,8 @@ import android.support.v7.app.AlertDialog
  * status bar and navigation/system bar) with user interaction.
  */
 class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEncodeHandler.SrsEncodeListener,
-    MessageListener {
+    MessageListener, ReactionListener {
+
     private var publisher: SrsPublisher? = null
     private val tag = "ENVUE-BROADCAST"
     private var chatList: RecyclerView? = null
@@ -44,12 +42,19 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var messages: ArrayList<Message> = ArrayList()
     private var rtmpHandler: RtmpHandler? = null
     private var encodeHandler: SrsEncodeHandler? = null
+    private var emojiFragment: EmojiFragment? = null
 
     override fun onMessage(message: Message) {
         runOnUiThread {
             messages.add(message)
             this.chatAdapter?.notifyDataSetChanged()
             scrollToBottom()
+        }
+    }
+
+    override fun onReaction(reaction: String) {
+        runOnUiThread {
+            emojiFragment?.begin(reaction,this@BroadcastActivity)
         }
     }
 
@@ -150,9 +155,17 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         chatAdapter = MessageListAdapter(this, messages, streamerView = true)
 
         // Initialize chat listener
-        socket = ChatListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this)
 
         chatList = findViewById(R.id.chat_view)
+
+        // Creates fragments for EmojiReactionsFragment
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        emojiFragment = EmojiFragment()
+        emojiFragment?.let {
+            fragmentTransaction.replace(R.id.fragment_container, it)
+            fragmentTransaction.commit()
+        }
 
         // Assign chat adapter and layout manager
         val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
@@ -160,17 +173,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        this.publisher?.apply {
-            stopPublish()
-            stopRecord()
-        }
-
-        this.socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
     override fun onPause() {
@@ -188,12 +190,19 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             .setTitle("Confirmation")
             .setMessage("Are you sure you want to stop the stream?")
             .setIcon(android.R.drawable.ic_dialog_alert)
-            .setPositiveButton(android.R.string.yes
+            .setPositiveButton(
+                android.R.string.yes
             ) { _, _ ->
                 finish()
-                
+
                 super.onBackPressed()
             }
             .setNegativeButton(android.R.string.no, null).show()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        this.publisher?.stopPublish()
+        this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 }
