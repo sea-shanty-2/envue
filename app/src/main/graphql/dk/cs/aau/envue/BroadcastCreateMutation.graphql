@@ -1,0 +1,5 @@
+mutation BroadcastCreateMutation($broadcast: BroadcastInputType!) {
+    broadcasts {
+        create(broadcast: $broadcast)
+    }
+}

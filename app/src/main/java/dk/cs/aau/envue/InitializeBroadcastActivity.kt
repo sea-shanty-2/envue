@@ -18,6 +18,9 @@ import android.util.Log
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
+import dk.cs.aau.envue.shared.GatewayClient
+import dk.cs.aau.envue.type.BroadcastInputType
+import dk.cs.aau.envue.type.LocationInputType
 
 
 class InitializeBroadcastActivity : AppCompatActivity() {
@@ -28,6 +31,19 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         EmojiCompat.init(BundledEmojiCompatConfig(this))
 
         startBroadcastButton.setOnClickListener { view ->
+            val location = LocationInputType.builder().latitude(100.0).longitude(20.0).build()
+            val broadcast = BroadcastInputType.builder().categories(listOf(0.2, 0.3)).location(location).build()
+
+            val broadcastCreateMutation = BroadcastCreateMutation.builder().broadcast(broadcast).build()
+            GatewayClient.apolloClient.mutate(broadcastCreateMutation).enqueue(object: ApolloCall.Callback<BroadcastCreateMutation.Data>() {
+                override fun onResponse(response: Response<BroadcastCreateMutation.Data>) {
+                    Log.d("Test", response.data()?.broadcasts()?.create())
+                }
+
+                override fun onFailure(e: ApolloException) {
+                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                }
+            })
             startBroadcast(view)
         }
 
