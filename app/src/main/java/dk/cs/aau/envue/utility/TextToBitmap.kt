@@ -7,23 +7,34 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.text.TextPaint
 import android.util.DisplayMetrics
+import java.util.concurrent.ConcurrentHashMap
+
+private val cacheMap = ConcurrentHashMap<String, Bitmap>()
 
 fun textToBitmap(text: String, dp: Int, context: Context): Bitmap {
     return textToBitmap(text, dp, context, false)
 }
 
-fun textToBitmap(text: String, dp: Int, context: Context, toScale: Boolean): Bitmap {
-    val size = if (toScale == true) calculateSize(dp, context) else dp
-    val bitmap: Bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_4444)
-    val canvas = Canvas(bitmap)
-    val paint = generateTextPaint(text, size)
-    val (xPos, yPos) = calculatePosition(canvas, paint)
+fun textToBitmap(text: String, dp: Int, context: Context, toScale: Boolean, clearCache: Boolean = false): Bitmap {
+    val existing = cacheMap[text]
 
-    canvas.drawText(text, xPos, yPos, paint)
-    canvas.density = DisplayMetrics.DENSITY_MEDIUM
-    bitmap.density = DisplayMetrics.DENSITY_MEDIUM
+    if (existing == null || clearCache) {
+        val size = if (toScale) calculateSize(dp, context) else dp
+        val bitmap: Bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_4444)
+        val canvas = Canvas(bitmap)
+        val paint = generateTextPaint(text, size)
+        val (xPos, yPos) = calculatePosition(canvas, paint)
 
-    return bitmap
+        canvas.drawText(text, xPos, yPos, paint)
+        canvas.density = DisplayMetrics.DENSITY_MEDIUM
+        bitmap.density = DisplayMetrics.DENSITY_MEDIUM
+
+        cacheMap[text] = bitmap
+
+        return bitmap
+    } else {
+        return existing
+    }
 }
 
 private fun calculatePosition(canvas: Canvas, paint: TextPaint): Pair<Float, Float> {
