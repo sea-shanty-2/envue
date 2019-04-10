@@ -31,19 +31,10 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         EmojiCompat.init(BundledEmojiCompatConfig(this))
 
         startBroadcastButton.setOnClickListener { view ->
-            val location = LocationInputType.builder().latitude(100.0).longitude(20.0).build()
-            val broadcast = BroadcastInputType.builder().categories(listOf(0.2, 0.3)).location(location).build()
+            // TODO: Fetch the geo-position
 
-            val broadcastCreateMutation = BroadcastCreateMutation.builder().broadcast(broadcast).build()
-            GatewayClient.apolloClient.mutate(broadcastCreateMutation).enqueue(object: ApolloCall.Callback<BroadcastCreateMutation.Data>() {
-                override fun onResponse(response: Response<BroadcastCreateMutation.Data>) {
-                    Log.d("Test", response.data()?.broadcasts()?.create())
-                }
-
-                override fun onFailure(e: ApolloException) {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                }
-            })
+            val category = ArrayList<Double>()
+            createBroadcaster(100.0, 20.0, category)
             startBroadcast(view)
         }
 
@@ -172,6 +163,23 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             }
             override fun onFailure(e: ApolloException){
                 Log.d(TAG, e.message)
+            }
+        })
+    }
+
+    private fun createBroadcaster(latitude: Double, longitude: Double, category: ArrayList<Double>) {
+
+        val location = LocationInputType.builder().latitude(latitude).longitude(longitude).build()
+        val broadcast = BroadcastInputType.builder().categories(category).location(location).build()
+        val broadcastCreateMutation = BroadcastCreateMutation.builder().broadcast(broadcast).build()
+        GatewayClient.apolloClient.mutate(broadcastCreateMutation).enqueue(object: ApolloCall.Callback<BroadcastCreateMutation.Data>() {
+
+            override fun onResponse(response: Response<BroadcastCreateMutation.Data>) {
+                Log.d("Test", response.data()?.broadcasts()?.create())
+            }
+
+            override fun onFailure(e: ApolloException) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
         })
     }
