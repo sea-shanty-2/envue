@@ -29,7 +29,7 @@
         <android.support.v7.widget.RecyclerView
                 android:layout_width="match_parent"
                 android:id="@+id/reaction_view"
-                android:layout_height="64dp"
+                android:layout_height="48dp"
         />
     </android.support.v7.widget.CardView>
 

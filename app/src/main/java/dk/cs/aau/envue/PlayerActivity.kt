@@ -23,9 +23,9 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import dk.cs.aau.envue.chat.*
-import dk.cs.aau.envue.chat.packets.MessagePacket
-import dk.cs.aau.envue.chat.packets.ReactionPacket
+import dk.cs.aau.envue.communication.*
+import dk.cs.aau.envue.communication.packets.MessagePacket
+import dk.cs.aau.envue.communication.packets.ReactionPacket
 import okhttp3.WebSocket
 
 
@@ -58,9 +58,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     private var playbackPosition: Long = 0
     private var loading: ProgressBar? = null
     private var chatAdapter: MessageListAdapter? = null
+    private var reactionAdapter: ReactionListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
     private var emojiFragment: EmojiFragment? = null
+    private var lastReactionAt: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +70,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
 
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Create reaction adapter
+        // TODO: Move to resources
+        reactionAdapter = ReactionListAdapter(::addReaction, listOf("👍", "👎", "❤", "\uD83D\uDD25", "\uD83D\uDE02", "\uD83C\uDD71️", "\uD83C\uDF46", "\uD83D\uDE20"))
 
         // Create chat adapter
         chatAdapter = MessageListAdapter(this, messages)
@@ -117,7 +123,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         // Assign reaction adapter and layout manager
         val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
         reactionList?.apply {
-            adapter = ReactionListAdapter(listOf("❤", "\uD83D\uDC4D"))
+            adapter = reactionAdapter
             layoutManager = reactionLayoutManager
         }
 
@@ -152,8 +158,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     }
 
     private fun addReaction(reaction: String) {
-        onReaction(reaction)
-        socket?.send(Gson().toJson(ReactionPacket(reaction)))
+        val timeSinceReaction = System.currentTimeMillis() - lastReactionAt
+
+        if (timeSinceReaction >= 250) {
+            onReaction(reaction)
+            socket?.send(Gson().toJson(ReactionPacket(reaction)))
+            lastReactionAt = System.currentTimeMillis()
+        }
     }
 
     private fun addLocalMessage() {
