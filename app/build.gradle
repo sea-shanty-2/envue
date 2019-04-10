@@ -42,6 +42,12 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
+    // all com.android.support libraries must use the same version specification
+    // (mixing versions can lead to runtime crashes)
+    // inspect .idea/libraries for com.android.support libraries with invariant versions and add them here
+    implementation 'com.android.support:customtabs:28.0.0'
+    implementation 'com.android.support:exifinterface:28.0.0'
+
     // facebook apps
     implementation 'com.facebook.android:facebook-login:4.41.0'
     // end facebook apps
@@ -51,7 +57,7 @@ dependencies {
     // end picasso
 
     // coroutines
-    def work_version = "1.0.0"
+    def work_version = "1.0.1"
     implementation "android.arch.work:work-runtime:$work_version"
     androidTestImplementation "android.arch.work:work-testing:$work_version"
     // end coroutines
