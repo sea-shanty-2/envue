@@ -5,15 +5,22 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
+import dk.cs.aau.envue.shared.GatewayClient
+import dk.cs.aau.envue.type.BroadcastInputType
+import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.workers.RefreshTokenWorker
 import kotlinx.android.synthetic.main.activity_login.*
 import java.util.concurrent.TimeUnit
@@ -49,6 +56,7 @@ class LoginActivity : AppCompatActivity() {
         val periodicWorkRequest = PeriodicWorkRequest
             .Builder(RefreshTokenWorker::class.java, 1, TimeUnit.HOURS)
             .build()
+
 
         // start periodic token refresh worker
         WorkManager

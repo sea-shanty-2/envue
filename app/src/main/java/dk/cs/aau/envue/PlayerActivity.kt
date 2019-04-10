@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentActivity
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -23,15 +25,12 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import dk.cs.aau.envue.chat.ChatListener
-import dk.cs.aau.envue.chat.Message
-import dk.cs.aau.envue.chat.MessageListAdapter
-import dk.cs.aau.envue.chat.MessageListener
+import dk.cs.aau.envue.chat.*
 import dk.cs.aau.envue.chat.packets.MessagePacket
 import okhttp3.WebSocket
 
 
-class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
+class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, ReactionListener {
     override fun onMessage(message: Message) {
         runOnUiThread {
             addMessage(message)
@@ -40,8 +39,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         }
     }
 
+    override fun onReaction(reaction: String) {
+        runOnUiThread {
+            emojiFragment?.begin(reaction,this@PlayerActivity)
+        }
+    }
+
     private fun scrollToBottom() {
-        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it )}
+        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
     private var playerView: SimpleExoPlayerView? = null
@@ -55,6 +60,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
+    private var emojiFragment: EmojiFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,20 +73,24 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         chatAdapter = MessageListAdapter(this, messages)
 
         // Initialize chat listener
-        socket = ChatListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this)
 
         // Initialize player
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
-        player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
-            DefaultTrackSelector(adaptiveTrackSelection))
+        player = ExoPlayerFactory.newSimpleInstance(
+            DefaultRenderersFactory(this),
+            DefaultTrackSelector(adaptiveTrackSelection)
+        )
 
         val defaultBandwidthMeter = DefaultBandwidthMeter()
         // Produces DataSource instances through which media data is loaded.
-        val dataSourceFactory = DefaultDataSourceFactory(this,
-            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter)
+        val dataSourceFactory = DefaultDataSourceFactory(
+            this,
+            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
+        )
 
         // Create media source
-        val hlsUrl = "http://envue.me/live/ThomasAndersen.m3u8"
+        val hlsUrl = "https://envue.me/live/ThomasAndersen.m3u8"
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
@@ -98,7 +108,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
 
     private fun bindContentView() {
         setContentView(R.layout.activity_player)
-
         playerView = findViewById(R.id.video_view)
         loading = findViewById(R.id.loading)
         editMessageView = findViewById(R.id.editText)
@@ -114,6 +123,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
             addLocalMessage()
+        }
+
+        // Creates fragments for EmojiReactionsFragment
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        emojiFragment = EmojiFragment()
+        emojiFragment?.let {
+            fragmentTransaction.replace(R.id.fragment_container, it)
+            fragmentTransaction.commit()
         }
 
         // Assign player view
@@ -148,7 +165,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener {
     override fun onStop() {
         super.onStop()
         releasePlayer()
-        socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+        socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
     private fun releasePlayer() {

@@ -1,0 +1,5 @@
+query GatewayAuthenticationQuery($token: ID!) {
+  authenticate {
+    facebook(token: $token)
+  }
+}
