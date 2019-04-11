@@ -4,10 +4,9 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import com.apollographql.apollo.ApolloCall
-import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.mapbox.geojson.GeoJson
+import com.mapbox.geojson.*
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.annotations.IconFactory
 import com.mapbox.mapboxsdk.annotations.Marker
@@ -19,23 +18,38 @@ import com.mapbox.mapboxsdk.style.layers.CircleLayer
 import com.mapbox.mapboxsdk.style.expressions.Expression.*
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.textToBitmap
-import okhttp3.OkHttpClient
-import java.net.MalformedURLException
-import java.net.URL
+import android.os.AsyncTask
+
+
 
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
-    private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
-    private val EARTHQUAKE_SOURCE_ID = "earthquakes"
-    private val HEATMAP_LAYER_ID = "earthquakes-heat"
-    private val HEATMAP_LAYER_SOURCE = "earthquakes"
+    // private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
+    private val STREAM_SOURCE_ID = "stream"
+    private val HEATMAP_LAYER_ID = "stream-heat"
+    private val HEATMAP_LAYER_SOURCE = "streams"
     private val CIRCLE_LAYER_ID = "earthquakes-circle"
     private val TAG = "MapActivity"
+    private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID)
+
+    private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
+        override fun doInBackground(vararg params: Style): Void {
+            while (true) {
+                this@MapActivity.runOnUiThread {
+                        updateStreamSource(params[0])
+                }
+                Thread.sleep(   300000)
+            }
+        }
+    }
 
     override fun onStyleLoaded(style: Style) {
-        addEarthquakeSource(style)
+        mMap?.style?.addSource(geoJsonSource)
         addHeatmapLayer(style)
+
+        StreamUpdateTask().execute(style)
     }
 
     private var mMap: MapboxMap? = null
@@ -82,39 +96,37 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
     }
 
     fun setHeatmap(list : List<ActiveBroadcastLocationQuery.Item>?){
-        var a = list?.last()?.location() as GeoJson
+        val streamCoordinates = ArrayList<Point>()
 
-        Log.d(TAG, "Got locations")
+        list?.forEach {
+            val location = it.location()
+            if (location != null) streamCoordinates.add(Point.fromLngLat(location.longitude(), location.latitude()))
+        }
+
+        // Do not update, probably fetch error.
+        if (streamCoordinates.isEmpty()) return
+
+        val lineString = LineString.fromLngLats(streamCoordinates)
+        val featureCollection = FeatureCollection.fromFeatures(arrayOf(Feature.fromGeometry(lineString)))
+
+        geoJsonSource.setGeoJson(featureCollection)
     }
 
-    private fun addEarthquakeSource(loadedMapStyle: Style) {
-       // TODO: Remove. Is temporary data for debugging.
-        val BASE_URL = "http://172.25.11.190/"
+    private fun updateStreamSource(loadedMapStyle: Style) {
 
-        val okHttpClient = OkHttpClient.Builder().build()
+       val activeQuery: ActiveBroadcastLocationQuery = ActiveBroadcastLocationQuery.builder().build()
 
-        val apolloClient = ApolloClient.builder()
-            .serverUrl(BASE_URL)
-            .okHttpClient(okHttpClient)
-            .build()
-
-        val activeQuery: ActiveBroadcastLocationQuery = ActiveBroadcastLocationQuery.builder().build()
-
-        val testCall: ApolloCall<ActiveBroadcastLocationQuery.Data> = apolloClient.query(activeQuery)
-        var data: ActiveBroadcastLocationQuery.Data? = null
+        val testCall = GatewayClient.apolloClient.query(activeQuery)
 
         testCall.enqueue(object : ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
             override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>){
                 Log.d(TAG, "Did shit")
 
-                var d = response.data()
-                var b = d?.broadcasts()
-                var a = b?.active()
-                var i = a?.items()
+                var d = response.data()?.broadcasts()?.active()?.items()
 
                 this@MapActivity.runOnUiThread(object : Runnable {
                     override fun run() {
-                        setHeatmap(null)
+                        setHeatmap(d)
                     }
                 })
 
@@ -125,20 +137,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
             }
         })
 
-        //var dat = testCall.execute()
-
-
-        try {
-            var tmp = GeoJsonSource(EARTHQUAKE_SOURCE_ID, URL(EARTHQUAKE_SOURCE_URL))
-            loadedMapStyle.addSource(tmp)
-        } catch (malformedUrlException: MalformedURLException) {
-            print("My heart")
-        }
-
     }
 
     private fun addHeatmapLayer(loadedMapStyle: Style) {
-        val layer = HeatmapLayer(HEATMAP_LAYER_ID, EARTHQUAKE_SOURCE_ID)
+        val layer = HeatmapLayer(HEATMAP_LAYER_ID, STREAM_SOURCE_ID)
         layer.maxZoom = 19f
         layer.setSourceLayer(HEATMAP_LAYER_SOURCE)
         layer.setProperties(
@@ -200,7 +202,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
     }
 
     private fun addCircleLayer(loadedMapStyle: Style) {
-        val circleLayer = CircleLayer(CIRCLE_LAYER_ID, EARTHQUAKE_SOURCE_ID)
+        val circleLayer = CircleLayer(CIRCLE_LAYER_ID, STREAM_SOURCE_ID)
         circleLayer.setProperties(
 
             // Size circle radius by earthquake magnitude and zoom level
