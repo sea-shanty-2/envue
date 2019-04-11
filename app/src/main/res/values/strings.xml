@@ -43,6 +43,8 @@
     <string name="illegal_char_in_search_for_emoji_field">Emojis only! 😡</string>
     <string name="no_categories_chosen">You must select at least 1 category!</string>
     <string name="title_activity_interests">InterestsActivity</string>
+    <string name="did_not_receive_location">We could not get your last position. Is your location turned on?</string>
+    <string name="location_permission_not_granted">We need your permission to get your location before you can start a broadcast.</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">Envue</string>
