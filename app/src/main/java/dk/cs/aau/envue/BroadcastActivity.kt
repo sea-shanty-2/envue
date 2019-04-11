@@ -1,7 +1,12 @@
 package dk.cs.aau.envue
 
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.SurfaceTexture
+import android.hardware.Camera
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.params.StreamConfigurationMap
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -20,11 +25,9 @@ import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.net.SocketException
-import android.content.DialogInterface
 import android.support.v7.app.AlertDialog
-
-
-
+import kotlinx.android.synthetic.main.activity_broadcast.*
+import java.util.*
 
 
 /**
@@ -135,6 +138,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         // Get profile
         val profile = Profile.getCurrentProfile()
 
+        // Get supported resolutions
+        val previewSize = Camera.open().parameters.previewSize
+        val outputSize = previewSize  // TODO: This is not optimal, but works fine.
+
         // Initialize publisher
         this.publisher = SrsPublisher(this.findViewById(R.id.camera_view))
         rtmpHandler = RtmpHandler(this)
@@ -143,8 +150,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             setEncodeHandler(encodeHandler)
             setRtmpHandler(rtmpHandler)
             setRecordHandler(null)
-            setPreviewResolution(1280, 720)
-            setOutputResolution(1280, 720)
+            setPreviewResolution(previewSize.width, previewSize.height)
+            setOutputResolution(outputSize.width, outputSize.height)
             setVideoHDMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)
             startPublish("rtmp://envue.me:1935/stream/${profile.firstName}${profile.lastName}")
