@@ -71,8 +71,11 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_broadcast -> {
-            if (ensurePermissionsGranted(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))) {
-                startActivity(Intent(this, BroadcastActivity::class.java))
+            if (ensurePermissionsGranted(arrayOf(
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.RECORD_AUDIO,
+                    Manifest.permission.ACCESS_FINE_LOCATION))) {
+                startActivity(Intent(this, InitializeBroadcastActivity::class.java))
             }
 
             true

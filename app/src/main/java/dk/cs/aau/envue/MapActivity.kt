@@ -116,7 +116,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
 
        val activeQuery: ActiveBroadcastLocationQuery = ActiveBroadcastLocationQuery.builder().build()
 
-        val testCall = GatewayClient.apolloClient.query(activeQuery)
+        val testCall = GatewayClient.query(activeQuery)
 
         testCall.enqueue(object : ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
             override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>){
