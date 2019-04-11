@@ -35,7 +35,7 @@ class GatewayClient {
         }
 
         val apolloClient = ApolloClient.builder()
-            .serverUrl("https://envue.me/api")
+            .serverUrl("http://172.25.11.190/")
             .okHttpClient(okHttpClient)
             .build()!!
 
