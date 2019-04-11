@@ -59,6 +59,10 @@ class InitializeBroadcastActivity : AppCompatActivity() {
                     addOnFailureListener {
                         Snackbar.make(view, R.string.did_not_receive_location, Snackbar.LENGTH_LONG)
                     }
+
+                    addOnCanceledListener {
+                        Snackbar.make(view, R.string.did_not_receive_location, Snackbar.LENGTH_LONG)
+                    }
                 }
             } else {
                 // The location permission has not been granted by the user
@@ -68,7 +72,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         // Load emojis into the grid view
-        loadEmojis(R.raw.emojis, R.id.broadcastCategoryListView)
+        loadEmojis(R.raw.limited_emojis, R.id.broadcastCategoryListView)
 
         // So we can access the geo location
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
