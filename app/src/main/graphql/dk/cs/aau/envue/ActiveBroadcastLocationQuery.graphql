@@ -1,0 +1,12 @@
+query ActiveBroadcastLocationQuery {
+  broadcasts {
+    active{
+      items{
+        location {
+          latitude
+          longitude
+        }
+      }
+    }
+  }
+}

@@ -24,6 +24,7 @@
     <string name="placeholder">Placeholder</string>
     <string name="chatter_avatar">Chatter avatar</string>
     <string name="placeholder_name">John Doe</string>
+    <string name="map">Map</string>
 
     <!-- Interests -->
     <string name="current_interests">Current Interests</string>

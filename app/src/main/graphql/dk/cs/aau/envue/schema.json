@@ -474,6 +474,59 @@
         "description": null,
         "fields": [
           {
+            "name": "active",
+            "description": "Gets pages of active broadcasts.",
+            "args": [
+              {
+                "name": "after",
+                "description": "Only look at connected edges with cursors greater than the value of `after`.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null"
+              },
+              {
+                "name": "first",
+                "description": "Specifies the number of edges to return starting from `after` or the first entry if `after` is not specified.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": "null"
+              },
+              {
+                "name": "before",
+                "description": "Only look at connected edges with cursors smaller than the value of `before`.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null"
+              },
+              {
+                "name": "last",
+                "description": "Specifies the number of edges to return counting reversely from `before`, or the last entry if `before` is not specified.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": "null"
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "BroadcastConnection",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "page",
             "description": "Gets pages of broadcasts.",
             "args": [
@@ -675,6 +728,18 @@
         "description": null,
         "fields": [
           {
+            "name": "activity",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTime",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": null,
             "args": [],
@@ -705,6 +770,16 @@
         ],
         "inputFields": null,
         "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "SCALAR",
+        "name": "DateTime",
+        "description": "The `DateTime` scalar type represents a date and time. `DateTime` expects timestamps to be formatted in accordance with the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) standard.",
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
         "enumValues": null,
         "possibleTypes": null
       },
@@ -2006,16 +2081,6 @@
         "kind": "SCALAR",
         "name": "Date",
         "description": "The `Date` scalar type represents a year, month and day in accordance with the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) standard.",
-        "fields": null,
-        "inputFields": null,
-        "interfaces": null,
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "SCALAR",
-        "name": "DateTime",
-        "description": "The `DateTime` scalar type represents a date and time. `DateTime` expects timestamps to be formatted in accordance with the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) standard.",
         "fields": null,
         "inputFields": null,
         "interfaces": null,

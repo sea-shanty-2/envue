@@ -7,16 +7,12 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
-import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Base64
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.api.Response
-import com.apollographql.apollo.exception.ApolloException
 import com.facebook.AccessToken
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
@@ -45,45 +41,20 @@ class MainActivity : AppCompatActivity() {
         } catch (e: NoSuchAlgorithmException) {
 
         }
+/*
+        val BASE_URL = "envue.me/api"
+
+        val okHttpClient = OkHttpClient.Builder().build()
+
+        val apolloClient = ApolloClient.builder()
+            .serverUrl(BASE_URL)
+            .okHttpClient(okHttpClient)
+            .build()*/
+
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
-
-        /*
-        ///
-        /// Working API example
-        ///
-
-        val okHttpClient = OkHttpClient.Builder().build()
-        val apolloCient = ApolloClient.builder().serverUrl(BASE_URL).okHttpClient(okHttpClient).build()
-
-        val accountsQuery = AccountsQuery.Builder().first(5).build()
-        apolloCient.query(accountsQuery).enqueue(object: ApolloCall.Callback<AccountsQuery.Data>() {
-
-            override fun onResponse(response: Response<AccountsQuery.Data>) {
-               runOnUiThread {
-
-                   response.data()
-                       ?.accounts()
-                       ?.page()
-                       ?.items()
-                       ?.forEach {
-                           AlertDialog.Builder(this@MainActivity)
-                               .setMessage(it.fullName())
-                               .create()
-                               .show()
-                       }
-
-
-               }
-            }
-
-            override fun onFailure(e: ApolloException) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-        })*/
 
     }
 
@@ -111,6 +82,11 @@ class MainActivity : AppCompatActivity() {
         }
         R.id.action_player -> {
             startActivity(Intent(this, PlayerActivity::class.java))
+
+            true
+        }
+        R.id.action_map -> {
+            startActivity(Intent(this, MapActivity::class.java))
 
             true
         }
