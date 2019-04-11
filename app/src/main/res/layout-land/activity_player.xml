@@ -20,7 +20,8 @@
             android:layout_height="72dp"
             android:layout_gravity="bottom"
             android:layout_marginBottom="0dp"
-            android:paddingBottom="0dp">
+            android:paddingBottom="0dp"
+            android:elevation="0dp">
 
             <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
@@ -29,6 +30,7 @@
                 android:layout_margin="5dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
+                android:elevation="0dp"
                 app:cardCornerRadius="4dp"
                 card_view:cardBackgroundColor="@android:color/transparent"
                 card_view:contentPadding="5dp"
@@ -41,7 +43,8 @@
                     android:id="@+id/reaction_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:alpha="0.5" />
+                    android:alpha="0.5"
+                    android:elevation="0dp" />
 
             </android.support.v7.widget.CardView>
         </android.support.constraint.ConstraintLayout>
