@@ -29,10 +29,7 @@ import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
 class ProfileActivity : AppCompatActivity() {
     companion object {
         internal val SET_INTERESTS_REQUEST = 0
-        internal val INTERESTS_RESPONSE_KEY = "interests"
-        internal val CURRENT_INTERESTS_KEY = "current interests"
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,8 +58,6 @@ class ProfileActivity : AppCompatActivity() {
         profileNameView.text = profileName
     }
 
-
-
     private fun onLogOut() {
         val profile = Profile.getCurrentProfile()
 
@@ -78,7 +73,10 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun onChangeInterests() {
-        startActivityForResult(Intent(this, InterestsActivity::class.java).putExtra(CURRENT_INTERESTS_KEY, currentInterestsView.text), SET_INTERESTS_REQUEST)
+        val curint: CharSequence = currentInterestsView.text
+        val intent = Intent(this, InterestsActivity::class.java)
+        intent.putExtra(resources.getString(R.string.current_interests_key), curint)
+        startActivityForResult(intent, SET_INTERESTS_REQUEST)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -86,7 +84,7 @@ class ProfileActivity : AppCompatActivity() {
         when (requestCode) {
             SET_INTERESTS_REQUEST ->
                 if (resultCode == Activity.RESULT_OK) {
-                    currentInterestsView.text = data?.getStringExtra(INTERESTS_RESPONSE_KEY)
+                    currentInterestsView.text = data?.getStringExtra(resources.getString(R.string.interests_response_key))
                 }
         }
     }

@@ -1,10 +1,14 @@
 package dk.cs.aau.envue
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
 import android.support.text.emoji.bundled.BundledEmojiCompatConfig
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ListView
@@ -16,6 +20,8 @@ import android.util.Log
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.type.BroadcastInputType
 import dk.cs.aau.envue.type.LocationInputType
@@ -24,19 +30,48 @@ import dk.cs.aau.envue.type.LocationInputType
 class InitializeBroadcastActivity : AppCompatActivity() {
 
     private var _allEmojis = ArrayList<EmojiIcon>()
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_initialize_broadcast)
         EmojiCompat.init(BundledEmojiCompatConfig(this))
 
+        // Create a broadcaster and start the stream when "GO" is pressed
         startBroadcastButton.setOnClickListener { view ->
-            // TODO: Fetch the exact geo-position
-            createBroadcaster(100.0, 20.0, category=getCategoryVector(getSelectedCategories()))
-            startBroadcast(view)
+            // Check if we have the required permission
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                // When we receive the last known position, create the broadcast and start the stream
+                fusedLocationClient.lastLocation.apply {
+                    addOnSuccessListener { location : Location? ->
+                        if (location != null) {
+                            createBroadcaster(location.latitude, location.longitude, category=getCategoryVector(getSelectedCategories()))
+                            startBroadcast(view)
+                        } else {
+                            // We were not able to get the location
+                            Snackbar.make(view, R.string.did_not_receive_location, Snackbar.LENGTH_LONG)
+                        }
+                    }
+
+                    addOnFailureListener {
+                        Snackbar.make(view, R.string.did_not_receive_location, Snackbar.LENGTH_LONG)
+                    }
+                }
+            } else {
+                // The location permission has not been granted by the user
+                Snackbar.make(view, R.string.location_permission_not_granted, Snackbar.LENGTH_LONG)
+            }
+
         }
 
+        // Load emojis into the grid view
         loadEmojis(R.raw.emojis, R.id.broadcastCategoryListView)
+
+        // So we can access the geo location
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
     }
 
 
