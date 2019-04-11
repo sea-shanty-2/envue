@@ -1,0 +1,275 @@
+[
+  {
+    "no":908,
+    "codes":"1F3C0",
+    "char":"\ud83c\udfc0",
+    "name":"basketball",
+    "keywords":"ball | basketball | hoop"
+  },
+  {
+    "no":910,
+    "codes":"1F3C8",
+    "char":"\ud83c\udfc8",
+    "name":"american football",
+    "keywords":"american | ball | football"
+  },
+  {
+    "no":912,
+    "codes":"1F3BE",
+    "char":"\ud83c\udfbe",
+    "name":"tennis",
+    "keywords":"ball | racquet | tennis"
+  },
+  {
+    "no":935,
+    "codes":"1F3AE",
+    "char":"\ud83c\udfae",
+    "name":"video game",
+    "keywords":"controller | game | video game"
+  },
+  {
+    "no":938,
+    "codes":"1F3B2",
+    "char":"\ud83c\udfb2",
+    "name":"game die",
+    "keywords":"dice | die | game"
+  },
+  {
+    "no":941,
+    "codes":"2660",
+    "char":"\u2660",
+    "name":"spade suit",
+    "keywords":"card | game | spade suit"
+  },
+  {
+    "no":949,
+    "codes":"1F3AD",
+    "char":"\ud83c\udfad",
+    "name":"performing arts",
+    "keywords":"art | mask | performing | performing arts | theater | theatre"
+  },
+  {
+    "no":951,
+    "codes":"1F3A8",
+    "char":"\ud83c\udfa8",
+    "name":"artist palette",
+    "keywords":"art | artist palette | museum | painting | palette"
+  },
+  {
+    "no":984,
+    "codes":"1F393",
+    "char":"\ud83c\udf93",
+    "name":"graduation cap",
+    "keywords":"cap | celebration | clothing | graduation | hat"
+  },
+  {
+    "no":1000,
+    "codes":"1F3BC",
+    "char":"\ud83c\udfbc",
+    "name":"musical score",
+    "keywords":"music | musical score | score"
+  },
+  {
+    "no":1006,
+    "codes":"1F3A4",
+    "char":"\ud83c\udfa4",
+    "name":"microphone",
+    "keywords":"karaoke | mic | microphone"
+  },
+  {
+    "no":1010,
+    "codes":"1F3B8",
+    "char":"\ud83c\udfb8",
+    "name":"guitar",
+    "keywords":"guitar | instrument | music"
+  },
+  {
+    "no":1013,
+    "codes":"1F3BB",
+    "char":"\ud83c\udfbb",
+    "name":"violin",
+    "keywords":"instrument | music | violin"
+  },
+  {
+    "no":1034,
+    "codes":"1F3A5",
+    "char":"\ud83c\udfa5",
+    "name":"movie camera",
+    "keywords":"camera | cinema | movie"
+  },
+  {
+    "no":1132,
+    "codes":"1F52B",
+    "char":"\ud83d\udd2b",
+    "name":"pistol",
+    "keywords":"gun | handgun | pistol | revolver | tool | weapon"
+  },
+  {
+    "no":1145,
+    "codes":"1F9EA",
+    "char":"\ud83e\uddea",
+    "name":"test tube",
+    "keywords":"chemist | chemistry | experiment | lab | science | test tube"
+  },
+  {
+    "no":1149,
+    "codes":"1F52D",
+    "char":"\ud83d\udd2d",
+    "name":"telescope",
+    "keywords":"science | telescope | tool"
+  },
+  {
+    "no":1377,
+    "codes":"1F3C1",
+    "char":"\ud83c\udfc1",
+    "name":"chequered flag",
+    "keywords":"checkered | chequered | chequered flag | racing"
+  },
+  {
+    "no":1382,
+    "codes":"1F3F3 FE0F 200D 1F308",
+    "char":"\ud83c\udff3\ufe0f\u200d\ud83c\udf08",
+    "name":"rainbow flag",
+    "keywords":"rainbow | rainbow flag"
+  },
+  {
+    "no":296,
+    "codes":"1F385",
+    "char":"\ud83c\udf85",
+    "name":"Santa Claus",
+    "keywords":"celebration | Christmas | claus | father | santa | Santa Claus"
+  },
+  {
+    "no":337,
+    "codes":"1F483",
+    "char":"\ud83d\udc83",
+    "name":"woman dancing",
+    "keywords":"dancing | woman"
+  },
+  {
+    "no":446,
+    "codes":"1F415",
+    "char":"\ud83d\udc15",
+    "name":"dog",
+    "keywords":"dog | pet"
+  },
+  {
+    "no":452,
+    "codes":"1F408",
+    "char":"\ud83d\udc08",
+    "name":"cat",
+    "keywords":"cat | pet"
+  },
+  {
+    "no":484,
+    "codes":"1F430",
+    "char":"\ud83d\udc30",
+    "name":"rabbit face",
+    "keywords":"bunny | face | pet | rabbit"
+  },
+  {
+    "no":551,
+    "codes":"1F332",
+    "char":"\ud83c\udf32",
+    "name":"evergreen tree",
+    "keywords":"evergreen tree | tree"
+  },
+  {
+    "no":580,
+    "codes":"1F346",
+    "char":"\ud83c\udf46",
+    "name":"eggplant",
+    "keywords":"aubergine | eggplant | vegetable"
+  },
+  {
+    "no":602,
+    "codes":"1F354",
+    "char":"\ud83c\udf54",
+    "name":"hamburger",
+    "keywords":"burger | hamburger"
+  },
+  {
+    "no":664,
+    "codes":"1F37B",
+    "char":"\ud83c\udf7b",
+    "name":"clinking beer mugs",
+    "keywords":"bar | beer | clink | clinking beer mugs | drink | mug"
+  },
+  {
+    "no":690,
+    "codes":"1F3DF",
+    "char":"\ud83c\udfdf",
+    "name":"stadium",
+    "keywords":"stadium"
+  },
+  {
+    "no":727,
+    "codes":"1F307",
+    "char":"\ud83c\udf07",
+    "name":"sunset",
+    "keywords":"dusk | sun | sunset"
+  },
+  {
+    "no":733,
+    "codes":"1F3A2",
+    "char":"\ud83c\udfa2",
+    "name":"roller coaster",
+    "keywords":"amusement park | coaster | roller"
+  },
+  {
+    "no":753,
+    "codes":"1F692",
+    "char":"\ud83d\ude92",
+    "name":"fire engine",
+    "keywords":"engine | fire | truck"
+  },
+  {
+    "no":754,
+    "codes":"1F693",
+    "char":"\ud83d\ude93",
+    "name":"police car",
+    "keywords":"car | patrol | police"
+  },
+  {
+    "no":875,
+    "codes":"1F525",
+    "char":"\ud83d\udd25",
+    "name":"fire",
+    "keywords":"fire | flame | tool"
+  },
+  {
+    "no":880,
+    "codes":"1F386",
+    "char":"\ud83c\udf86",
+    "name":"fireworks",
+    "keywords":"celebration | fireworks"
+  },
+  {
+    "no":885,
+    "codes":"1F389",
+    "char":"\ud83c\udf89",
+    "name":"party popper",
+    "keywords":"celebration | party | popper | tada"
+  },
+  {
+    "no":898,
+    "codes":"1F3AB",
+    "char":"\ud83c\udfab",
+    "name":"ticket",
+    "keywords":"admission | ticket"
+  },
+  {
+    "no":900,
+    "codes":"1F3C6",
+    "char":"\ud83c\udfc6",
+    "name":"trophy",
+    "keywords":"prize | trophy"
+  },
+  {
+    "no":905,
+    "codes":"26BD",
+    "char":"\u26bd",
+    "name":"soccer ball",
+    "keywords":"ball | football | soccer"
+  }
+]

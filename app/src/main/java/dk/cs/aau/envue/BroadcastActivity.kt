@@ -1,7 +1,12 @@
 package dk.cs.aau.envue
 
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.SurfaceTexture
+import android.hardware.Camera
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.params.StreamConfigurationMap
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -20,7 +25,9 @@ import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.net.SocketException
-
+import android.support.v7.app.AlertDialog
+import kotlinx.android.synthetic.main.activity_broadcast.*
+import java.util.*
 
 
 /**
@@ -36,6 +43,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
+    private var rtmpHandler: RtmpHandler? = null
+    private var encodeHandler: SrsEncodeHandler? = null
     private var emojiFragment: EmojiFragment? = null
 
     override fun onMessage(message: Message) {
@@ -129,16 +138,20 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         // Get profile
         val profile = Profile.getCurrentProfile()
 
+        // Get supported resolutions
+        val previewSize = Camera.open().parameters.previewSize
+        val outputSize = previewSize  // TODO: This is not optimal, but works fine.
+
         // Initialize publisher
         this.publisher = SrsPublisher(this.findViewById(R.id.camera_view))
-        val rtmpHandler = RtmpHandler(this)
-        val srsEncodeHandler = SrsEncodeHandler(this)
+        rtmpHandler = RtmpHandler(this)
+        encodeHandler = SrsEncodeHandler(this)
         this.publisher?.apply {
-            setEncodeHandler(srsEncodeHandler)
+            setEncodeHandler(encodeHandler)
             setRtmpHandler(rtmpHandler)
             setRecordHandler(null)
-            setPreviewResolution(1280, 720)
-            setOutputResolution(1280, 720)
+            setPreviewResolution(previewSize.width, previewSize.height)
+            setOutputResolution(outputSize.width, outputSize.height)
             setVideoHDMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)
             startPublish("rtmp://envue.me:1935/stream/${profile.firstName}${profile.lastName}")
@@ -167,21 +180,31 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
-
-        messages.add(Message("this is a test to see how well the chat works", "test"))
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        // TODO: Implement orientation change
-    }
-
-    override fun onResume() {
-        super.onResume()
     }
 
     override fun onPause() {
         super.onPause()
+        this.publisher?.pauseRecord()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        this.publisher?.resumeRecord()
+    }
+
+    override fun onBackPressed() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmation")
+            .setMessage("Are you sure you want to stop the stream?")
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(
+                android.R.string.yes
+            ) { _, _ ->
+                finish()
+
+                super.onBackPressed()
+            }
+            .setNegativeButton(android.R.string.no, null).show()
     }
 
     override fun onDestroy() {

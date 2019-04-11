@@ -1,6 +1,11 @@
 package dk.cs.aau.envue.shared
 
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.ApolloMutationCall
+import com.apollographql.apollo.ApolloQueryCall
+import com.apollographql.apollo.api.Mutation
+import com.apollographql.apollo.api.Operation
+import com.apollographql.apollo.api.Query
 import okhttp3.Authenticator
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -13,6 +18,10 @@ class GatewayClient {
 
     companion object {
         private var okHttpClient = OkHttpClient.Builder().build()
+        private val apolloClient = ApolloClient.builder()
+            .serverUrl("https://envue.me/api")
+            .okHttpClient(okHttpClient)
+            .build()!!
 
         fun setAuthenticator(token: String) {
 
@@ -25,19 +34,12 @@ class GatewayClient {
             okHttpClient = okHttpClient.newBuilder().authenticator(authenticator).build()
         }
 
-        fun addHeader(name: String, value: String) {
-
-            val interceptor = Interceptor { chain ->
-                chain.proceed(chain.request().newBuilder().addHeader(name, value).build())
-            }
-
-            okHttpClient = okHttpClient.newBuilder().addInterceptor(interceptor).build()
+        fun <D: Operation.Data, T: Any, V: Operation.Variables>query(query: Query<D, T, V>): ApolloQueryCall<T> {
+            return apolloClient.query(query)
         }
 
-        val apolloClient = ApolloClient.builder()
-            .serverUrl("https://envue.me/api")
-            .okHttpClient(okHttpClient)
-            .build()!!
-
+        fun <D: Operation.Data, T: Any, V: Operation.Variables>mutate(mutation: Mutation<D, T, V>): ApolloMutationCall<T> {
+            return apolloClient.mutate(mutation)
+        }
     }
 }
