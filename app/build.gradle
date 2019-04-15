@@ -29,9 +29,14 @@ android {
     }
 }
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:7.2.0'
     //noinspection GradleCompatible
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
@@ -42,6 +47,12 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
+    // all com.android.support libraries must use the same version specification
+    // (mixing versions can lead to runtime crashes)
+    // inspect .idea/libraries for com.android.support libraries with invariant versions and add them here
+    implementation 'com.android.support:customtabs:28.0.0'
+    implementation 'com.android.support:exifinterface:28.0.0'
+
     // facebook apps
     implementation 'com.facebook.android:facebook-login:4.41.0'
     // end facebook apps
@@ -51,7 +62,7 @@ dependencies {
     // end picasso
 
     // coroutines
-    def work_version = "1.0.0"
+    def work_version = "1.0.1"
     implementation "android.arch.work:work-runtime:$work_version"
     androidTestImplementation "android.arch.work:work-testing:$work_version"
     // end coroutines
@@ -61,8 +72,8 @@ dependencies {
     // end yasea
 
     // graphql
-    implementation 'com.apollographql.apollo:apollo-runtime:0.3.2'
-    implementation "com.apollographql.apollo:apollo-android-support:0.3.2"
+    implementation 'com.apollographql.apollo:apollo-runtime:0.3.1'
+    implementation "com.apollographql.apollo:apollo-android-support:0.3.1"
     // end graphql
 
     // exoplayer
@@ -75,4 +86,12 @@ dependencies {
     // gson
     implementation 'com.google.code.gson:gson:2.8.5'
     // end gson
+
+    // emoji-support
+    implementation "com.android.support:support-emoji-bundled:28.0.0"
+    // end emoji-support
+
+    // location support
+    implementation "com.google.android.gms:play-services-location:16.0.0"
+    // end location support
 }

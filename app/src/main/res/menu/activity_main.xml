@@ -20,4 +20,9 @@
         android:title="tmp"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/action_map"
+        android:title="@string/mapbox_attributionsDialogTitle"
+        app:showAsAction="ifRoom" />
+
 </menu>

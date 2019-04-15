@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".InterestsActivity">
+
+    <include layout="@layout/content_interests"/>
+
+        <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_anchorGravity="top|left">
+
+            <android.support.constraint.ConstraintLayout
+                    android:layout_width="413dp"
+                    android:layout_height="216dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/interestsEmojiRowsConstraintLayout">
+
+                <EditText
+                        android:id="@+id/interestsEmojiSearchField"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:textAlignment="center"
+                        android:textSize="16dp"
+                        android:textColorHint="@color/envue_light"
+                        android:ems="10"
+                        android:inputType="textPersonName"
+                        android:hint="@string/search_for_emoji_text"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="@dimen/start_broadcast_button_margin"
+                        android:layout_marginStart="262dp"
+                        android:layout_marginTop="582dp"
+                        android:layout_marginEnd="264dp"
+                        android:layout_marginBottom="67dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:elevation="16dp"
+                            android:text="@string/interests_dialog_possitive"
+                            android:textAlignment="center"
+                            android:textColor="@color/white"
+                            android:textSize="36sp"
+                            android:textStyle="bold"
+                            android:typeface="monospace"
+                            tools:layout_editor_absoluteX="183dp"
+                            tools:layout_editor_absoluteY="83dp" />
+
+                    <android.support.design.widget.FloatingActionButton
+                            android:id="@+id/setInterestsButton"
+                            android:layout_width="88dp"
+                            android:layout_height="103dp"
+                            android:src="@android:color/transparent"
+                            android:elevation="0dp"
+                            app:elevation="0dp"
+                            app:backgroundTint="@color/envue_light" />
+
+                </FrameLayout>
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                    android:id="@+id/windowTitleConstraintLayout"
+                    android:layout_width="414dp"
+                    android:layout_height="132dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+
+                <TextView
+                        android:id="@+id/changeInterestsHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/interests_dialog_title"
+                        android:textColor="@color/envue_light"
+                        android:textSize="36sp"
+                        android:textStyle="bold|italic"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                    android:id="@+id/interestsEmojiRowsConstraintLayout"
+                    android:layout_width="415dp"
+                    android:layout_height="298dp"
+                    android:layout_marginEnd="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+
+                <ListView
+                        android:id="@+id/interestsCategoryListView"
+                        android:layout_width="393dp"
+                        android:layout_height="279dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:divider="@null"
+                        android:dividerHeight="0dp"
+                        android:fadingEdge="horizontal"
+                        android:fadingEdgeLength="30dp"
+                        android:fillViewport="false"
+                        android:footerDividersEnabled="false"
+                        android:headerDividersEnabled="false"
+                        android:requiresFadingEdge="vertical"
+                        android:scrollbars="none"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+            </android.support.constraint.ConstraintLayout>
+
+        </android.support.constraint.ConstraintLayout>
+
+    </android.support.design.widget.CoordinatorLayout>

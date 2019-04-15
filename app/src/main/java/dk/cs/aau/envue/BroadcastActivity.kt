@@ -7,6 +7,10 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.graphics.SurfaceTexture
+import android.hardware.Camera
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.params.StreamConfigurationMap
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -17,10 +21,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import com.facebook.Profile
 import com.github.faucamp.simplertmp.RtmpHandler
-import dk.cs.aau.envue.chat.ChatListener
-import dk.cs.aau.envue.chat.Message
-import dk.cs.aau.envue.chat.MessageListAdapter
-import dk.cs.aau.envue.chat.MessageListener
+import dk.cs.aau.envue.chat.*
 import net.ossrs.yasea.SrsEncodeHandler
 import net.ossrs.yasea.SrsPublisher
 import okhttp3.WebSocket
@@ -28,6 +29,9 @@ import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.net.SocketException
+import android.support.v7.app.AlertDialog
+import kotlinx.android.synthetic.main.activity_broadcast.*
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.sign
@@ -38,13 +42,16 @@ import kotlin.math.sign
  * status bar and navigation/system bar) with user interaction.
  */
 class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEncodeHandler.SrsEncodeListener,
-    MessageListener, SensorEventListener {
+    MessageListener, SensorEventListener, ReactionListener {
     private var publisher: SrsPublisher? = null
     private val TAG = "ENVUE-BROADCAST"
     private var chatList: RecyclerView? = null
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
+    private var rtmpHandler: RtmpHandler? = null
+    private var encodeHandler: SrsEncodeHandler? = null
+    private var emojiFragment: EmojiFragment? = null
     private var sensorManager: SensorManager? = null
     private var sensor: Sensor? = null
     private var accelerationArray: MutableList<Pair<FloatArray, Long>> = mutableListOf()
@@ -128,6 +135,12 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
     }
 
+    override fun onReaction(reaction: String) {
+        runOnUiThread {
+            emojiFragment?.begin(reaction,this@BroadcastActivity)
+        }
+    }
+
     private fun scrollToBottom() {
         this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it )}
     }
@@ -205,16 +218,20 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         // Get profile
         val profile = Profile.getCurrentProfile()
 
+        // Get supported resolutions
+        val previewSize = Camera.open().parameters.previewSize
+        val outputSize = previewSize  // TODO: This is not optimal, but works fine.
+
         // Initialize publisher
         this.publisher = SrsPublisher(this.findViewById(R.id.camera_view))
-        val rtmpHandler = RtmpHandler(this)
-        val srsEncodeHandler = SrsEncodeHandler(this)
+        rtmpHandler = RtmpHandler(this)
+        encodeHandler = SrsEncodeHandler(this)
         this.publisher?.apply {
-            setEncodeHandler(srsEncodeHandler)
+            setEncodeHandler(encodeHandler)
             setRtmpHandler(rtmpHandler)
             setRecordHandler(null)
-            setPreviewResolution(1280, 720)
-            setOutputResolution(1280, 720)
+            setPreviewResolution(previewSize.width, previewSize.height)
+            setOutputResolution(outputSize.width, outputSize.height)
             setVideoHDMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)
             startPublish("rtmp://envue.me:1935/stream/${profile.firstName}${profile.lastName}")
@@ -225,9 +242,17 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         chatAdapter = MessageListAdapter(this, messages, streamerView = true)
 
         // Initialize chat listener
-        socket = ChatListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this)
 
         chatList = findViewById(R.id.chat_view)
+
+        // Creates fragments for EmojiReactionsFragment
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        emojiFragment = EmojiFragment()
+        emojiFragment?.let {
+            fragmentTransaction.replace(R.id.fragment_container, it)
+            fragmentTransaction.commit()
+        }
 
         // Assign chat adapter and layout manager
         val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
@@ -235,15 +260,12 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
-
-        messages.add(Message("this is a test to see how well the chat works", "test"))
-
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor =  sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         setThread()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
     }
-
+    
     fun setThread() {
         thread = Thread(Runnable {
             while(true){
@@ -271,18 +293,35 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         sensor?.also { accelerometer ->
             sensorManager?.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
         }
+        this.publisher?.resumeRecord()
     }
 
     override fun onPause() {
         super.onPause()
         lock.withLock { running = false }
         sensorManager?.unregisterListener(this)
+        this.publisher?.pauseRecord()
+    }
+
+    override fun onBackPressed() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmation")
+            .setMessage("Are you sure you want to stop the stream?")
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(
+                android.R.string.yes
+            ) { _, _ ->
+                finish()
+
+                super.onBackPressed()
+            }
+            .setNegativeButton(android.R.string.no, null).show()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         lock.withLock { running = false }
         this.publisher?.stopPublish()
-        this.socket?.close(ChatListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+        this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 }

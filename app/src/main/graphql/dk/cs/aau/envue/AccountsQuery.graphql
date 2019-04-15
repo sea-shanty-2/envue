@@ -1,0 +1,10 @@
+query AccountsQuery($after: String, $first: Int, $before: String, $last: Int) {
+  accounts {
+    page(after: $after, first: $first, before: $before, last: $last) {
+      items {
+        id
+        displayName
+      }
+    }
+  }
+}
