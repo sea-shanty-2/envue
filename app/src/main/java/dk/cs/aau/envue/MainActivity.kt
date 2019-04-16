@@ -18,10 +18,16 @@ import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import android.support.v4.os.HandlerCompat.postDelayed
+import android.widget.Toast
+import android.Manifest.permission.READ_SMS
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+
+
 
 
 class MainActivity : AppCompatActivity() {
-    private val PERMISSION_REQUEST_CODE = 42
+    private val PERMISSION_REQUEST_CODE_BROADCAST = 42
     private val BASE_URL="http://envue.me:8000/graphql"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,13 +77,13 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_broadcast -> {
-            if (ensurePermissionsGranted(arrayOf(
+            if(ensurePermissionsGranted(arrayOf(
                     Manifest.permission.CAMERA,
                     Manifest.permission.RECORD_AUDIO,
                     Manifest.permission.ACCESS_FINE_LOCATION))) {
                 startActivity(Intent(this, InitializeBroadcastActivity::class.java))
-            }
 
+            }
             true
         }
         R.id.action_player -> {
@@ -110,7 +116,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestPermissions(permissions: Array<String>) {
-        ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE)
+        ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE_BROADCAST)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        when(requestCode){
+            PERMISSION_REQUEST_CODE_BROADCAST -> if(grantResults.contains(PackageManager.PERMISSION_DENIED)){
+                //startActivity(Intent(this, MainActivity::class.java))
+            }
+            else { startActivity(Intent(this, InitializeBroadcastActivity::class.java)) }
+        }
     }
 
 }
