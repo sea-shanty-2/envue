@@ -1,16 +1,15 @@
 package dk.cs.aau.envue
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.view.View
-import android.view.WindowManager
+import android.util.Log
+import android.view.*
 import android.widget.*
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
@@ -41,7 +40,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
 
     override fun onReaction(reaction: String) {
         runOnUiThread {
-            emojiFragment?.begin(reaction,this@PlayerActivity)
+            emojiFragment?.begin(reaction, this@PlayerActivity)
         }
     }
 
@@ -62,10 +61,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     private var messages: ArrayList<Message> = ArrayList()
     private var emojiFragment: EmojiFragment? = null
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
-
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -102,10 +101,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
             addListener(listener)
             playWhenReady = true
         }
+        val chatViewus = player
 
         bindContentView()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun bindContentView() {
         setContentView(R.layout.activity_player)
         playerView = findViewById(R.id.video_view)
@@ -119,6 +120,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
+        //When in horizontal we want to be able to click through the recycler
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            exoPlayerViewOnTouch()
+        }
+
 
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
@@ -134,13 +140,49 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         }
 
         // Assign player view
-        player?.let { playerView?.player = it }
+        player?.let {
+            playerView?.player = it
+        }
 
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
+
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
+    }
+
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun exoPlayerViewOnTouch() {
+        var startClickTime: Long = 0
+        var isPressed = true
+        val exoPlayer = playerView
+        val chatView = chatList
+        exoPlayer?.setOnClickListener { }
+        chatView?.setOnTouchListener { _, event ->
+            if (event?.action == MotionEvent.ACTION_DOWN) {
+                //Log.e("Touch", "ACTION DOWN")
+                startClickTime = System.currentTimeMillis()
+            } else if (event?.action == MotionEvent.ACTION_UP) {
+                if (System.currentTimeMillis() - startClickTime < ViewConfiguration.getTapTimeout()) {
+                    if (isPressed) {
+                        //Log.e("Press", "Pause")
+                        exoPlayer?.controllerHideOnTouch = false
+                        player?.playWhenReady = false
+                        player?.playbackState
+                        isPressed = false
+                    } else {
+                        //Log.e("Press", "Play")
+                        exoPlayer?.controllerHideOnTouch = true
+                        player?.playWhenReady = true
+                        player?.playbackState
+                        isPressed = true
+                    }
+                }
+            }
+            false
+        }
     }
 
     private fun addLocalMessage() {
