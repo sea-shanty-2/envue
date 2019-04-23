@@ -32,6 +32,7 @@
                                                 android:divider="#fff"
                                                 android:layout_width="match_parent"
                                                 android:layout_height="match_parent"
+                                                android:overScrollMode="never"
                                                 android:padding="5dp"
                                                 android:requiresFadingEdge="vertical"
                                                 android:duplicateParentState="true"
