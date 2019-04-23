@@ -11,6 +11,7 @@ import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -45,6 +46,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     MessageListener, SensorEventListener, ReactionListener {
     private var publisher: SrsPublisher? = null
     private val TAG = "ENVUE-BROADCAST"
+    private var id: String? = null
+    private var rtmp: String? = null
     private var chatList: RecyclerView? = null
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
@@ -63,6 +66,34 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private val curveSmoothingConstant = 20
     private var thread: Thread? = null
     private var running = true
+    private var currentBitrate: Double = 0.0
+
+    private inner class BroadcastInformationUpdater: AsyncTask<Void, Void, Void>() {
+        override fun doInBackground(vararg params: Void?): Void {
+            while(running){
+                val stabilityValue = calculateDirectionChanges()
+                var bitrate = 0.0
+                lock.withLock { bitrate = currentBitrate }
+                Thread.sleep(5000)
+
+
+            }
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+    }
+
+    fun setThread() {
+        thread = Thread(Runnable {
+            while(running){
+                val tmp = calculateDirectionChanges()
+                // TODO: Send value to server.
+                Log.d(TAG, "Stability: $tmp")
+                Thread.sleep(5000)
+            }
+        })
+        thread?.start()
+    }
 
     fun calculateDirectionChanges(): Double {
         var arrayCopy: List<FloatArray> = listOf()
@@ -173,6 +204,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     override fun onRtmpVideoBitrateChanged(bitrate: Double) {
         Toast.makeText(applicationContext, "Bitrate: $bitrate", Toast.LENGTH_SHORT).show()
+        lock.withLock { currentBitrate = bitrate }
     }
 
     override fun onRtmpAudioBitrateChanged(bitrate: Double) {
@@ -212,6 +244,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_broadcast)
 
+        id = intent.getStringExtra("ID")
+        rtmp = intent.getStringExtra("RTMP")
+
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
@@ -234,7 +269,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             setOutputResolution(outputSize.width, outputSize.height)
             setVideoHDMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)
-            startPublish("rtmp://envue.me:1935/stream/${profile.firstName}${profile.lastName}")
+            startPublish(rtmp)
             startCamera()
         }
 
@@ -266,18 +301,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
     }
     
-    fun setThread() {
-        thread = Thread(Runnable {
-            while(true){
-                lock.withLock { if (!running) return@Runnable }
-                Thread.sleep(5000)
-                val tmp = calculateDirectionChanges()
-                // TODO: Send value to server.
-                Log.d(TAG, "Stability: $tmp")
-            }
-        })
-        thread?.start()
-    }
+
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
