@@ -157,15 +157,26 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     private fun exoPlayerViewOnTouch() {
         var startClickTime: Long = 0
         var isPressed = true
+        var startX = 0F
+        var startY = 0F
         val exoPlayer = playerView
         val chatView = chatList
         exoPlayer?.setOnClickListener { }
         chatView?.setOnTouchListener { _, event ->
             if (event?.action == MotionEvent.ACTION_DOWN) {
                 //Log.e("Touch", "ACTION DOWN")
-                startClickTime = System.currentTimeMillis()
+                startX = event.x
+                startY = event.y
+
+                //startClickTime = System.currentTimeMillis()
+
             } else if (event?.action == MotionEvent.ACTION_UP) {
-                if (System.currentTimeMillis() - startClickTime < ViewConfiguration.getTapTimeout()) {
+                val endX = event.x
+                val endY = event.y
+
+                if (//System.currentTimeMillis() - startClickTime < ViewConfiguration.getTapTimeout() &&
+                    Math.abs(startX - endX) < 5 || Math.abs(startY- endY) < 5) {
+
                     if (isPressed) {
                         //Log.e("Press", "Pause")
                         exoPlayer?.controllerHideOnTouch = false
