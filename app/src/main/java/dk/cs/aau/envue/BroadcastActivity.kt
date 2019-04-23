@@ -68,31 +68,21 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var running = true
     private var currentBitrate: Double = 0.0
 
-    private inner class BroadcastInformationUpdater: AsyncTask<Void, Void, Void>() {
-        override fun doInBackground(vararg params: Void?): Void {
+    private inner class BroadcastInformationUpdater: AsyncTask<Unit, Unit, Unit>() {
+        //val query: BroadcastUpdateMutation
+
+        init {
+
+        }
+
+        override fun doInBackground(vararg params: Unit) {
             while(running){
                 val stabilityValue = calculateDirectionChanges()
                 var bitrate = 0.0
                 lock.withLock { bitrate = currentBitrate }
                 Thread.sleep(5000)
-
-
             }
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
-
-    }
-
-    fun setThread() {
-        thread = Thread(Runnable {
-            while(running){
-                val tmp = calculateDirectionChanges()
-                // TODO: Send value to server.
-                Log.d(TAG, "Stability: $tmp")
-                Thread.sleep(5000)
-            }
-        })
-        thread?.start()
     }
 
     fun calculateDirectionChanges(): Double {
@@ -297,11 +287,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor =  sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-        setThread()
+        BroadcastInformationUpdater().execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
     }
-    
-
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
