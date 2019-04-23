@@ -101,7 +101,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
             addListener(listener)
             playWhenReady = true
         }
-        val chatViewus = player
 
         bindContentView()
     }
