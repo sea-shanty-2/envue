@@ -64,10 +64,9 @@ class DynamicAnimation {
 
     private fun getRandomWidth(parent: ViewGroup, emojiWidth: Int): IntArray {
         val width = parent.width - emojiWidth
-        val moveEmojiToRight = parent.width - (parent.width / 6) - emojiWidth
         val height = parent.height
 
-        val x = random.nextInt(width - moveEmojiToRight) + moveEmojiToRight
+        val x = random.nextInt(width - emojiWidth) + emojiWidth
 
         return intArrayOf(x, height)
     }

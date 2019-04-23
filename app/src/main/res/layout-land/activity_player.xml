@@ -15,7 +15,6 @@
             app:controller_layout_id="@layout/player_controls"
             android:layout_gravity="center">
 
-
         <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
