@@ -1,4 +1,4 @@
-package dk.cs.aau.envue.chat
+package dk.cs.aau.envue.communication
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView

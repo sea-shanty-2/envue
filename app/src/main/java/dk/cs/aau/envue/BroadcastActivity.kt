@@ -17,7 +17,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import com.facebook.Profile
 import com.github.faucamp.simplertmp.RtmpHandler
-import dk.cs.aau.envue.chat.*
+import dk.cs.aau.envue.communication.*
 import net.ossrs.yasea.SrsEncodeHandler
 import net.ossrs.yasea.SrsPublisher
 import okhttp3.WebSocket

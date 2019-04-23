@@ -1,4 +1,4 @@
-package dk.cs.aau.envue.chat
+package dk.cs.aau.envue.communication
 
 interface MessageListener {
     fun onMessage(message: Message)
