@@ -1,5 +1,5 @@
 package dk.cs.aau.envue.communication.packets
 
-class MessagePacket(val message: String) {
-    val type = "message"
+class MessagePacket(val Message: String) {
+    val Type = "Message"
 }
