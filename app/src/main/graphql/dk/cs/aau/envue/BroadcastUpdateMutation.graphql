@@ -1,0 +1,7 @@
+mutation BroadcastUpdateMutation($broadcast: BroadcastUpdateInputType, $id: String!){
+    broadcasts{
+        update(id: $id, broadcast: $broadcast){
+            id
+        }
+    }
+}
