@@ -155,7 +155,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
 
     @SuppressLint("ClickableViewAccessibility")
     private fun exoPlayerViewOnTouch() {
-        var startClickTime: Long = 0
         var isPressed = true
         var startX = 0F
         var startY = 0F
