@@ -168,14 +168,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
                 startX = event.x
                 startY = event.y
 
-                //startClickTime = System.currentTimeMillis()
-
             } else if (event?.action == MotionEvent.ACTION_UP) {
                 val endX = event.x
                 val endY = event.y
 
-                if (//System.currentTimeMillis() - startClickTime < ViewConfiguration.getTapTimeout() &&
-                    Math.abs(startX - endX) < 5 || Math.abs(startY- endY) < 5) {
+                if (Math.abs(startX - endX) < 5 || Math.abs(startY- endY) < 5) {
 
                     if (isPressed) {
                         //Log.e("Press", "Pause")
