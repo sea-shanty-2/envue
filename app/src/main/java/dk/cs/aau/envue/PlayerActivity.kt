@@ -73,7 +73,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
 
         // Create reaction adapter
         // TODO: Move to resources
-        reactionAdapter = ReactionListAdapter(::addReaction, listOf("👍", "👎", "❤", "\uD83D\uDD25", "\uD83D\uDE02", "\uD83C\uDD71️", "\uD83C\uDF46", "\uD83D\uDE20"))
+        reactionAdapter = ReactionListAdapter(::addReaction, listOf("👍", "👎", "❤", "\uD83D\uDD25", "\uD83D\uDE02", "\uD83C\uDF46", "\uD83D\uDE20"))
 
         // Create chat adapter
         chatAdapter = MessageListAdapter(this, messages)
