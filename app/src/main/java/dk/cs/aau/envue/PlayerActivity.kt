@@ -1,5 +1,6 @@
 package dk.cs.aau.envue
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -7,8 +8,8 @@ import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.view.View
-import android.view.WindowManager
+import android.util.Log
+import android.view.*
 import android.widget.*
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
@@ -64,10 +65,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     private var emojiFragment: EmojiFragment? = null
     private var lastReactionAt: Long = 0
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
-
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -112,6 +113,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         bindContentView()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun bindContentView() {
         setContentView(R.layout.activity_player)
         playerView = findViewById(R.id.video_view)
@@ -133,6 +135,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
+        //When in horizontal we want to be able to click through the recycler
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            exoPlayerViewOnTouch()
+        }
+
 
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
@@ -155,6 +162,46 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
 
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
+    }
+
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun exoPlayerViewOnTouch() {
+        var isPressed = true
+        var startX = 0F
+        var startY = 0F
+        val exoPlayer = playerView
+        val chatView = chatList
+        exoPlayer?.setOnClickListener { }
+        chatView?.setOnTouchListener { _, event ->
+            if (event?.action == MotionEvent.ACTION_DOWN) {
+                //Log.e("Touch", "ACTION DOWN")
+                startX = event.x
+                startY = event.y
+
+            } else if (event?.action == MotionEvent.ACTION_UP) {
+                val endX = event.x
+                val endY = event.y
+
+                if (Math.abs(startX - endX) < 5 || Math.abs(startY- endY) < 5) {
+
+                    if (isPressed) {
+                        //Log.e("Press", "Pause")
+                        exoPlayer?.controllerHideOnTouch = false
+                        player?.playWhenReady = false
+                        player?.playbackState
+                        isPressed = false
+                    } else {
+                        //Log.e("Press", "Play")
+                        exoPlayer?.controllerHideOnTouch = true
+                        player?.playWhenReady = true
+                        player?.playbackState
+                        isPressed = true
+                    }
+                }
+            }
+            false
+        }
     }
 
     private fun addReaction(reaction: String) {
