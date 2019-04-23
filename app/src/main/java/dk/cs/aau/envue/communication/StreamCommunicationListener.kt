@@ -1,11 +1,11 @@
-package dk.cs.aau.envue.chat
+package dk.cs.aau.envue.communication
 
 import android.util.Log
 import com.facebook.Profile
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import dk.cs.aau.envue.chat.packets.HandshakePacket
+import dk.cs.aau.envue.communication.packets.HandshakePacket
 import okhttp3.*
 import okio.ByteString
 

@@ -4,8 +4,6 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -25,8 +23,9 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import dk.cs.aau.envue.chat.*
-import dk.cs.aau.envue.chat.packets.MessagePacket
+import dk.cs.aau.envue.communication.*
+import dk.cs.aau.envue.communication.packets.MessagePacket
+import dk.cs.aau.envue.communication.packets.ReactionPacket
 import okhttp3.WebSocket
 
 
@@ -53,14 +52,17 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
     private var chatList: RecyclerView? = null
+    private var reactionList: RecyclerView? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
     private var loading: ProgressBar? = null
     private var chatAdapter: MessageListAdapter? = null
+    private var reactionAdapter: ReactionListAdapter? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
     private var emojiFragment: EmojiFragment? = null
+    private var lastReactionAt: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +70,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
 
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Create reaction adapter
+        // TODO: Move to resources
+        reactionAdapter = ReactionListAdapter(::addReaction, listOf("👍", "👎", "❤", "\uD83D\uDD25", "\uD83D\uDE02", "\uD83C\uDD71️", "\uD83C\uDF46", "\uD83D\uDE20"))
 
         // Create chat adapter
         chatAdapter = MessageListAdapter(this, messages)
@@ -112,6 +118,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         loading = findViewById(R.id.loading)
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
+        reactionList = findViewById(R.id.reaction_view)
+
+        // Assign reaction adapter and layout manager
+        val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
+        reactionList?.apply {
+            adapter = reactionAdapter
+            layoutManager = reactionLayoutManager
+        }
 
         // Assign chat adapter and layout manager
         val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
@@ -141,6 +155,16 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
 
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
+    }
+
+    private fun addReaction(reaction: String) {
+        val timeSinceReaction = System.currentTimeMillis() - lastReactionAt
+
+        if (timeSinceReaction >= 250) {
+            onReaction(reaction)
+            socket?.send(Gson().toJson(ReactionPacket(reaction)))
+            lastReactionAt = System.currentTimeMillis()
+        }
     }
 
     private fun addLocalMessage() {
