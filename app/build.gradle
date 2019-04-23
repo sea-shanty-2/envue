@@ -6,6 +6,7 @@ apply plugin: 'kotlin-android-extensions'
 
 apply plugin: 'com.apollographql.android'
 
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -94,4 +95,10 @@ dependencies {
     // location support
     implementation "com.google.android.gms:play-services-location:16.0.0"
     // end location support
+
+    // push notification support
+    implementation 'com.google.firebase:firebase-core:16.0.8'
+    // end push notification support
 }
+
+apply plugin: 'com.google.gms.google-services'
