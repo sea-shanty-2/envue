@@ -1,4 +1,4 @@
-mutation BroadcastUpdateMutation($broadcast: BroadcastUpdateInputType, $id: String!){
+mutation BroadcastUpdateMutation($broadcast: BroadcastUpdateInputType!, $id: ID!){
     broadcasts{
         update(id: $id, broadcast: $broadcast){
             id

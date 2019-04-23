@@ -7,10 +7,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.graphics.SurfaceTexture
 import android.hardware.Camera
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.params.StreamConfigurationMap
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -31,7 +28,11 @@ import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.net.SocketException
 import android.support.v7.app.AlertDialog
-import kotlinx.android.synthetic.main.activity_broadcast.*
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
+import dk.cs.aau.envue.shared.GatewayClient
+import dk.cs.aau.envue.type.BroadcastUpdateInputType
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -46,8 +47,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     MessageListener, SensorEventListener, ReactionListener {
     private var publisher: SrsPublisher? = null
     private val TAG = "ENVUE-BROADCAST"
-    private var id: String? = null
-    private var rtmp: String? = null
     private var chatList: RecyclerView? = null
     private var chatAdapter: MessageListAdapter? = null
     private var socket: WebSocket? = null
@@ -66,20 +65,31 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private val curveSmoothingConstant = 20
     private var thread: Thread? = null
     private var running = true
-    private var currentBitrate: Double = 0.0
+    private var currentBitrate: Int = 0
 
-    private inner class BroadcastInformationUpdater: AsyncTask<Unit, Unit, Unit>() {
-        //val query: BroadcastUpdateMutation
-
-        init {
-
-        }
+    private inner class BroadcastInformationUpdater(id: String): AsyncTask<Unit, Unit, Unit>() {
+        val queryBuilder: BroadcastUpdateMutation.Builder = BroadcastUpdateMutation.builder().id(id)
+        val typeBuilder: BroadcastUpdateInputType.Builder = BroadcastUpdateInputType.builder()
 
         override fun doInBackground(vararg params: Unit) {
+            var stability: Double
+            var bitrate = 0
             while(running){
-                val stabilityValue = calculateDirectionChanges()
-                var bitrate = 0.0
+                stability = calculateDirectionChanges()
                 lock.withLock { bitrate = currentBitrate }
+                val update = typeBuilder.stability(stability).bitrate(bitrate).build()
+                val query = queryBuilder.broadcast(update).build()
+
+                GatewayClient.mutate(query).enqueue(object : ApolloCall.Callback<BroadcastUpdateMutation.Data>() {
+                    override fun onResponse(response: Response<BroadcastUpdateMutation.Data>) {
+                        Log.d(TAG, response.data()?.broadcasts()?.update()?.id())
+                    }
+
+                    override fun onFailure(e: ApolloException) {
+                        Log.d(TAG, e.message)
+                    }
+                })
+
                 Thread.sleep(5000)
             }
         }
@@ -194,7 +204,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     override fun onRtmpVideoBitrateChanged(bitrate: Double) {
         Toast.makeText(applicationContext, "Bitrate: $bitrate", Toast.LENGTH_SHORT).show()
-        lock.withLock { currentBitrate = bitrate }
+        lock.withLock { currentBitrate = bitrate.toInt() }
     }
 
     override fun onRtmpAudioBitrateChanged(bitrate: Double) {
@@ -234,8 +244,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_broadcast)
 
-        id = intent.getStringExtra("ID")
-        rtmp = intent.getStringExtra("RTMP")
+        val id = intent.getStringExtra("ID")
+        val rtmp = intent.getStringExtra("RTMP")
+
+        Log.d(TAG, "$id")
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
@@ -287,7 +299,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor =  sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-        BroadcastInformationUpdater().execute()
+        BroadcastInformationUpdater(id).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
     }
 
