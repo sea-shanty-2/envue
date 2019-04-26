@@ -58,6 +58,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
                         } else {
                             // We were not able to get the location
                             Snackbar.make(view, R.string.did_not_receive_location, Snackbar.LENGTH_LONG)
+
                         }
                     }
 
