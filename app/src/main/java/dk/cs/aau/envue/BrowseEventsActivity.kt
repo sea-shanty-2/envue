@@ -22,14 +22,14 @@ class BrowseEventsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_choose_broadcast)
-        loadBroadcasts()
+        loadEvents()
 
         findViewById<Button>(R.id.watch_broadcast_btn).setOnClickListener {
             startActivity(Intent(this, PlayerActivity::class.java))
         }
     }
 
-    private fun loadBroadcasts() {
+    private fun loadEvents() {
 
         // Launch the query
         // TODO: We should have an EventsQuery that fetches broadcast clusters, not the broadcasts themselves
@@ -59,14 +59,16 @@ class BrowseEventsActivity : AppCompatActivity() {
     /**
      * Populates the RecyclerView with the broadcasts (should be events, see the to-do) **/
     private fun initializeRecyclerView(items: Array<BroadcastsQuery.Item>) {
+        for (b in items) {
+        }
         runOnUiThread {
-            viewManager = LinearLayoutManager(this)
-            viewAdapter = BrowseEventsListAdapter(items)
-            recyclerView = findViewById<RecyclerView>(R.id.choose_broadcast_list_view).apply {
-                setHasFixedSize(true)
-                layoutManager = viewManager
-                adapter = viewAdapter
-            }
+//            viewManager = LinearLayoutManager(this)
+//            viewAdapter = BrowseEventsListAdapter(items)
+//            recyclerView = findViewById<RecyclerView>(R.id.choose_broadcast_list_view).apply {
+//                setHasFixedSize(true)
+//                layoutManager = viewManager
+//                adapter = viewAdapter
+//            }
         }
     }
 }
