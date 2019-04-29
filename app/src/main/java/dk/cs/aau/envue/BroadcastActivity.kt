@@ -8,6 +8,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.hardware.Camera
+import android.location.Location
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -31,10 +32,17 @@ import android.support.v7.app.AlertDialog
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.type.BroadcastUpdateInputType
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import android.Manifest
+import android.content.pm.PackageManager
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import dk.cs.aau.envue.type.LocationInputType
 import kotlin.concurrent.withLock
 import kotlin.math.sign
 
@@ -67,17 +75,52 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var running = true
     private var currentBitrate: Int = 0
 
-    private inner class BroadcastInformationUpdater(id: String): AsyncTask<Unit, Unit, Unit>() {
+    private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity): AsyncTask<Unit, Unit, Unit>() {
         val queryBuilder: BroadcastUpdateMutation.Builder = BroadcastUpdateMutation.builder().id(id)
         val typeBuilder: BroadcastUpdateInputType.Builder = BroadcastUpdateInputType.builder()
+        private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
+        private lateinit var currentLocation: LocationInputType
 
         override fun doInBackground(vararg params: Unit) {
             var stability: Double
             var bitrate = 0
+            ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+
+            var count = 0
             while(running){
+                fusedLocationClient.lastLocation.apply {
+                    addOnSuccessListener { location: Location? ->
+                        if (location != null) {
+                            currentLocation = LocationInputType.builder()
+                                .latitude(location.latitude)
+                                .longitude(location.longitude)
+                                .build()
+                        }
+                    }
+
+                    addOnFailureListener { Log.d(TAG, it.message) }
+
+                    addOnCanceledListener { Log.d(TAG, "Cancelled") }
+                }
+
+                if(!::currentLocation.isInitialized){
+                    count++
+                    if (count > 50) {
+                        Log.d(TAG, "To many location tries.")
+                        //TODO: Could not get location error
+                    }
+                    Thread.sleep(10)
+                    continue
+                }
+
                 stability = calculateDirectionChanges()
                 lock.withLock { bitrate = currentBitrate }
-                val update = typeBuilder.stability(stability).bitrate(bitrate).build()
+
+                val update = typeBuilder
+                    .stability(stability)
+                    .bitrate(bitrate)
+                    .location(currentLocation)
+                    .build()
                 val query = queryBuilder.broadcast(update).build()
 
                 GatewayClient.mutate(query).enqueue(object : ApolloCall.Callback<BroadcastUpdateMutation.Data>() {
@@ -90,8 +133,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     }
                 })
 
-                Thread.sleep(5000)
+                count = 0
+
+                Thread.sleep(60000)
             }
+
         }
     }
 
@@ -247,8 +293,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val id = intent.getStringExtra("ID")
         val rtmp = intent.getStringExtra("RTMP")
 
-        Log.d(TAG, "$id")
-
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
@@ -299,7 +343,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor =  sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-        BroadcastInformationUpdater(id).execute()
+        BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
     }
 

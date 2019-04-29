@@ -237,13 +237,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             return
         }
 
-        val progress = ProgressDialog(this)
-        progress.apply {
-            setMessage("Loading...")
-            setTitle("Creating broadcast")
-            setCancelable(true)
-        }
-
         StartBroadcastTask(this).execute()
     }
 }
