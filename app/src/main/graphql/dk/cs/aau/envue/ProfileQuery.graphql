@@ -1,0 +1,8 @@
+query ProfileQuery {
+    accounts {
+        me {
+            id
+            displayName
+        }
+    }
+}
