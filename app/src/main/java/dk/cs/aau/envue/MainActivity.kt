@@ -87,8 +87,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_player -> {
-            startActivity(Intent(this, PlayerActivity::class.java))
-
+            startActivity(Intent(this, ChooseBroadcastActivity::class.java))
             true
         }
         R.id.action_map -> {

@@ -1,0 +1,14 @@
+query BroadcastsQuery {
+  broadcasts {
+    active {
+      items {
+        activity
+        location {
+          latitude
+          longitude
+        }
+        id
+      }
+    }
+  }
+}
