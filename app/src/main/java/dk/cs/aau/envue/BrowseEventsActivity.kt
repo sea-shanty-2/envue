@@ -59,16 +59,14 @@ class BrowseEventsActivity : AppCompatActivity() {
     /**
      * Populates the RecyclerView with the broadcasts (should be events, see the to-do) **/
     private fun initializeRecyclerView(items: Array<BroadcastsQuery.Item>) {
-        for (b in items) {
-        }
         runOnUiThread {
-//            viewManager = LinearLayoutManager(this)
-//            viewAdapter = BrowseEventsListAdapter(items)
-//            recyclerView = findViewById<RecyclerView>(R.id.choose_broadcast_list_view).apply {
-//                setHasFixedSize(true)
-//                layoutManager = viewManager
-//                adapter = viewAdapter
-//            }
+            viewManager = LinearLayoutManager(this)
+            viewAdapter = BrowseEventsListAdapter(items)
+            recyclerView = findViewById<RecyclerView>(R.id.choose_broadcast_list_view).apply {
+                setHasFixedSize(true)
+                layoutManager = viewManager
+                adapter = viewAdapter
+            }
         }
     }
 }

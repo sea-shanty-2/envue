@@ -1,0 +1,15 @@
+query EventsQuery {
+    events {
+        all {
+            broadcasts {
+                id
+                activity
+                categories
+                location {
+                    latitude
+                    longitude
+                }
+            }
+        }
+    }
+}
