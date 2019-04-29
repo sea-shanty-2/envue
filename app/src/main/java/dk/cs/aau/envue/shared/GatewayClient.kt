@@ -19,7 +19,7 @@ class GatewayClient {
     companion object {
         private var okHttpClient = OkHttpClient.Builder().build()
         private val apolloClient = ApolloClient.builder()
-            .serverUrl("https://envue.me/api")
+            .serverUrl("http://172.25.11.190")  // Change to http://172.25.11.190 if using staging
             .okHttpClient(okHttpClient)
             .build()!!
 
