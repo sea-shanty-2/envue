@@ -17,7 +17,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity
-            android:name=".ChooseBroadcastActivity"
+            android:name=".BrowseEventsActivity"
             android:label="@string/title_activity_choose_broadcast"
             android:theme="@style/NoActionBar"></activity>
         <activity android:name=".MapActivity"></activity>

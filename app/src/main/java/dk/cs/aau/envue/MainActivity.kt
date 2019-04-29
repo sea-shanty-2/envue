@@ -12,18 +12,10 @@ import android.util.Base64
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.apollographql.apollo.ApolloClient
 import com.facebook.AccessToken
 import kotlinx.android.synthetic.main.activity_main.*
-import okhttp3.OkHttpClient
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import android.support.v4.os.HandlerCompat.postDelayed
-import android.widget.Toast
-import android.Manifest.permission.READ_SMS
-import android.Manifest.permission.ACCESS_FINE_LOCATION
-
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -87,7 +79,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_player -> {
-            startActivity(Intent(this, ChooseBroadcastActivity::class.java))
+            startActivity(Intent(this, BrowseEventsActivity::class.java))
             true
         }
         R.id.action_map -> {

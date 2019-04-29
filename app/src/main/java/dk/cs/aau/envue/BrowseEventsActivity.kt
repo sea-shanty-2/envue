@@ -11,9 +11,9 @@ import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
 import dk.cs.aau.envue.shared.GatewayClient
-import dk.cs.aau.envue.workers.ChooseBroadcastListAdapter
+import dk.cs.aau.envue.workers.BrowseEventsListAdapter
 
-class ChooseBroadcastActivity : AppCompatActivity() {
+class BrowseEventsActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var viewAdapter: RecyclerView.Adapter<*>
@@ -61,7 +61,7 @@ class ChooseBroadcastActivity : AppCompatActivity() {
     private fun initializeRecyclerView(items: Array<BroadcastsQuery.Item>) {
         runOnUiThread {
             viewManager = LinearLayoutManager(this)
-            viewAdapter = ChooseBroadcastListAdapter(items)
+            viewAdapter = BrowseEventsListAdapter(items)
             recyclerView = findViewById<RecyclerView>(R.id.choose_broadcast_list_view).apply {
                 setHasFixedSize(true)
                 layoutManager = viewManager
