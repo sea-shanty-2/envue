@@ -16,6 +16,7 @@ import com.facebook.AccessToken
 import dk.cs.aau.envue.GatewayAuthenticationQuery
 import dk.cs.aau.envue.LoginActivity
 import dk.cs.aau.envue.R
+import dk.cs.aau.envue.interceptors.AuthenticationInterceptor
 import dk.cs.aau.envue.shared.GatewayClient
 
 
@@ -39,7 +40,7 @@ class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : Wor
                     val token = response.data()?.authenticate()?.facebook()
 
                     if (!token.isNullOrEmpty()) {
-                        GatewayClient.setAuthenticator(token)
+                        GatewayClient.setAuthenticationToken(token)
                     }
                 }
 

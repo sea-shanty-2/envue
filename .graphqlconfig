@@ -1,0 +1,10 @@
+{
+  "schemaPath": "app/src/main/graphql/dk/cs/aau/envue/schema.json",
+  "extensions": {
+    "endpoints": {
+      "dev": "http://localhost:5000/",
+      "stag": "http://172.25.11.190/",
+      "prod": "https://envue.me/api"
+    }
+  }
+}
