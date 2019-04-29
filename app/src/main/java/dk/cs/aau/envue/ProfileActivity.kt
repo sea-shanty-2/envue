@@ -1,61 +1,73 @@
 package dk.cs.aau.envue
 
 import android.app.Activity
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.NotificationCompat
-import android.support.v4.app.NotificationManagerCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
-import android.widget.ListView
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
 import com.facebook.Profile
 import com.facebook.login.LoginManager
-import com.google.gson.GsonBuilder
 import com.squareup.picasso.Picasso
+import dk.cs.aau.envue.shared.GatewayClient
 import kotlinx.android.synthetic.main.activity_profile.*
 import dk.cs.aau.envue.transformers.CircleTransform
-import dk.cs.aau.envue.utility.EmojiIcon
-import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
-import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
 
 class ProfileActivity : AppCompatActivity() {
     companion object {
-        internal val SET_INTERESTS_REQUEST = 0
+        internal const val SET_INTERESTS_REQUEST = 0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
-        val profile = Profile.getCurrentProfile()
+        val profileQuery = ProfileQuery.builder().build()
+
+        GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
+            override fun onResponse(response: Response<ProfileQuery.Data>) {
+                val profile = response.data()?.accounts()?.me()
+
+                if (profile != null) {
+                    onProfileFetch(profile!!)
+                }
+                else {
+                    TODO("Handle null response")
+                }
+            }
+
+            override fun onFailure(e: ApolloException) = onProfileFetchFailure(e)
+
+        })
 
         // register log out button listener
         logOutButton.setOnClickListener { this.onLogOut() }
         // register change interests button listener
         interestsButton.setOnClickListener { this.onChangeInterests() }
-        testButton.setOnClickListener { this.onTestNotification() }
 
-        val profilePicture = profile.getProfilePictureUri(1024, 1024)
-        val profileName = profile.name
 
-        Picasso
-            .get()
-            .load(profilePicture)
-            .placeholder(R.drawable.ic_profile_picture_placeholder)
-            .error(R.drawable.ic_profile_picture_placeholder)
-            .resize(256, 256)
-            .transform(CircleTransform())
-            .into(profilePictureView)
 
-        profileNameView.text = profileName
+    }
+
+    private fun onProfileFetch(profile: ProfileQuery.Me) {
+        runOnUiThread {
+            profileNameView.text = profile.displayName()
+        }
+    }
+
+    private fun onProfileFetchFailure(e: ApolloException) {
+        runOnUiThread {
+
+            AlertDialog
+                .Builder(this)
+                .setMessage(e.message)
+                .setNegativeButton("log out") { _, _ -> startActivity(Intent(this, LoginActivity::class.java)) }
+                .setPositiveButton("return") { _, _ -> finish() }
+                .create()
+        }
     }
 
     private fun onLogOut() {
@@ -87,34 +99,6 @@ class ProfileActivity : AppCompatActivity() {
                     currentInterestsView.text = data?.getStringExtra(resources.getString(R.string.interests_response_key))
                 }
         }
-    }
-
-    private fun onTestNotification() {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        val icon: Bitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.dummy)
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
-        var builder = NotificationCompat.Builder(this, getString(R.string.notification_channel_id))
-            .setSmallIcon(R.drawable.ic_live_tv_48dp)
-            .setContentTitle("Notification!!!")
-            .setContentText("This is a notification")
-            .setLargeIcon(icon)
-            .setStyle(NotificationCompat.BigPictureStyle()
-                .bigPicture(icon)
-                .bigLargeIcon(null))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            // Set the intent that will fire when the user taps the notification
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-
-        with(NotificationManagerCompat.from(this)) {
-            // notificationId is a unique int for each notification that you must define
-            notify(1, builder.build())
-        }
-
-
-
     }
 
 }
