@@ -11,6 +11,7 @@ import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
 import dk.cs.aau.envue.shared.GatewayClient
+import dk.cs.aau.envue.utility.Event
 import dk.cs.aau.envue.workers.BrowseEventsListAdapter
 
 class BrowseEventsActivity : AppCompatActivity() {
@@ -31,37 +32,37 @@ class BrowseEventsActivity : AppCompatActivity() {
 
     private fun loadEvents() {
 
-        // Launch the query
-        // TODO: We should have an EventsQuery that fetches broadcast clusters, not the broadcasts themselves
-        val broadcastsQuery = BroadcastsQuery.builder().build()
-        GatewayClient.query(broadcastsQuery).enqueue(object: ApolloCall.Callback<BroadcastsQuery.Data>() {
+        val eventsQuery = EventsQuery.builder().build()
+        GatewayClient.query(eventsQuery).enqueue(object: ApolloCall.Callback<EventsQuery.Data>() {
 
-            // Load the broadcasts into the recycler view when received
-            override fun onResponse(response: Response<BroadcastsQuery.Data>) {
+            override fun onResponse(response: Response<EventsQuery.Data>) {
                 val data = response.data()
                 if (data == null) {
-                    Log.e("LoadBroadcast", "Could not load active broadcasts.")
+                    Log.e("LoadEvents", "Could not load events.")
                 }
 
-                val broadcasts = data?.broadcasts()?.active()?.items()?.toTypedArray()
-                if (broadcasts != null) {
-                    // Populate the recycler view with the broadcasts (should be events)
-                    initializeRecyclerView(broadcasts)
+                val events = data?.events()?.all()
+                if (events != null) {
+                    initializeRecyclerView(events)
                 }
             }
 
             override fun onFailure(e: ApolloException) {
-                Log.d("LOAD_FAILURE", e.toString())
+                Log.e("LoadEvents", e.message)
             }
         })
     }
 
+
+
     /**
-     * Populates the RecyclerView with the broadcasts (should be events, see the to-do) **/
-    private fun initializeRecyclerView(items: Array<BroadcastsQuery.Item>) {
+     * Populates the RecyclerView with the broadcasts. **/
+    private fun initializeRecyclerView(items: Iterable<EventsQuery.All>) {
+
         runOnUiThread {
+            val events = items.map { e -> Event(e.broadcasts()?.toTypedArray()) }
             viewManager = LinearLayoutManager(this)
-            viewAdapter = BrowseEventsListAdapter(items)
+            viewAdapter = BrowseEventsListAdapter(events.toTypedArray())
             recyclerView = findViewById<RecyclerView>(R.id.choose_broadcast_list_view).apply {
                 setHasFixedSize(true)
                 layoutManager = viewManager
