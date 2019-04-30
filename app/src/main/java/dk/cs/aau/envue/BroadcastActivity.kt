@@ -43,7 +43,9 @@ import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import dk.cs.aau.envue.type.LocationInputType
+import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
+import kotlin.math.abs
 import kotlin.math.sign
 
 
@@ -80,10 +82,14 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val typeBuilder: BroadcastUpdateInputType.Builder = BroadcastUpdateInputType.builder()
         private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
         private lateinit var currentLocation: LocationInputType
+        private lateinit var lastLocation: LocationInputType
+        private var lastStability = 0.0
+        private var lastBitrate = 0
 
         override fun doInBackground(vararg params: Unit) {
             var stability: Double
             var bitrate = 0
+
             ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
 
             var count = 0
@@ -113,29 +119,53 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     continue
                 }
 
+                if(!::lastLocation.isInitialized) lastLocation = currentLocation
+
                 stability = calculateDirectionChanges()
                 lock.withLock { bitrate = currentBitrate }
 
-                val update = typeBuilder
-                    .stability(stability)
-                    .bitrate(bitrate)
-                    .location(currentLocation)
-                    .build()
-                val query = queryBuilder.broadcast(update).build()
+                var update = typeBuilder
+                var toUpdate = false
 
-                GatewayClient.mutate(query).enqueue(object : ApolloCall.Callback<BroadcastUpdateMutation.Data>() {
-                    override fun onResponse(response: Response<BroadcastUpdateMutation.Data>) {
-                        Log.d(TAG, response.data()?.broadcasts()?.update()?.id())
-                    }
+                // Update if above ten percent difference
+                if (stability != lastStability && abs(stability - lastStability) / ((stability + lastStability) / 2) > 0.1) {
+                    update = update.stability(stability)
+                    toUpdate = true
+                    lastStability = stability
+                    Log.d(TAG, "Update stability")
+                }
+                // Update if above ten percent difference
+                if (bitrate != lastBitrate && abs(bitrate - lastBitrate) / ((bitrate + lastBitrate) / 2) > 0.1) {
+                    update = update.bitrate(bitrate)
+                    toUpdate = true
+                    lastBitrate = bitrate
+                    Log.d(TAG, "Update bitrate")
+                }
+                // Update if stream have moved 50 meters
+                if (haversine(lastLocation, currentLocation) > 50) {
+                    update = update.location(lastLocation)
+                    toUpdate = true
+                    currentLocation = lastLocation
+                    Log.d(TAG, "Update Location")
+                }
 
-                    override fun onFailure(e: ApolloException) {
-                        Log.d(TAG, e.message)
-                    }
-                })
+                if (toUpdate) {
+                    val query = queryBuilder.broadcast(update.build()).build()
+
+                    GatewayClient.mutate(query).enqueue(object : ApolloCall.Callback<BroadcastUpdateMutation.Data>() {
+                        override fun onResponse(response: Response<BroadcastUpdateMutation.Data>) {
+                            Log.d(TAG, response.data()?.broadcasts()?.update()?.id())
+                        }
+
+                        override fun onFailure(e: ApolloException) {
+                            Log.d(TAG, e.message)
+                        }
+                    })
+                }
 
                 count = 0
 
-                Thread.sleep(60000)
+                Thread.sleep(10000)
             }
 
         }
