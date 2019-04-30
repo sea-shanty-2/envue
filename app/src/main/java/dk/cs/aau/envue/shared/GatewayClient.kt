@@ -1,13 +1,17 @@
 package dk.cs.aau.envue.shared
 
+import androidx.work.ListenableWorker
+import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.ApolloMutationCall
 import com.apollographql.apollo.ApolloQueryCall
 import com.apollographql.apollo.api.Mutation
 import com.apollographql.apollo.api.Operation
 import com.apollographql.apollo.api.Query
+import com.apollographql.apollo.exception.ApolloException
 import com.facebook.AccessToken
 import com.facebook.Profile
+import dk.cs.aau.envue.GatewayAuthenticationQuery
 import dk.cs.aau.envue.interceptors.AuthenticationInterceptor
 import dk.cs.aau.envue.interceptors.LoggingInterceptor
 import okhttp3.Authenticator
@@ -41,8 +45,29 @@ class GatewayClient {
                 .okHttpClient(okHttpClient().build())
         }
 
-        fun setAuthenticationToken(token: String) {
+        private fun setAuthenticationToken(token: String) {
             AuthenticationInterceptor.token = token
+        }
+
+        fun authenticate() {
+            var query = GatewayAuthenticationQuery
+                .builder()
+                .token(AccessToken.getCurrentAccessToken().token)
+                .build()
+
+            query(query).enqueue(object: ApolloCall.Callback<GatewayAuthenticationQuery.Data>() {
+                override fun onResponse(response: com.apollographql.apollo.api.Response<GatewayAuthenticationQuery.Data>) {
+                    val token = response.data()?.authenticate()?.facebook()
+
+                    if (!token.isNullOrEmpty()) {
+                        setAuthenticationToken(token)
+                    }
+                }
+
+                override fun onFailure(e: ApolloException) {
+
+                }
+            })
         }
 
 
