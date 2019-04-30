@@ -161,12 +161,16 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                     val mostFrequentEmoji = limitedEmojis[mostFrequentIndex]
                     val event = Event(qEvent.broadcasts()?.toTypedArray(), mostFrequentEmoji)
                     events.add(event)
-                    Log.d("EVENTS", "Added event with $mostFrequentEmoji as the emoji.")
+                    Log.d("EVENTS", "Added event with $mostFrequentEmoji as the emoji and ${event.center} as the center.")
                 }
 
                 activity?.runOnUiThread {
                     Log.d("EVENTS", "Setting HeatmapV2")
                     setHeatmapV2(events)
+                    for (event in events) {
+                        Log.d("EVENTS", "Adding marker ${event.emojiCode}")
+                        addMarker(LatLng(event.center.lat, event.center.lon), event.emojiCode, 35)
+                    }
                 }
 
             }
@@ -290,11 +294,11 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     private fun loadEmojis() {
         // Load all emojis into local storage
-        limitedEmojis = limitedEmojis.plus(
-            GsonBuilder().create().fromJson(
+        limitedEmojis.addAll(GsonBuilder().create().fromJson(
                 resources.openRawResource(R.raw.limited_emojis).bufferedReader(),
-                Array<EmojiIcon>::class.java
-            )) as ArrayList<String>
+                Array<EmojiIcon>::class.java).map { e -> e.char })
+
+
     }
 
 }
