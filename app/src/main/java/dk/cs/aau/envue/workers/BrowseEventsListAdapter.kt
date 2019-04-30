@@ -35,7 +35,7 @@ class BrowseEventsListAdapter(private val items: Array<Event>) :
                 Log.d("Click", "You clicked an with ${event.size} broadcasts!")
             }
 
-            text = "Event at ${event.center} (contains ${event.size} broadcasts)"
+            text = "Event at ${event.center.toString()} (contains ${event.size} broadcasts)"
 
         }
     }
