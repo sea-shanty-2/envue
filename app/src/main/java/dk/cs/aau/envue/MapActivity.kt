@@ -26,6 +26,9 @@ import android.support.v4.app.Fragment
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
+import com.google.gson.GsonBuilder
+import dk.cs.aau.envue.utility.EmojiIcon
+import dk.cs.aau.envue.utility.Event
 
 
 class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
@@ -36,6 +39,7 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     private val CIRCLE_LAYER_ID = "earthquakes-circle"
     private val TAG = "MapActivity"
     private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID)
+    private var limitedEmojis = ArrayList<String>()
 
     private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
         override fun doInBackground(vararg params: Style): Void {
@@ -59,8 +63,11 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        // Set mapbox instance, with access token
 
+        // Load all emojis into local storage
+        loadEmojis()
+
+        // Set mapbox instance, with access token
         Mapbox.getInstance(context!!, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
 
         // Mapbox view options
@@ -99,6 +106,17 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         return
     }
 
+    fun setHeatmapV2(events: List<Event>) {
+        val streamCoordinates = events.map { e -> Point.fromLngLat(e.center.lon, e.center.lat) }
+
+        if (streamCoordinates.isEmpty()) return
+
+        val lineString = LineString.fromLngLats(streamCoordinates)
+        val featureCollection = FeatureCollection.fromFeatures(arrayOf(Feature.fromGeometry(lineString)))
+
+        geoJsonSource.setGeoJson(featureCollection)
+    }
+
     fun setHeatmap(list : List<ActiveBroadcastLocationQuery.Item>?){
         val streamCoordinates = ArrayList<Point>()
 
@@ -118,29 +136,45 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     private fun updateStreamSource(loadedMapStyle: Style) {
 
-       val activeQuery: ActiveBroadcastLocationQuery = ActiveBroadcastLocationQuery.builder().build()
+        val activeEventsQuery = EventsQuery.builder().build()
+        GatewayClient.query(activeEventsQuery).enqueue(object: ApolloCall.Callback<EventsQuery.Data>() {
+            override fun onResponse(response: Response<EventsQuery.Data>) {
+                Log.d("EVENTS", "Received event data.")
+                val qEvents = response.data()?.events()?.all()
 
-        val testCall = GatewayClient.query(activeQuery)
-
-        testCall.enqueue(object : ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
-            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>){
-                Log.d(TAG, "Did shit")
-
-                var d = response.data()?.broadcasts()?.active()?.items()
-
-                activity?.runOnUiThread(object : Runnable {
-                    override fun run() {
-                        setHeatmap(d)
+                // Convert into event objects
+                val events = ArrayList<Event>()
+                for (qEvent in qEvents!!) {
+                    // For all broadcasts, find the emojis used for categorization.
+                    // Then, determine the most frequently used one. Use this as the emoji
+                    // for the event.
+                    val emojiIndexCounts = Array(limitedEmojis.size) {i -> 0}
+                    for (broadcast in qEvent.broadcasts()!!) {
+                        val emojis = broadcast.categories()
+                        for (i in 0 until emojis.size) {
+                            val indicator = emojis[i]
+                            emojiIndexCounts[i] += if (indicator > 0) 1 else 0
+                        }
                     }
-                })
+
+                    val mostFrequentIndex = emojiIndexCounts.indexOf(emojiIndexCounts.max())
+                    val mostFrequentEmoji = limitedEmojis[mostFrequentIndex]
+                    val event = Event(qEvent.broadcasts()?.toTypedArray(), mostFrequentEmoji)
+                    events.add(event)
+                    Log.d("EVENTS", "Added event with $mostFrequentEmoji as the emoji.")
+                }
+
+                activity?.runOnUiThread {
+                    Log.d("EVENTS", "Setting HeatmapV2")
+                    setHeatmapV2(events)
+                }
 
             }
 
-            override fun onFailure(e: ApolloException){
-                Log.d(TAG, e.message)
+            override fun onFailure(e: ApolloException) {
+                Log.d("EVENTS", "Something went wrong xD: ${e.message}")
             }
         })
-
     }
 
     private fun addHeatmapLayer(loadedMapStyle: Style) {
@@ -254,5 +288,13 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID)
     }
 
+    private fun loadEmojis() {
+        // Load all emojis into local storage
+        limitedEmojis = limitedEmojis.plus(
+            GsonBuilder().create().fromJson(
+                resources.openRawResource(R.raw.limited_emojis).bufferedReader(),
+                Array<EmojiIcon>::class.java
+            )) as ArrayList<String>
+    }
 
 }
