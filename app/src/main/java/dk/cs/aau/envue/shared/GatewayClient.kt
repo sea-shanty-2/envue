@@ -37,7 +37,7 @@ class GatewayClient {
 
         private fun apolloClient() : ApolloClient.Builder {
             return ApolloClient.builder()
-                .serverUrl("http://172.25.11.190")
+                .serverUrl("https://envue.me/api")  // Either "https://envue.me/api" or "http://172.25.11.190" (staging)
                 .okHttpClient(okHttpClient().build())
         }
 
