@@ -46,6 +46,9 @@ class LoginActivity : AppCompatActivity() {
 
     fun onSuccess(loginResult: LoginResult?) {
 
+        // authenticate with the gateway
+        GatewayClient.authenticate()
+
         // remove login button (to avoid interrupts)
         login_button.visibility = View.GONE
 
@@ -56,7 +59,6 @@ class LoginActivity : AppCompatActivity() {
         val periodicWorkRequest = PeriodicWorkRequest
             .Builder(RefreshTokenWorker::class.java, 1, TimeUnit.HOURS)
             .build()
-
 
         // start periodic token refresh worker
         WorkManager

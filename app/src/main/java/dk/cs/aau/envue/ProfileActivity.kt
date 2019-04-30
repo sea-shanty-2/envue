@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
@@ -24,7 +25,18 @@ class ProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
+        // register button listeners
+        logOutButton.setOnClickListener { this.logOut() }
+        interestsButton.setOnClickListener { this.onChangeInterests() }
+    }
 
+    override fun onStart() {
+        super.onStart()
+        container.visibility = View.INVISIBLE
+        fetchProfile()
+    }
+
+    private fun fetchProfile() {
         val profileQuery = ProfileQuery.builder().build()
 
         GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
@@ -42,19 +54,12 @@ class ProfileActivity : AppCompatActivity() {
             override fun onFailure(e: ApolloException) = onProfileFetchFailure(e)
 
         })
-
-        // register log out button listener
-        logOutButton.setOnClickListener { this.onLogOut() }
-        // register change interests button listener
-        interestsButton.setOnClickListener { this.onChangeInterests() }
-
-
-
     }
 
     private fun onProfileFetch(profile: ProfileQuery.Me) {
         runOnUiThread {
             profileNameView.text = profile.displayName()
+            container.visibility = View.VISIBLE
         }
     }
 
@@ -63,25 +68,20 @@ class ProfileActivity : AppCompatActivity() {
 
             AlertDialog
                 .Builder(this)
-                .setMessage(e.message)
-                .setNegativeButton("log out") { _, _ -> startActivity(Intent(this, LoginActivity::class.java)) }
+                .setTitle(e.message)
+                .setMessage(
+                    "There was an issue with fetching your profile data." +
+                    "To resolve the issue, you can try relogging.")
+                .setNegativeButton("log out") { _, _ ->  logOut() }
                 .setPositiveButton("return") { _, _ -> finish() }
                 .create()
+                .show()
         }
     }
 
-    private fun onLogOut() {
-        val profile = Profile.getCurrentProfile()
-
-        AlertDialog.Builder(this)
-            .setMessage( resources.getString(R.string.com_facebook_loginview_logged_in_as, profile.name))
-            .setCancelable(true)
-            .setPositiveButton(R.string.com_facebook_loginview_log_out_button) { _: DialogInterface, _: Int -> run{
-                LoginManager.getInstance().logOut()
-                startActivity(Intent(this, LoginActivity::class.java))
-            }}
-            .create()
-            .show()
+    private fun logOut() {
+        LoginManager.getInstance().logOut()
+        startActivity(Intent(this, LoginActivity::class.java))
     }
 
     private fun onChangeInterests() {
