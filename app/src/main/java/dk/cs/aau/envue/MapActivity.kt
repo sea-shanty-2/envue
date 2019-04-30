@@ -1,5 +1,6 @@
 package dk.cs.aau.envue
 
+import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -21,11 +22,13 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.textToBitmap
 import android.os.AsyncTask
+import android.support.v4.app.Fragment
+import android.view.ViewGroup
+import android.view.LayoutInflater
+import android.view.View
 
 
-
-
-class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
+class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
     // private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
     private val STREAM_SOURCE_ID = "stream"
     private val HEATMAP_LAYER_ID = "stream-heat"
@@ -37,7 +40,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
     private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
         override fun doInBackground(vararg params: Style): Void {
             while (true) {
-                this@MapActivity.runOnUiThread {
+                activity?.runOnUiThread {
                         updateStreamSource(params[0])
                 }
                 Thread.sleep(   300000)
@@ -54,11 +57,11 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
 
     private var mMap: MapboxMap? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Set mapbox instance, with access token
-        Mapbox.getInstance(this, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
+
+        Mapbox.getInstance(context!!, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
 
         // Mapbox view options
         var options = MapboxMapOptions().apply {
@@ -66,11 +69,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
         }
 
         // Create mapview with options
-        var mapView = MapView(this, options)
+        var mapView = MapView(context!!, options)
         mapView.id = R.id.mapView
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this) // Fragment mapper
-        setContentView(mapView) // Sets view to mapview
+
+        return mapView
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
@@ -89,8 +93,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
     }
 
     fun addMarker(position: LatLng, text: String, size: Int) {
-        var bitmap = textToBitmap(text, size, this)
-        var descriptor = IconFactory.getInstance(this).fromBitmap(bitmap)
+        var bitmap = textToBitmap(text, size, context!!)
+        var descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
         mMap?.addMarker(MarkerOptions().position(position).icon(descriptor))
         return
     }
@@ -124,7 +128,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
 
                 var d = response.data()?.broadcasts()?.active()?.items()
 
-                this@MapActivity.runOnUiThread(object : Runnable {
+                activity?.runOnUiThread(object : Runnable {
                     override fun run() {
                         setHeatmap(d)
                     }

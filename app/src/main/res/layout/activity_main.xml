@@ -16,5 +16,10 @@
             android:background="?attr/colorPrimary"
             app:layout_constraintTop_toTopOf="parent"/>
 
+    <fragment
+        android:name="dk.cs.aau.envue.MapActivity"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
 
 </android.support.constraint.ConstraintLayout>
