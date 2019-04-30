@@ -29,28 +29,8 @@ class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : Wor
 
         return if (isValid) {
             AccessToken.refreshCurrentAccessTokenAsync()
-
-            var query = GatewayAuthenticationQuery
-                .builder()
-                .token(AccessToken.getCurrentAccessToken().token)
-                .build()
-
-            GatewayClient.query(query).enqueue(object: ApolloCall.Callback<GatewayAuthenticationQuery.Data>() {
-                override fun onResponse(response: Response<GatewayAuthenticationQuery.Data>) {
-                    val token = response.data()?.authenticate()?.facebook()
-
-                    if (!token.isNullOrEmpty()) {
-                        GatewayClient.setAuthenticationToken(token)
-                    }
-                }
-
-                override fun onFailure(e: ApolloException) {
-                    Result.failure()
-                }
-            })
-
+            GatewayClient.authenticate()
             Result.success()
-
         } else {
             AlertDialog.Builder(applicationContext)
                 .setMessage(applicationContext.resources.getString(R.string.invalid_access_token))
@@ -59,7 +39,6 @@ class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : Wor
                 }}
                 .create()
                 .show()
-
             Result.failure()
         }
 
