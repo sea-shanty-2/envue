@@ -102,7 +102,7 @@ class InitializeBroadcastActivity : AppCompatActivity() {
 
     /** Creates a broadcaster object and stores it in stable storage
      * on the Envue database. */
-    private fun createBroadcaster(latitude: Double, longitude: Double, category: DoubleArray, view: View) {
+    private fun createBroadcaster(latitude: Double, longitude: Double, category: Array<Double>, view: View) {
         val location = LocationInputType.builder().latitude(latitude).longitude(longitude).build()
         val broadcast = BroadcastInputType.builder().categories(category.toList()).location(location).build()
 
@@ -131,8 +131,8 @@ class InitializeBroadcastActivity : AppCompatActivity() {
 
 
     /** Creates a one-hot vector of selected emojis */
-    private fun getCategoryVector(selectedEmojis: List<EmojiIcon>): DoubleArray {
-        val categoryVector = _allEmojis.map { 0.0 }.toDoubleArray()
+    private fun getCategoryVector(selectedEmojis: List<EmojiIcon>): Array<Double> {
+        val categoryVector = Array(_allEmojis.size) {i -> 0.0}
         for (emojiIcon in selectedEmojis) {
             val i = _allEmojis.indexOf(emojiIcon)
             categoryVector[i] = 1.0
