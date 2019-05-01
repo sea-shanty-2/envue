@@ -51,5 +51,10 @@
     <string name="notification_channel_name">Envue</string>
     <string name="notification_channel_id">"Envue"</string>
     <string name="notification_channel_description">Envue notification channel</string>
+    <string name="msg_subscribed">Subscribed</string>
+    <string name="msg_subscribe_failed">Subscribe failed</string>
+    <string name="msg_unsubscribed">Unsubscribed</string>
+    <string name="msg_unsubscribe_failed">Unsubscribe failed</string>
+
 
 </resources>

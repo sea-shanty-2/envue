@@ -15,9 +15,13 @@ import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.widget.ListView
+import android.widget.Toast
 import com.facebook.Profile
 import com.facebook.login.LoginManager
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.GsonBuilder
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_profile.*
@@ -29,6 +33,8 @@ import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
 class ProfileActivity : AppCompatActivity() {
     companion object {
         internal val SET_INTERESTS_REQUEST = 0
+        internal val TAG = ProfileActivity::class.java.simpleName ?: "ProfileActivity"
+        internal val SENDER_ID = 3317625636
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,6 +96,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun onTestNotification() {
+        /**
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -111,10 +118,41 @@ class ProfileActivity : AppCompatActivity() {
         with(NotificationManagerCompat.from(this)) {
             // notificationId is a unique int for each notification that you must define
             notify(1, builder.build())
-        }
+        }*/
+        subscribeCategory("test")
 
+        val fm = FirebaseMessaging.getInstance()
 
+        fm.send(
+            RemoteMessage.Builder("$SENDER_ID@fcm.googleapis.com")
+            .setMessageId(Integer.toString(1))
+            .addData("my_message", "Hello World")
+            .addData("my_action", "SAY_HELLO")
+            .build())
+    }
 
+    fun subscribeCategory(topic: String){
+        FirebaseMessaging.getInstance().subscribeToTopic(topic)
+            .addOnCompleteListener { task ->
+                var msg = getString(R.string.msg_subscribed)
+                if (!task.isSuccessful) {
+                    msg = getString(R.string.msg_subscribe_failed)
+                }
+                Log.d(TAG, msg)
+                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    fun unsubscribeCategory(topic: String){
+        FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
+            .addOnCompleteListener { task ->
+                var msg = getString(R.string.msg_unsubscribed)
+                if (!task.isSuccessful) {
+                    msg = getString(R.string.msg_unsubscribe_failed)
+                }
+                Log.d(TAG, msg)
+                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            }
     }
 
 }
