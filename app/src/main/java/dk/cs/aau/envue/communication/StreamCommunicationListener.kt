@@ -9,10 +9,9 @@ import dk.cs.aau.envue.communication.packets.HandshakePacket
 import okhttp3.*
 import okio.ByteString
 
-class StreamCommunicationListener(private val messageListener: MessageListener,
-                                  private val reactionListener: ReactionListener) : WebSocketListener() {
+class StreamCommunicationListener(private val communicationListener: CommunicationListener) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        output("Connected")
+        communicationListener.onConnected()
         webSocket.send(Gson().toJson(
             HandshakePacket(
                 Profile.getCurrentProfile().name,
@@ -28,14 +27,14 @@ class StreamCommunicationListener(private val messageListener: MessageListener,
             val jsonObj = JsonParser().parse(it) as JsonObject
 
             when (jsonObj.get("Type").asString) {
-                "Message" -> this.messageListener.onMessage(
+                "Message" -> this.communicationListener.onMessage(
                     Message(
                         jsonObj.get("Message").asString,
                         jsonObj.get("Author").asString,
                         jsonObj.get("Avatar").asString
                     )
                 )
-                "Reaction" -> this.reactionListener.onReaction(jsonObj.get("Reaction").asString)
+                "Reaction" -> this.communicationListener.onReaction(jsonObj.get("Reaction").asString)
             }
         }
     }
@@ -44,21 +43,31 @@ class StreamCommunicationListener(private val messageListener: MessageListener,
         output("Received message")
     }
 
-    override fun onClosing(webSocket: WebSocket?, code: Int, reason: String?) {
-        output("Closing")
+    override fun onClosed(webSocket: WebSocket?, code: Int, reason: String?) {
+        output("Closed")
+
+        communicationListener.onClosed(code)
+    }
+
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        output("Failure")
+
+        t.printStackTrace()
+
+        communicationListener.onClosed(-1)
     }
 
     companion object {
         const val NORMAL_CLOSURE_STATUS = 1000
 
-        fun buildSocket(messageListener: MessageListener, reactionListener: ReactionListener): WebSocket {
+        fun buildSocket(communicationListener: CommunicationListener): WebSocket {
             val client = OkHttpClient.Builder()
                 .build()
             val request = Request.Builder()
-                .url("ws://envue.me:4040")
+                .url("wss://envue.me:4040")
                 .build()
 
-            return client.newWebSocket(request, StreamCommunicationListener(messageListener, reactionListener))
+            return client.newWebSocket(request, StreamCommunicationListener(communicationListener))
         }
     }
 

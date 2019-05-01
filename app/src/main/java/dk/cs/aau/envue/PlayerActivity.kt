@@ -8,7 +8,6 @@ import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.*
 import android.widget.*
 import com.google.android.exoplayer2.DefaultRenderersFactory
@@ -30,7 +29,28 @@ import dk.cs.aau.envue.communication.packets.ReactionPacket
 import okhttp3.WebSocket
 
 
-class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, ReactionListener {
+class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+
+    fun setConnected(state: Boolean) {
+        runOnUiThread {
+            findViewById<Button>(R.id.button_chatbox_send)?.isEnabled = state
+        }
+    }
+
+    override fun onClosed(code: Int) {
+        setConnected(false)
+
+        if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
+            Thread.sleep(500)
+
+            startCommunicationSocket()
+        }
+    }
+
+    override fun onConnected() {
+        setConnected(true)
+    }
+
     override fun onMessage(message: Message) {
         runOnUiThread {
             addMessage(message)
@@ -67,6 +87,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     private var emojiFragment: EmojiFragment? = null
     private var lastReactionAt: Long = 0
 
+    private fun startCommunicationSocket() {
+        socket = StreamCommunicationListener.buildSocket(this)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +100,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         broadcastId = intent.getStringExtra(intentKeys.toTypedArray()[0])
 
         setContentView(R.layout.activity_player)
+
+        // Initially disable the ability to send messages
+        setConnected(false)
+
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -85,8 +113,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         // Create chat adapter
         chatAdapter = MessageListAdapter(this, messages)
 
-        // Initialize chat listener
-        socket = StreamCommunicationListener.buildSocket(this, this)
+        // Initialize communication socket
+        startCommunicationSocket()
 
         // Initialize player
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
@@ -141,11 +169,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
-        //When in horizontal we want to be able to click through the recycler
+
+        // When in horizontal we want to be able to click through the recycler
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             exoPlayerViewOnTouch()
         }
-
 
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
@@ -242,7 +270,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     override fun onStop() {
         super.onStop()
         releasePlayer()
-        socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
     private fun releasePlayer() {
