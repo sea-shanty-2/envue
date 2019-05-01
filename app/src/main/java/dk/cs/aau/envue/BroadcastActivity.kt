@@ -39,9 +39,7 @@ import dk.cs.aau.envue.type.BroadcastUpdateInputType
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import android.Manifest
-import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
 import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
@@ -54,7 +52,8 @@ import kotlin.math.sign
  * status bar and navigation/system bar) with user interaction.
  */
 class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEncodeHandler.SrsEncodeListener,
-    MessageListener, SensorEventListener, ReactionListener {
+    CommunicationListener, SensorEventListener {
+
     private var publisher: SrsPublisher? = null
     private val TAG = "ENVUE-BROADCAST"
     private var chatList: RecyclerView? = null
@@ -76,6 +75,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var thread: Thread? = null
     private var running = true
     private var currentBitrate: Int = 0
+    private var shouldReconnectCommunication: Boolean = false
 
     private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity): AsyncTask<Unit, Unit, Unit>() {
         val queryBuilder: BroadcastUpdateMutation.Builder = BroadcastUpdateMutation.builder().id(id)
@@ -112,7 +112,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 if(!::currentLocation.isInitialized){
                     count++
                     if (count > 50) {
-                        Log.d(TAG, "To many location tries.")
+                        Log.d(TAG, "Too many location tries.")
                         //TODO: Could not get location error
                     }
                     Thread.sleep(10)
@@ -171,6 +171,19 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
     }
 
+    override fun onClosed(code: Int) {
+        if (shouldReconnectCommunication) {
+            startCommunicationSocket()
+        }
+    }
+
+    override fun onConnected() {
+    }
+
+    private fun startCommunicationSocket() {
+        socket = StreamCommunicationListener.buildSocket(this)
+    }
+
     fun calculateDirectionChanges(): Double {
         var arrayCopy: List<FloatArray> = listOf()
 
@@ -191,8 +204,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             || sampleArray[lastIndex][y] != sampleArray[lastIndex/2][y]
             || sampleArray[lastIndex][z] != sampleArray[lastIndex/2][z]) {
             for (i in 0..(lastIndex - 3)) {
-                val sgn1 = sgn(sampleArray[i], sampleArray[i+1])
-                val sgn2 = sgn(sampleArray[i+1], sampleArray[i+2])
+                val sgn1 = calculateSign(sampleArray[i], sampleArray[i+1])
+                val sgn2 = calculateSign(sampleArray[i+1], sampleArray[i+2])
                 if (!(sgn1 contentEquals sgn2)) {
                     cd++
                 }
@@ -203,10 +216,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         return 1 - Math.tanh(cd.toDouble() / curveSmoothingConstant)
     }
 
-    private fun sgn(arrayp: FloatArray, arrayq: FloatArray): FloatArray {
-        val xDiff = arrayp[x] - arrayq[x]
-        val yDiff = arrayp[y] - arrayq[y]
-        val zDiff = arrayp[z] - arrayq[z]
+    private fun calculateSign(arrayP: FloatArray, arrayQ: FloatArray): FloatArray {
+        val xDiff = arrayP[x] - arrayQ[x]
+        val yDiff = arrayP[y] - arrayQ[y]
+        val zDiff = arrayP[z] - arrayQ[z]
 
         // Ensure difference is above threshold to ensure small shakes aren't registered.
         val xSign = if (Math.abs(xDiff) > threshold) sign(xDiff) else 0f
@@ -352,8 +365,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         // Create chat adapter
         chatAdapter = MessageListAdapter(this, messages, streamerView = true)
 
-        // Initialize chat listener
-        socket = StreamCommunicationListener.buildSocket(this, this)
+        // Initialize communication socket
+        startCommunicationSocket()
 
         chatList = findViewById(R.id.chat_view)
 
@@ -419,6 +432,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     override fun onDestroy() {
         super.onDestroy()
         lock.withLock { running = false }
+        this.shouldReconnectCommunication = false
         this.publisher?.stopPublish()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
