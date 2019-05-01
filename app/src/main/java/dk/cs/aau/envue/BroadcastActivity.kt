@@ -40,6 +40,8 @@ import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import android.Manifest
 import android.support.v4.app.ActivityCompat
+import android.view.View
+import android.widget.TextView
 import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
@@ -73,6 +75,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private val threshold = 1f
     private val curveSmoothingConstant = 20
     private var thread: Thread? = null
+    private var counterThread: Thread? = null
     private var running = true
     private var currentBitrate: Int = 0
 
@@ -267,11 +270,47 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onRtmpConnecting(msg: String?) {
-        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    fun startCounter() {
+        val startedAt = System.currentTimeMillis()
+        counterThread = Thread {
+            while (true) {
+                try {
+                    Thread.sleep(1000)
+                } catch (ex: InterruptedException) {
+                    break
+                }
+
+                val difference = System.currentTimeMillis() - startedAt
+                val seconds = difference / 1000 % 60
+                val minutes = difference / 1000 / 60
+
+                runOnUiThread { setLiveText("${getString(R.string.live)} ${minutes.format(2)}:${seconds.format(2)}") }
+            }
+        }
+        counterThread?.start()
+    }
+
+    fun stopCounter() {
+        this.counterThread?.interrupt()
     }
 
     override fun onRtmpConnected(msg: String?) {
-        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
+        setLiveStatus(true)
+        startCounter()
+    }
+
+    fun setLiveText(newText: String) {
+        this.findViewById<TextView>(R.id.live_status)?.apply {
+            text = newText
+        }
+    }
+
+    fun setLiveStatus(live: Boolean) {
+        this.findViewById<TextView>(R.id.live_status)?.apply {
+            visibility = if (live) View.VISIBLE else View.GONE
+        }
     }
 
     override fun onRtmpVideoStreaming() {
@@ -282,10 +321,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     override fun onRtmpStopped() {
         Toast.makeText(applicationContext, "RTMP stopped", Toast.LENGTH_SHORT).show()
+        stopCounter()
     }
 
     override fun onRtmpDisconnected() {
-        Toast.makeText(applicationContext, "RTMP disconnected", Toast.LENGTH_SHORT).show()
+        setLiveStatus(false)
     }
 
     override fun onRtmpVideoFpsChanged(fps: Double) {
@@ -310,7 +350,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     override fun onRtmpIllegalArgumentException(e: IllegalArgumentException?) {
         Toast.makeText(applicationContext, "Illegal argument exception (RTMP)", Toast.LENGTH_SHORT).show()
-
     }
 
     override fun onRtmpIllegalStateException(e: IllegalStateException?) {
@@ -391,11 +430,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        // TODO: Implement orientation change
-    }
-
     override fun onResume() {
         super.onResume()
         lock.withLock {
@@ -437,3 +471,5 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 }
+
+fun Number.format(digits: Int) = "%0${digits}d".format(this)
