@@ -25,6 +25,7 @@ class ProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
+
         // register button listeners
         logOutButton.setOnClickListener { this.logOut() }
         interestsButton.setOnClickListener { this.onChangeInterests() }
