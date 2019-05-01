@@ -41,6 +41,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         setConnected(false)
 
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
+            Thread.sleep(500)
+
             startCommunicationSocket()
         }
     }

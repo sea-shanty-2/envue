@@ -172,6 +172,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     override fun onClosed(code: Int) {
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
+            Thread.sleep(500)
+
             startCommunicationSocket()
         }
     }
