@@ -10,7 +10,7 @@ import android.widget.ImageView
 import kotlinx.android.synthetic.main.fragment_reaction.view.*
 
 
-class ReactionListAdapter(private val onClick: (String) -> Unit, private val emojiList: List<String>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class ReactionListAdapter(private val onClick: (String) -> Unit, private val emojiList: Array<String>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
