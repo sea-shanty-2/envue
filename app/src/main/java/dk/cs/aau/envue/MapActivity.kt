@@ -1,6 +1,7 @@
 package dk.cs.aau.envue
 
 import android.content.Context
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -90,19 +91,20 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         // Set style of map. Use style loader in this context.
         mMap?.setStyle(Style.MAPBOX_STREETS, this)
 
-        // TODO: Load markers from database.
-        addMarker(LatLng(50.0, 50.0), "\uD83D\uDE1A", 50)
         mMap?.setOnMarkerClickListener(this)
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val bundle = Bundle().apply { putString("broadcastId", marker.title) }
+        val intent = Intent(activity, PlayerActivity::class.java).apply { putExtras(bundle)}
+        startActivity(intent)
+        return false
     }
 
-    fun addMarker(position: LatLng, text: String, size: Int) {
+    fun addMarker(position: LatLng, text: String, size: Int, broadcastId: String) {
         var bitmap = textToBitmap(text, size, context!!)
         var descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
-        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor))
+        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))
         return
     }
 
@@ -169,7 +171,10 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                     setHeatmapV2(events)
                     for (event in events) {
                         Log.d("EVENTS", "Adding marker ${event.emojiCode}")
-                        addMarker(LatLng(event.center.lat, event.center.lon), event.emojiCode, 35)
+                        addMarker(LatLng(event.center.lat, event.center.lon),
+                            event.emojiCode,
+                            35,
+                            event.broadcasts?.first()?.id()!!)
                     }
                 }
 

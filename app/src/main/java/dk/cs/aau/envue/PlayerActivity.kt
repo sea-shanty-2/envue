@@ -49,6 +49,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
+    private lateinit var broadcastId: String
+
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
@@ -68,6 +70,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        broadcastId = savedInstanceState!!["broadcastId"] as String
         setContentView(R.layout.activity_player)
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -97,8 +100,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         )
 
         // Create media source
-        val broadcastId = "FixMigBrams"
-        val hlsUrl = "https://envue.me/relay/$broadcastId"
+        val hlsUrl = "https://envue.me/relay/$broadcastId"  //TODO: Set this before onCreate()!
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
