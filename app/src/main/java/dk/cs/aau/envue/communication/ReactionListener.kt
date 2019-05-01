@@ -1,4 +1,4 @@
-package dk.cs.aau.envue.chat
+package dk.cs.aau.envue.communication
 
 interface ReactionListener {
     fun onReaction(reaction: String)

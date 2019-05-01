@@ -16,6 +16,7 @@ import com.facebook.AccessToken
 import dk.cs.aau.envue.GatewayAuthenticationQuery
 import dk.cs.aau.envue.LoginActivity
 import dk.cs.aau.envue.R
+import dk.cs.aau.envue.interceptors.AuthenticationInterceptor
 import dk.cs.aau.envue.shared.GatewayClient
 
 
@@ -28,28 +29,8 @@ class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : Wor
 
         return if (isValid) {
             AccessToken.refreshCurrentAccessTokenAsync()
-
-            var query = GatewayAuthenticationQuery
-                .builder()
-                .token(AccessToken.getCurrentAccessToken().token)
-                .build()
-
-            GatewayClient.query(query).enqueue(object: ApolloCall.Callback<GatewayAuthenticationQuery.Data>() {
-                override fun onResponse(response: Response<GatewayAuthenticationQuery.Data>) {
-                    val token = response.data()?.authenticate()?.facebook()
-
-                    if (!token.isNullOrEmpty()) {
-                        GatewayClient.setAuthenticator(token)
-                    }
-                }
-
-                override fun onFailure(e: ApolloException) {
-                    Result.failure()
-                }
-            })
-
+            GatewayClient.authenticate()
             Result.success()
-
         } else {
             AlertDialog.Builder(applicationContext)
                 .setMessage(applicationContext.resources.getString(R.string.invalid_access_token))
@@ -58,7 +39,6 @@ class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : Wor
                 }}
                 .create()
                 .show()
-
             Result.failure()
         }
 

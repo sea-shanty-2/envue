@@ -68,13 +68,5 @@
             android:layout_margin="16dp"
     />
 
-    <Button
-            android:text="Notification test"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/interestsButton"
-            android:id="@+id/testButton"
-            android:layout_margin="16dp"
-    />
 
 </RelativeLayout>

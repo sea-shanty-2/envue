@@ -1,11 +1,11 @@
-package dk.cs.aau.envue.chat
+package dk.cs.aau.envue.communication
 
 import android.util.Log
 import com.facebook.Profile
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import dk.cs.aau.envue.chat.packets.HandshakePacket
+import dk.cs.aau.envue.communication.packets.HandshakePacket
 import okhttp3.*
 import okio.ByteString
 
@@ -27,15 +27,15 @@ class StreamCommunicationListener(private val messageListener: MessageListener,
         text?.let {
             val jsonObj = JsonParser().parse(it) as JsonObject
 
-            when (jsonObj.get("type").asString) {
-                "message" -> this.messageListener.onMessage(
+            when (jsonObj.get("Type").asString) {
+                "Message" -> this.messageListener.onMessage(
                     Message(
-                        jsonObj.get("message").asString,
-                        jsonObj.get("author").asString,
-                        jsonObj.get("avatar").asString
+                        jsonObj.get("Message").asString,
+                        jsonObj.get("Author").asString,
+                        jsonObj.get("Avatar").asString
                     )
                 )
-                "reaction" -> this.reactionListener.onReaction(jsonObj.get("reaction").asString)
+                "Reaction" -> this.reactionListener.onReaction(jsonObj.get("Reaction").asString)
             }
         }
     }
@@ -55,7 +55,7 @@ class StreamCommunicationListener(private val messageListener: MessageListener,
             val client = OkHttpClient.Builder()
                 .build()
             val request = Request.Builder()
-                .url("ws://envue.me:8765")
+                .url("ws://envue.me:4040")
                 .build()
 
             return client.newWebSocket(request, StreamCommunicationListener(messageListener, reactionListener))

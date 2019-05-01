@@ -1,9 +1,12 @@
 package dk.cs.aau.envue
 
 import android.Manifest
+import android.app.ProgressDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
@@ -28,7 +31,9 @@ import dk.cs.aau.envue.type.LocationInputType
 
 
 class InitializeBroadcastActivity : AppCompatActivity() {
-
+    private val tag = "InitBroadcastActivity"
+    private var id: String? = null
+    private var rtmp: String? = null
     private var _allEmojis = ArrayList<EmojiIcon>()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
@@ -48,11 +53,12 @@ class InitializeBroadcastActivity : AppCompatActivity() {
                 fusedLocationClient.lastLocation.apply {
                     addOnSuccessListener { location : Location? ->
                         if (location != null) {
-                            createBroadcaster(location.latitude, location.longitude, category=getCategoryVector(getSelectedCategories()))
+                            createBroadcaster(location.latitude, location.longitude, category=getCategoryVector(getSelectedCategories()), view = view)
                             startBroadcast(view)
                         } else {
                             // We were not able to get the location
                             Snackbar.make(view, R.string.did_not_receive_location, Snackbar.LENGTH_LONG)
+
                         }
                     }
 
@@ -96,27 +102,37 @@ class InitializeBroadcastActivity : AppCompatActivity() {
 
     /** Creates a broadcaster object and stores it in stable storage
      * on the Envue database. */
-    private fun createBroadcaster(latitude: Double, longitude: Double, category: DoubleArray) {
-
+    private fun createBroadcaster(latitude: Double, longitude: Double, category: Array<Double>, view: View) {
         val location = LocationInputType.builder().latitude(latitude).longitude(longitude).build()
         val broadcast = BroadcastInputType.builder().categories(category.toList()).location(location).build()
+
         val broadcastCreateMutation = BroadcastCreateMutation.builder().broadcast(broadcast).build()
+
         GatewayClient.mutate(broadcastCreateMutation).enqueue(object: ApolloCall.Callback<BroadcastCreateMutation.Data>() {
 
             override fun onResponse(response: Response<BroadcastCreateMutation.Data>) {
-                Log.d("Test", response.data()?.broadcasts()?.create())
+                val create = response.data()?.broadcasts()?.create()
+                if (create == null) {
+                    Snackbar.make(view, "Could not create broadcast.", Snackbar.LENGTH_LONG)
+                }
+                else {
+                    id = create.id()
+                    rtmp = create.rtmp()
+
+                    Log.d(tag, "ID: $id, RTMP:  $rtmp")
+                }
             }
 
             override fun onFailure(e: ApolloException) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                Log.d(tag, e.message)
             }
         })
     }
 
 
     /** Creates a one-hot vector of selected emojis */
-    private fun getCategoryVector(selectedEmojis: List<EmojiIcon>): DoubleArray {
-        val categoryVector = _allEmojis.map { 0.0 }.toDoubleArray()
+    private fun getCategoryVector(selectedEmojis: List<EmojiIcon>): Array<Double> {
+        val categoryVector = Array(_allEmojis.size) {i -> 0.0}
         for (emojiIcon in selectedEmojis) {
             val i = _allEmojis.indexOf(emojiIcon)
             categoryVector[i] = 1.0
@@ -163,6 +179,53 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             .filter {it.isSelected}
             .map {it.getEmoji()}
 
+    inner class StartBroadcastTask(c: Context): AsyncTask<Void, Void, Boolean>() {
+        val progress: ProgressDialog = ProgressDialog(c)
+        val context: Context = c
+
+        init {
+            progress.apply {
+                setMessage("Loading...")
+                setTitle("Creating broadcast")
+                setCancelable(true)
+            }
+        }
+
+        override fun doInBackground(vararg params: Void): Boolean {
+            val starttime = System.currentTimeMillis()
+
+            while (id == null || rtmp == null) {
+                if (System.currentTimeMillis() - starttime > 10000) return false
+                Thread.sleep(500)
+            }
+            return true
+        }
+
+        override fun onPreExecute() {
+            super.onPreExecute()
+            progress.show()
+        }
+
+        override fun onPostExecute(result: Boolean) {
+            super.onPostExecute(result)
+            progress.dismiss()
+            if (!result) {
+                this@InitializeBroadcastActivity.finish()
+                return
+            }
+
+            val i = Intent(context, BroadcastActivity::class.java)
+
+            // Variables to parse to next activity.
+            i.apply {
+                putExtra("ID", id)
+                putExtra("RTMP", rtmp)
+            }
+
+            startActivity(i)
+        }
+
+    }
 
     /** Starts the broadcast after processing selected categories
      * if all checks pass. */
@@ -174,6 +237,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             return
         }
 
-        startActivity(Intent(this, BroadcastActivity::class.java))
+        StartBroadcastTask(this).execute()
     }
 }
