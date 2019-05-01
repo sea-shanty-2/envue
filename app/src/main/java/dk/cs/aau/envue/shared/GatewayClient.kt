@@ -45,7 +45,7 @@ class GatewayClient {
                 .okHttpClient(okHttpClient().build())
         }
 
-        private fun setAuthenticationToken(token: String) {
+        fun setAuthenticationToken(token: String) {
             AuthenticationInterceptor.token = token
         }
 
