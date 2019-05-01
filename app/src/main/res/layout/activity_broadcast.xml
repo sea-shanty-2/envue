@@ -33,7 +33,7 @@
             android:id="@+id/live_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end|top"
+            android:layout_gravity="start|top"
             android:layout_margin="8dp"
             android:background="@drawable/rounded_live"
             android:padding="5dp"
