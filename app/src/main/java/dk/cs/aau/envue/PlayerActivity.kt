@@ -76,8 +76,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Create reaction adapter
-        // TODO: Move to resources
-        reactionAdapter = ReactionListAdapter(::addReaction, listOf("👍", "👎", "❤", "\uD83D\uDD25", "\uD83D\uDE02", "\uD83C\uDF46", "\uD83D\uDE20"))
+        reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
 
         // Create chat adapter
         chatAdapter = MessageListAdapter(this, messages)
