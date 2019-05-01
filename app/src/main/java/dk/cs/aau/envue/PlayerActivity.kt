@@ -40,7 +40,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onClosed(code: Int) {
         setConnected(false)
 
-        if (shouldReconnectCommunication) {
+        if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
             startCommunicationSocket()
         }
     }
@@ -82,7 +82,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var messages: ArrayList<Message> = ArrayList()
     private var emojiFragment: EmojiFragment? = null
     private var lastReactionAt: Long = 0
-    private var shouldReconnectCommunication: Boolean = true
 
     private fun startCommunicationSocket() {
         socket = StreamCommunicationListener.buildSocket(this)
@@ -267,7 +266,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     override fun onDestroy() {
         super.onDestroy()
-        this.shouldReconnectCommunication = false
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 

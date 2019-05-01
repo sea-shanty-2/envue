@@ -75,7 +75,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var thread: Thread? = null
     private var running = true
     private var currentBitrate: Int = 0
-    private var shouldReconnectCommunication: Boolean = false
 
     private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity): AsyncTask<Unit, Unit, Unit>() {
         val queryBuilder: BroadcastUpdateMutation.Builder = BroadcastUpdateMutation.builder().id(id)
@@ -172,7 +171,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onClosed(code: Int) {
-        if (shouldReconnectCommunication) {
+        if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
             startCommunicationSocket()
         }
     }
@@ -198,7 +197,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val sampleArray = arrayCopy.takeLast(100)
 
         val lastIndex = sampleArray.lastIndex
-        var cd = 0
+        var directionChange = 0
 
         if (sampleArray[lastIndex][x] != sampleArray[lastIndex/2][y]
             || sampleArray[lastIndex][y] != sampleArray[lastIndex/2][y]
@@ -207,13 +206,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 val sgn1 = calculateSign(sampleArray[i], sampleArray[i+1])
                 val sgn2 = calculateSign(sampleArray[i+1], sampleArray[i+2])
                 if (!(sgn1 contentEquals sgn2)) {
-                    cd++
+                    directionChange++
                 }
             }
         }
 
-        // Divides with ten to smooth curve.
-        return 1 - Math.tanh(cd.toDouble() / curveSmoothingConstant)
+        // Smooth curve
+        return 1 - Math.tanh(directionChange.toDouble() / curveSmoothingConstant)
     }
 
     private fun calculateSign(arrayP: FloatArray, arrayQ: FloatArray): FloatArray {
@@ -432,7 +431,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     override fun onDestroy() {
         super.onDestroy()
         lock.withLock { running = false }
-        this.shouldReconnectCommunication = false
         this.publisher?.stopPublish()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
