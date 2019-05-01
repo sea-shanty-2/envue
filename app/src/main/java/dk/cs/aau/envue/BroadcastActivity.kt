@@ -470,6 +470,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         this.publisher?.stopPublish()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
+
+    private fun removeFromActiveEvents() {
+
+    }
 }
 
 fun Number.format(digits: Int) = "%0${digits}d".format(this)

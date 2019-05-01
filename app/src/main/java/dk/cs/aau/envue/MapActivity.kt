@@ -186,9 +186,21 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             }
         })
 
-        GatewayClient.query(activeBroadcastsQuery).enqueue(object: ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
 
+        GatewayClient.query(activeBroadcastsQuery).enqueue(object: ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
+            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>) {
+
+                activity?.runOnUiThread {
+                    setHeatmap(response.data()?.broadcasts()?.active()?.items())
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("BROADCASTS", "Something went wrong xD: ${e.message}")
+            }
         })
+
+
     }
 
     private fun addHeatmapLayer(loadedMapStyle: Style) {
