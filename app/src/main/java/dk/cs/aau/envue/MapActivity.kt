@@ -95,8 +95,7 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-        val bundle = Bundle().apply { putString("broadcastId", marker.title) }
-        val intent = Intent(activity, PlayerActivity::class.java).apply { putExtras(bundle)}
+        val intent = Intent(activity, PlayerActivity::class.java).apply { putExtra("broadcastId", marker.title)}
         startActivity(intent)
         return false
     }
@@ -139,6 +138,8 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     private fun updateStreamSource(loadedMapStyle: Style) {
 
         val activeEventsQuery = EventsQuery.builder().build()
+        val activeBroadcastsQuery = ActiveBroadcastLocationQuery.builder().build()
+
         GatewayClient.query(activeEventsQuery).enqueue(object: ApolloCall.Callback<EventsQuery.Data>() {
             override fun onResponse(response: Response<EventsQuery.Data>) {
                 Log.d("EVENTS", "Received event data.")
@@ -183,6 +184,10 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             override fun onFailure(e: ApolloException) {
                 Log.d("EVENTS", "Something went wrong xD: ${e.message}")
             }
+        })
+
+        GatewayClient.query(activeBroadcastsQuery).enqueue(object: ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
+
         })
     }
 

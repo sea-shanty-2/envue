@@ -70,7 +70,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        broadcastId = savedInstanceState!!["broadcastId"] as String
+
+        // LMFAO WTF - get the broadcastId as sent from the MapActivity (determined by which event was pressed)
+        val intentKeys = intent.extras.keySet()
+        broadcastId = intent.getStringExtra(intentKeys.toTypedArray()[0])
+
         setContentView(R.layout.activity_player)
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
