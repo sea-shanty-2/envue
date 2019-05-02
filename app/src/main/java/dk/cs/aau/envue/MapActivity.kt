@@ -1,5 +1,7 @@
 package dk.cs.aau.envue
 
+import android.content.Context
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -21,11 +23,16 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.textToBitmap
 import android.os.AsyncTask
+import android.support.v4.app.Fragment
+import android.view.ViewGroup
+import android.view.LayoutInflater
+import android.view.View
+import com.google.gson.GsonBuilder
+import dk.cs.aau.envue.utility.EmojiIcon
+import dk.cs.aau.envue.utility.Event
 
 
-
-
-class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
+class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
     // private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
     private val STREAM_SOURCE_ID = "stream"
     private val HEATMAP_LAYER_ID = "stream-heat"
@@ -33,11 +40,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
     private val CIRCLE_LAYER_ID = "earthquakes-circle"
     private val TAG = "MapActivity"
     private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID)
+    private var limitedEmojis = ArrayList<String>()
 
     private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
         override fun doInBackground(vararg params: Style): Void {
             while (true) {
-                this@MapActivity.runOnUiThread {
+                activity?.runOnUiThread {
                         updateStreamSource(params[0])
                 }
                 Thread.sleep(   300000)
@@ -54,11 +62,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
 
     private var mMap: MapboxMap? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
+        // Load all emojis into local storage
+        loadEmojis()
 
         // Set mapbox instance, with access token
-        Mapbox.getInstance(this, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
+        Mapbox.getInstance(context!!, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
 
         // Mapbox view options
         var options = MapboxMapOptions().apply {
@@ -66,11 +77,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
         }
 
         // Create mapview with options
-        var mapView = MapView(this, options)
+        var mapView = MapView(context!!, options)
         mapView.id = R.id.mapView
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this) // Fragment mapper
-        setContentView(mapView) // Sets view to mapview
+
+        return mapView
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
@@ -79,20 +91,31 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
         // Set style of map. Use style loader in this context.
         mMap?.setStyle(Style.MAPBOX_STREETS, this)
 
-        // TODO: Load markers from database.
-        addMarker(LatLng(50.0, 50.0), "\uD83D\uDE1A", 50)
         mMap?.setOnMarkerClickListener(this)
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val intent = Intent(activity, PlayerActivity::class.java).apply { putExtra("broadcastId", marker.title)}
+        startActivity(intent)
+        return false
     }
 
-    fun addMarker(position: LatLng, text: String, size: Int) {
-        var bitmap = textToBitmap(text, size, this)
-        var descriptor = IconFactory.getInstance(this).fromBitmap(bitmap)
-        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor))
+    fun addMarker(position: LatLng, text: String, size: Int, broadcastId: String) {
+        var bitmap = textToBitmap(text, size, context!!)
+        var descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
+        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))
         return
+    }
+
+    fun setHeatmapV2(events: List<Event>) {
+        val streamCoordinates = events.map { e -> Point.fromLngLat(e.center.lon, e.center.lat) }
+
+        if (streamCoordinates.isEmpty()) return
+
+        val lineString = LineString.fromLngLats(streamCoordinates)
+        val featureCollection = FeatureCollection.fromFeatures(arrayOf(Feature.fromGeometry(lineString)))
+
+        geoJsonSource.setGeoJson(featureCollection)
     }
 
     fun setHeatmap(list : List<ActiveBroadcastLocationQuery.Item>?){
@@ -114,28 +137,69 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
 
     private fun updateStreamSource(loadedMapStyle: Style) {
 
-       val activeQuery: ActiveBroadcastLocationQuery = ActiveBroadcastLocationQuery.builder().build()
+        val activeEventsQuery = EventsQuery.builder().build()
+        val activeBroadcastsQuery = ActiveBroadcastLocationQuery.builder().build()
 
-        val testCall = GatewayClient.query(activeQuery)
+        GatewayClient.query(activeEventsQuery).enqueue(object: ApolloCall.Callback<EventsQuery.Data>() {
+            override fun onResponse(response: Response<EventsQuery.Data>) {
+                Log.d("EVENTS", "Received event data.")
+                val qEvents = response.data()?.events()?.all()
 
-        testCall.enqueue(object : ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
-            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>){
-                Log.d(TAG, "Did shit")
-
-                var d = response.data()?.broadcasts()?.active()?.items()
-
-                this@MapActivity.runOnUiThread(object : Runnable {
-                    override fun run() {
-                        setHeatmap(d)
+                // Convert into event objects
+                val events = ArrayList<Event>()
+                for (qEvent in qEvents!!) {
+                    // For all broadcasts, find the emojis used for categorization.
+                    // Then, determine the most frequently used one. Use this as the emoji
+                    // for the event.
+                    val emojiIndexCounts = Array(limitedEmojis.size) {i -> 0}
+                    for (broadcast in qEvent.broadcasts()!!) {
+                        val emojis = broadcast.categories()
+                        for (i in 0 until emojis.size) {
+                            val indicator = emojis[i]
+                            emojiIndexCounts[i] += if (indicator > 0) 1 else 0
+                        }
                     }
-                })
+
+                    val mostFrequentIndex = emojiIndexCounts.indexOf(emojiIndexCounts.max())
+                    val mostFrequentEmoji = limitedEmojis[mostFrequentIndex]
+                    val event = Event(qEvent.broadcasts()?.toTypedArray(), mostFrequentEmoji)
+                    events.add(event)
+                    Log.d("EVENTS", "Added event with $mostFrequentEmoji as the emoji and ${event.center} as the center.")
+                }
+
+                activity?.runOnUiThread {
+                    Log.d("EVENTS", "Setting HeatmapV2")
+                    setHeatmapV2(events)
+                    for (event in events) {
+                        Log.d("EVENTS", "Adding marker ${event.emojiCode}")
+                        addMarker(LatLng(event.center.lat, event.center.lon),
+                            event.emojiCode,
+                            35,
+                            event.broadcasts?.first()?.id()!!)
+                    }
+                }
 
             }
 
-            override fun onFailure(e: ApolloException){
-                Log.d(TAG, e.message)
+            override fun onFailure(e: ApolloException) {
+                Log.d("EVENTS", "Something went wrong xD: ${e.message}")
             }
         })
+
+
+        GatewayClient.query(activeBroadcastsQuery).enqueue(object: ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
+            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>) {
+
+                activity?.runOnUiThread {
+                    setHeatmap(response.data()?.broadcasts()?.active()?.items())
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("BROADCASTS", "Something went wrong xD: ${e.message}")
+            }
+        })
+
 
     }
 
@@ -250,5 +314,13 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, MapboxMap.OnMarkerC
         loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID)
     }
 
+    private fun loadEmojis() {
+        // Load all emojis into local storage
+        limitedEmojis.addAll(GsonBuilder().create().fromJson(
+                resources.openRawResource(R.raw.limited_emojis).bufferedReader(),
+                Array<EmojiIcon>::class.java).map { e -> e.char })
+
+
+    }
 
 }

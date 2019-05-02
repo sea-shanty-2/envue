@@ -69,6 +69,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
+    private lateinit var broadcastId: String
+
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
@@ -92,6 +94,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // LMFAO WTF - get the broadcastId as sent from the MapActivity (determined by which event was pressed)
+        val intentKeys = intent.extras.keySet()
+        broadcastId = intent.getStringExtra(intentKeys.toTypedArray()[0])
+
         setContentView(R.layout.activity_player)
 
         // Initially disable the ability to send messages
@@ -124,8 +131,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         )
 
         // Create media source
-        val broadcastId = "FixMigBrams"
-        val hlsUrl = "https://envue.me/relay/$broadcastId"
+        val hlsUrl = "https://envue.me/relay/$broadcastId"  //TODO: Set this before onCreate()!
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
