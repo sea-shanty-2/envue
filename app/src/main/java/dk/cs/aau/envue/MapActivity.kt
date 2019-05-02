@@ -135,7 +135,7 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         geoJsonSource.setGeoJson(featureCollection)
     }
 
-    private fun updateStreamSource(loadedMapStyle: Style) {
+    private fun updateStreamSource(loadedMapStyle: Style?) {
 
         val activeEventsQuery = EventsQuery.builder().build()
         val activeBroadcastsQuery = ActiveBroadcastLocationQuery.builder().build()
@@ -319,8 +319,12 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         limitedEmojis.addAll(GsonBuilder().create().fromJson(
                 resources.openRawResource(R.raw.limited_emojis).bufferedReader(),
                 Array<EmojiIcon>::class.java).map { e -> e.char })
-
-
     }
 
+    fun updateMap() {
+        activity?.runOnUiThread {
+            mMap?.markers?.forEach { mMap?.removeMarker(it) }
+            updateStreamSource(null)
+        }
+    }
 }
