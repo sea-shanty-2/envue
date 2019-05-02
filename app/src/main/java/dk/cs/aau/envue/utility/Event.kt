@@ -1,15 +1,16 @@
 package dk.cs.aau.envue.utility
 
+import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.EventsQuery
 
-class Event(val broadcasts: Array<EventsQuery.Broadcast>?) {
+class Event(val broadcasts: Array<EventsQuery.Broadcast>?, val emojiCode: String) {
+
 
     class Location(var lat: Double, var lon: Double) {
         override fun toString(): String {
             return "($lat, $lon)"
         }
     }
-
 
     val size get() = broadcasts?.size
 

@@ -60,7 +60,7 @@ class BrowseEventsActivity : AppCompatActivity() {
     private fun initializeRecyclerView(items: Iterable<EventsQuery.All>) {
 
         runOnUiThread {
-            val events = items.map { e -> Event(e.broadcasts()?.toTypedArray()) }
+            val events = items.map { e -> Event(e.broadcasts()?.toTypedArray(), "") }
             viewManager = LinearLayoutManager(this)
             viewAdapter = BrowseEventsListAdapter(events.toTypedArray())
             recyclerView = findViewById<RecyclerView>(R.id.choose_broadcast_list_view).apply {

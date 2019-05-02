@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout android:id="@+id/player_linear_layout"
+              xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:card_view="http://schemas.android.com/apk/res-auto"
               xmlns:app="http://schemas.android.com/apk/res-auto"
               android:layout_height="wrap_content"
@@ -19,6 +20,7 @@
     </com.google.android.exoplayer2.ui.SimpleExoPlayerView>
 
     <android.support.v7.widget.CardView
+            android:id="@+id/player_card_view"
             android:layout_gravity="center"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
@@ -34,12 +36,14 @@
     </android.support.v7.widget.CardView>
 
     <android.support.v7.widget.CardView
+            android:id="@+id/palyer_card_view_2"
             android:layout_gravity="center"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             app:cardCornerRadius="4dp"
             android:layout_margin="5dp" card_view:contentPadding="5dp">
         <LinearLayout
+                android:id="@+id/player_linear_layout_2"
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -54,6 +58,7 @@
             />
 
             <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                          android:id="@+id/player_linear_layout_3"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
                           android:background="#fff"

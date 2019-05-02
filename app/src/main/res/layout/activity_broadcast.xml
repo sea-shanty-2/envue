@@ -28,6 +28,21 @@
                                                 android:fadingEdge="horizontal"
                                                 android:layout_gravity="end"/>
     </LinearLayout>
+    
+    <TextView
+            android:id="@+id/live_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|top"
+            android:layout_margin="8dp"
+            android:background="@drawable/rounded_live"
+            android:padding="5dp"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:text="@string/live"
+            android:visibility="gone"/>
+
     <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -13,6 +13,7 @@ import androidx.work.WorkManager
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
+import com.facebook.AccessToken
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -46,30 +47,58 @@ class LoginActivity : AppCompatActivity() {
 
     fun onSuccess(loginResult: LoginResult?) {
 
-        // authenticate with the gateway
-        GatewayClient.authenticate()
-
         // remove login button (to avoid interrupts)
         login_button.visibility = View.GONE
 
-        // set a unique work name for periodic token refresh
-        val uniqueWorkName = "periodic_token_refresh"
-
-        // build token refresh worker
-        val periodicWorkRequest = PeriodicWorkRequest
-            .Builder(RefreshTokenWorker::class.java, 1, TimeUnit.HOURS)
+        var query = GatewayAuthenticationQuery
+            .builder()
+            .token(AccessToken.getCurrentAccessToken().token)
             .build()
 
-        // start periodic token refresh worker
-        WorkManager
-            .getInstance()
-            .enqueueUniquePeriodicWork(
-                uniqueWorkName,
-                ExistingPeriodicWorkPolicy.KEEP,
-                periodicWorkRequest)
+        GatewayClient.query(query).enqueue(object: ApolloCall.Callback<GatewayAuthenticationQuery.Data>() {
+            override fun onResponse(response: com.apollographql.apollo.api.Response<GatewayAuthenticationQuery.Data>) {
 
-        // return to prev activity
-        finish()
+                val token = response.data()?.authenticate()?.facebook()
+
+                GatewayClient.setAuthenticationToken(token!!)
+
+                // set a unique work name for periodic token refresh
+                val uniqueWorkName = "periodic_token_refresh"
+
+                // build token refresh worker
+                val periodicWorkRequest = PeriodicWorkRequest
+                    .Builder(RefreshTokenWorker::class.java, 1, TimeUnit.HOURS)
+                    .build()
+
+                // start periodic token refresh worker
+                WorkManager
+                    .getInstance()
+                    .enqueueUniquePeriodicWork(
+                        uniqueWorkName,
+                        ExistingPeriodicWorkPolicy.KEEP,
+                        periodicWorkRequest)
+
+                // return to prev activity
+                finish()
+            }
+
+            override fun onFailure(e: ApolloException) {
+
+                login_button.visibility = View.VISIBLE
+
+                runOnUiThread {
+
+                    AlertDialog
+                        .Builder(this@LoginActivity)
+                        .setTitle(e.message)
+                        .setMessage(
+                            "There was an issue logging you in." +
+                            "Could not authenticate with the envue api.")
+                        .create()
+                        .show()
+                }
+            }
+        })
     }
 
     fun onCancel() {

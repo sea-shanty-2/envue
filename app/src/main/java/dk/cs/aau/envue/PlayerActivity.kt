@@ -8,7 +8,6 @@ import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.*
 import android.widget.*
 import com.google.android.exoplayer2.DefaultRenderersFactory
@@ -30,7 +29,28 @@ import dk.cs.aau.envue.communication.packets.ReactionPacket
 import okhttp3.WebSocket
 
 
-class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, ReactionListener {
+class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+
+    fun setConnected(state: Boolean) {
+        runOnUiThread {
+            findViewById<Button>(R.id.button_chatbox_send)?.isEnabled = state
+        }
+    }
+
+    override fun onClosed(code: Int) {
+        setConnected(false)
+
+        if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
+            Thread.sleep(500)
+
+            startCommunicationSocket()
+        }
+    }
+
+    override fun onConnected() {
+        setConnected(true)
+    }
+
     override fun onMessage(message: Message) {
         runOnUiThread {
             addMessage(message)
@@ -49,6 +69,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
+    private lateinit var broadcastId: String
+
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
@@ -65,22 +87,34 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     private var emojiFragment: EmojiFragment? = null
     private var lastReactionAt: Long = 0
 
+    private fun startCommunicationSocket() {
+        socket = StreamCommunicationListener.buildSocket(this)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // LMFAO WTF - get the broadcastId as sent from the MapActivity (determined by which event was pressed)
+        val intentKeys = intent.extras.keySet()
+        broadcastId = intent.getStringExtra(intentKeys.toTypedArray()[0])
+
         setContentView(R.layout.activity_player)
+
+        // Initially disable the ability to send messages
+        setConnected(false)
+
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Create reaction adapter
-        // TODO: Move to resources
-        reactionAdapter = ReactionListAdapter(::addReaction, listOf("👍", "👎", "❤", "\uD83D\uDD25", "\uD83D\uDE02", "\uD83C\uDF46", "\uD83D\uDE20"))
+        reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
 
         // Create chat adapter
         chatAdapter = MessageListAdapter(this, messages)
 
-        // Initialize chat listener
-        socket = StreamCommunicationListener.buildSocket(this, this)
+        // Initialize communication socket
+        startCommunicationSocket()
 
         // Initialize player
         val adaptiveTrackSelection = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
@@ -97,8 +131,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
         )
 
         // Create media source
-        val broadcastId = "FixMigBrams"
-        val hlsUrl = "https://envue.me/relay/$broadcastId"
+        val hlsUrl = "https://envue.me/relay/$broadcastId"  //TODO: Set this before onCreate()!
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
@@ -136,11 +169,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
-        //When in horizontal we want to be able to click through the recycler
+
+        // When in horizontal we want to be able to click through the recycler
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             exoPlayerViewOnTouch()
         }
-
 
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
@@ -237,7 +270,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, MessageListener, Reac
     override fun onStop() {
         super.onStop()
         releasePlayer()
-        socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
     private fun releasePlayer() {
