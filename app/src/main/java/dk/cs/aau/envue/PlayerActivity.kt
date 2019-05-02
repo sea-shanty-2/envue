@@ -283,6 +283,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
         view?.apply {
+            visibility = View.VISIBLE
             alpha = initialAlpha
             animate()
                 .alpha(finalAlpha)
