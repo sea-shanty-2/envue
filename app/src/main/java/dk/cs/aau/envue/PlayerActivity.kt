@@ -1,11 +1,14 @@
 package dk.cs.aau.envue
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
@@ -95,9 +98,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // LMFAO WTF - get the broadcastId as sent from the MapActivity (determined by which event was pressed)
-        val intentKeys = intent.extras.keySet()
-        broadcastId = intent.getStringExtra(intentKeys.toTypedArray()[0])
+        // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
+        val intentKeys = intent?.extras?.keySet()
+        broadcastId = intentKeys?.let { intent.getStringExtra(it.toTypedArray()[0]) } ?: "main"
 
         setContentView(R.layout.activity_player)
 
@@ -249,6 +252,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun addLocalMessage() {
+        val recommended = findViewById<CardView>(R.id.recommended_card)
+        if (recommended.visibility == View.VISIBLE) {
+            transitionView(recommended, 1f, 0f, View.GONE)
+        } else {
+            transitionView(recommended, 0f, 1f, View.VISIBLE)
+        }
         val messageView = findViewById<EditText>(R.id.editText)
         val text = messageView?.text.toString()
         if (!text.isEmpty()) {
@@ -270,6 +279,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onStop() {
         super.onStop()
         releasePlayer()
+    }
+
+    fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
+        view?.apply {
+            alpha = initialAlpha
+            animate()
+                .alpha(finalAlpha)
+                .setDuration(1000)
+                .setListener((object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        view.visibility = finalState
+                    }
+                }))
+        }
     }
 
     override fun onDestroy() {
