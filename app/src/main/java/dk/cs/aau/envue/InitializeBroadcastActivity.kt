@@ -109,7 +109,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         val broadcastCreateMutation = BroadcastCreateMutation.builder().broadcast(broadcast).build()
 
         GatewayClient.mutate(broadcastCreateMutation).enqueue(object: ApolloCall.Callback<BroadcastCreateMutation.Data>() {
-
             override fun onResponse(response: Response<BroadcastCreateMutation.Data>) {
                 val create = response.data()?.broadcasts()?.create()
                 if (create == null) {
@@ -129,7 +128,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         })
     }
 
-
     /** Creates a one-hot vector of selected emojis */
     private fun getCategoryVector(selectedEmojis: List<EmojiIcon>): Array<Double> {
         val categoryVector = Array(_allEmojis.size) {i -> 0.0}
@@ -141,18 +139,15 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         return categoryVector
     }
 
-
     /** Loads emojis from a JSON file provided by the resource id.
      * Emojis are loaded directly into a list adapter used by the
      * broadcast category list view. */
     private fun loadEmojis(resourceId: Int, targetResourceId: Int) {
-
         // Load all emojis into local storage
         _allEmojis = _allEmojis.plus(GsonBuilder().create().fromJson(
             resources.openRawResource(resourceId).bufferedReader(),
             Array<EmojiIcon>::class.java
         )) as ArrayList
-
 
         // Wrap all unicodes in EmojiIcon objects in rows of 5
         val emojiRows = ArrayList<ArrayList<EmojiIcon>>()
@@ -192,10 +187,10 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         override fun doInBackground(vararg params: Void): Boolean {
-            val starttime = System.currentTimeMillis()
+            val startTime = System.currentTimeMillis()
 
             while (id == null || rtmp == null) {
-                if (System.currentTimeMillis() - starttime > 10000) return false
+                if (System.currentTimeMillis() - startTime > 10000) return false
                 Thread.sleep(500)
             }
             return true
@@ -214,15 +209,15 @@ class InitializeBroadcastActivity : AppCompatActivity() {
                 return
             }
 
-            val i = Intent(context, BroadcastActivity::class.java)
+            val intent = Intent(context, BroadcastActivity::class.java)
 
-            // Variables to parse to next activity.
-            i.apply {
+            // Variables to pass to next activity.
+            intent.apply {
                 putExtra("ID", id)
                 putExtra("RTMP", rtmp)
             }
 
-            startActivity(i)
+            startActivity(intent)
         }
 
     }
