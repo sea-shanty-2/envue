@@ -78,6 +78,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var counterThread: Thread? = null
     private var running = true
     private var currentBitrate: Int = 0
+    private lateinit var broadcastId: String
 
     private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity): AsyncTask<Unit, Unit, Unit>() {
         val queryBuilder: BroadcastUpdateMutation.Builder = BroadcastUpdateMutation.builder().id(id)
@@ -376,6 +377,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val id = intent.getStringExtra("ID")
         val rtmp = intent.getStringExtra("RTMP")
 
+        broadcastId = id
+
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
@@ -458,7 +461,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 android.R.string.yes
             ) { _, _ ->
                 finish()
-
+                removeFromActiveEvents()
                 super.onBackPressed()
             }
             .setNegativeButton(android.R.string.no, null).show()
@@ -469,10 +472,22 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         lock.withLock { running = false }
         this.publisher?.stopPublish()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+        removeFromActiveEvents()
     }
 
     private fun removeFromActiveEvents() {
+        val removalMutation = BroadcastStopMutation.builder().id(broadcastId).build()
+        GatewayClient.mutate(removalMutation).enqueue(object: ApolloCall.Callback<BroadcastStopMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
+                val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
+                val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
+                // TODO: Use the above lists to calculate points and visualise a graph of viewership
+            }
 
+            override fun onFailure(e: ApolloException) {
+                Log.d("STOPBROADCAST", "Stop broadcast mutation failed, broadcast has not been removed from events!")
+            }
+        })
     }
 }
 

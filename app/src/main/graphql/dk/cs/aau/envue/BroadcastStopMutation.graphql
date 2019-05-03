@@ -1,0 +1,16 @@
+mutation BroadcastStopMutation($id: ID!) {
+    broadcasts{
+        stop(
+            id:$id
+        ) {
+            leftTimeStamps {
+                id
+                time
+            }
+            joinedTimeStamps {
+                id
+                time
+            }
+        }
+    }
+}
