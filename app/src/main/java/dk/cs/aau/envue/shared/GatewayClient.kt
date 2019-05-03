@@ -1,26 +1,16 @@
 package dk.cs.aau.envue.shared
 
-import androidx.work.ListenableWorker
-import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.ApolloMutationCall
 import com.apollographql.apollo.ApolloQueryCall
 import com.apollographql.apollo.api.Mutation
 import com.apollographql.apollo.api.Operation
 import com.apollographql.apollo.api.Query
-import com.apollographql.apollo.exception.ApolloException
 import com.facebook.AccessToken
-import com.facebook.Profile
 import dk.cs.aau.envue.GatewayAuthenticationQuery
 import dk.cs.aau.envue.interceptors.AuthenticationInterceptor
 import dk.cs.aau.envue.interceptors.LoggingInterceptor
-import okhttp3.Authenticator
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Response
-import javax.xml.datatype.DatatypeConstants.SECONDS
-import okhttp3.Route
-import java.util.concurrent.TimeUnit
 
 
 class GatewayClient {
@@ -29,45 +19,34 @@ class GatewayClient {
 
     companion object {
 
-        private fun okHttpClient() : OkHttpClient.Builder {
+        const val endpoint = "https://envue.me/api"
 
+        private fun okHttpClient() : OkHttpClient.Builder {
             return OkHttpClient.Builder()
                 .addInterceptor(AuthenticationInterceptor())
                 .addInterceptor(LoggingInterceptor())
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
         }
 
         private fun apolloClient() : ApolloClient.Builder {
+
             return ApolloClient.builder()
-                .serverUrl("https://envue.me/api")  // Either "https://envue.me/api" or "http://172.25.11.190" (staging)
+                .serverUrl(endpoint)
                 .okHttpClient(okHttpClient().build())
         }
 
-        fun setAuthenticationToken(token: String) {
-            AuthenticationInterceptor.token = token
-        }
+        fun fetchToken(): String? {
 
-        fun authenticate() {
+            // Build new client instances without interceptors
+            var httpClient = OkHttpClient.Builder().build()
+            var apolloClient = ApolloClient.builder().serverUrl(endpoint).okHttpClient(httpClient).build()
+
             var query = GatewayAuthenticationQuery
                 .builder()
                 .token(AccessToken.getCurrentAccessToken().token)
                 .build()
 
-            query(query).enqueue(object: ApolloCall.Callback<GatewayAuthenticationQuery.Data>() {
-                override fun onResponse(response: com.apollographql.apollo.api.Response<GatewayAuthenticationQuery.Data>) {
-                    val token = response.data()?.authenticate()?.facebook()
-
-                    if (!token.isNullOrEmpty()) {
-                        setAuthenticationToken(token)
-                    }
-                }
-
-                override fun onFailure(e: ApolloException) {
-
-                }
-            })
+            // Perform a blocking authentication request
+            return apolloClient.query(query).execute().data()?.authenticate()?.facebook()
         }
 
 

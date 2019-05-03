@@ -71,8 +71,8 @@ class ProfileActivity : AppCompatActivity() {
                 .Builder(this)
                 .setTitle(e.message)
                 .setMessage(
-                    "There was an issue with fetching your profile data." +
-                    "To resolve the issue, you can try relogging.")
+                    "There was an issue fetching your profile data." +
+                    "Check your internet connection or you can try relogging.")
                 .setNegativeButton("log out") { _, _ ->  logOut() }
                 .setPositiveButton("return") { _, _ -> finish() }
                 .create()
