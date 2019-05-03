@@ -4,7 +4,9 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
+import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
 import android.support.v7.app.AppCompatActivity
@@ -39,21 +41,16 @@ class MainActivity : AppCompatActivity() {
         } catch (e: NoSuchAlgorithmException) {
 
         }
-/*
-        val BASE_URL = "envue.me/api"
-
-        val okHttpClient = OkHttpClient.Builder().build()
-
-        val apolloClient = ApolloClient.builder()
-            .serverUrl(BASE_URL)
-            .okHttpClient(okHttpClient)
-            .build()*/
 
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
 
+        // Update map on button press
+        findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
+            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

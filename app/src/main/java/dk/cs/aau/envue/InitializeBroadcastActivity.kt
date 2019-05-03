@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.AsyncTask
+import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
@@ -195,9 +196,12 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             val starttime = System.currentTimeMillis()
 
             while (id == null || rtmp == null) {
-                if (System.currentTimeMillis() - starttime > 10000) return false
+                if (System.currentTimeMillis() - starttime > 10000) {
+                    return false
+                }
                 Thread.sleep(500)
             }
+
             return true
         }
 
@@ -224,7 +228,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
 
             startActivity(i)
         }
-
     }
 
     /** Starts the broadcast after processing selected categories
@@ -237,6 +240,10 @@ class InitializeBroadcastActivity : AppCompatActivity() {
             return
         }
 
-        StartBroadcastTask(this).execute()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+            StartBroadcastTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+        } else {
+            StartBroadcastTask(this).execute()
+        }
     }
 }
