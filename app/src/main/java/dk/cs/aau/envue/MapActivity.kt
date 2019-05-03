@@ -28,8 +28,11 @@ import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
 import com.google.gson.GsonBuilder
+import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.utility.Event
+import java.net.URL
+import kotlin.random.Random
 
 
 class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
@@ -95,6 +98,7 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
+        // Start a viewing session passing the broadcaster id so the client is redirected to the broadcast they pressed
         val intent = Intent(activity, PlayerActivity::class.java).apply { putExtra("broadcastId", marker.title)}
         startActivity(intent)
         return false
@@ -103,7 +107,7 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     fun addMarker(position: LatLng, text: String, size: Int, broadcastId: String) {
         var bitmap = textToBitmap(text, size, context!!)
         var descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
-        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))
+        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))  // Title = broadcastId
         return
     }
 
@@ -134,11 +138,36 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
         geoJsonSource.setGeoJson(featureCollection)
     }
-
     private fun updateStreamSource(loadedMapStyle: Style?) {
 
+        // Create queries for
+        // - Events (so we can show their emojis)
+        // - Broadcasts (so we can show the heat map)
         val activeEventsQuery = EventsQuery.builder().build()
         val activeBroadcastsQuery = ActiveBroadcastLocationQuery.builder().build()
+
+        loadEventsToMap(activeEventsQuery)
+        loadBroadcastsToMap(activeBroadcastsQuery)
+    }
+
+    // Loads all active broadcasts to the map in the form of heat map points
+    private fun loadBroadcastsToMap(activeBroadcastsQuery: ActiveBroadcastLocationQuery) {
+        GatewayClient.query(activeBroadcastsQuery).enqueue(object: ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
+            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>) {
+
+                activity?.runOnUiThread {
+                    setHeatmap(response.data()?.broadcasts()?.active()?.items())
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("BROADCASTS", "Something went wrong: ${e.message}")
+            }
+        })
+    }
+
+    // Loads all active events to the map in the form of most frequent emoji in each event
+    private fun loadEventsToMap(activeEventsQuery: EventsQuery) {
 
         GatewayClient.query(activeEventsQuery).enqueue(object: ApolloCall.Callback<EventsQuery.Data>() {
             override fun onResponse(response: Response<EventsQuery.Data>) {
@@ -178,29 +207,12 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                             event.broadcasts?.first()?.id()!!)
                     }
                 }
-
             }
 
             override fun onFailure(e: ApolloException) {
-                Log.d("EVENTS", "Something went wrong xD: ${e.message}")
+                Log.d("EVENTS", "Something went wrong: ${e.message}")
             }
         })
-
-
-        GatewayClient.query(activeBroadcastsQuery).enqueue(object: ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
-            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>) {
-
-                activity?.runOnUiThread {
-                    setHeatmap(response.data()?.broadcasts()?.active()?.items())
-                }
-            }
-
-            override fun onFailure(e: ApolloException) {
-                Log.d("BROADCASTS", "Something went wrong xD: ${e.message}")
-            }
-        })
-
-
     }
 
     private fun addHeatmapLayer(loadedMapStyle: Style) {
@@ -327,4 +339,5 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             updateStreamSource(null)
         }
     }
+
 }
