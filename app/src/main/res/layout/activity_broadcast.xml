@@ -9,8 +9,8 @@
             android:layout_height="match_parent"
             android:id="@+id/camera_view"/>
 
-    <LinearLayout android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="match_parent"
                   android:orientation="horizontal"
                   android:weightSum="1"
                   android:baselineAligned="false"
@@ -20,7 +20,7 @@
                                                 android:divider="#fff"
                                                 android:layout_weight=".4"
                                                 android:layout_width="0dip"
-                                                android:layout_height="wrap_content"
+                                                android:layout_height="match_parent"
                                                 android:padding="5dp"
                                                 android:requiresFadingEdge="vertical"
                                                 android:fadingEdgeLength="50dp"

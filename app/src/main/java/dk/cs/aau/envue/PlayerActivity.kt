@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
@@ -79,6 +78,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var editMessageView: EditText? = null
     private var chatList: RecyclerView? = null
     private var reactionList: RecyclerView? = null
+    private var recommendationView: View? = null
+    private var recommendationTimeout: ProgressBar? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
@@ -89,6 +90,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var messages: ArrayList<Message> = ArrayList()
     private var emojiFragment: EmojiFragment? = null
     private var lastReactionAt: Long = 0
+    private var recommendationExpirationThread: Thread? = null
+    private var recommendedBroadcastId: String? = null
 
     private fun startCommunicationSocket() {
         socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
@@ -134,7 +137,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         )
 
         // Create media source
-        val hlsUrl = "https://envue.me/relay/$broadcastId"  //TODO: Set this before onCreate()!
+        val hlsUrl = "https://envue.me/relay/$broadcastId"
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
@@ -158,6 +161,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
         reactionList = findViewById(R.id.reaction_view)
+        recommendationView = findViewById(R.id.recommendation_view)
+        recommendationTimeout = findViewById(R.id.recommendation_timer)
 
         // Assign reaction adapter and layout manager
         val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
@@ -200,7 +205,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }
-
 
     @SuppressLint("ClickableViewAccessibility")
     private fun exoPlayerViewOnTouch() {
@@ -251,15 +255,41 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    private fun addLocalMessage() {
-        val recommended = findViewById<CardView>(R.id.recommended_card)
-        if (recommended.visibility == View.VISIBLE) {
-            transitionView(recommended, 1f, 0f, View.GONE)
-        } else {
-            transitionView(recommended, 0f, 1f, View.VISIBLE)
+    private fun hideRecommendation() {
+        recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) }}
+    }
+
+    private fun showRecommendation(broadcastId: String) {
+        recommendedBroadcastId = broadcastId
+        recommendationView?.let { transitionView(it, 0f, 1f, View.VISIBLE) }
+
+        recommendationExpirationThread = Thread {
+            recommendationTimeout?.let { it.progress = it.max }
+
+            while (recommendationTimeout?.let { it.progress > 0 } == true) {
+                runOnUiThread { recommendationTimeout?.let { it.progress -= 1 } }
+                try {
+                    Thread.sleep(5)
+                } catch (interruptedException: InterruptedException) {
+                    return@Thread
+                }
+            }
+
+            hideRecommendation()
         }
+        recommendationExpirationThread?.start()
+    }
+
+    private fun cancelRecommendation() {
+        recommendedBroadcastId = null
+        recommendationExpirationThread?.interrupt()
+        hideRecommendation()
+    }
+
+    private fun addLocalMessage() {
         val messageView = findViewById<EditText>(R.id.editText)
         val text = messageView?.text.toString()
+        showRecommendation("test")
         if (!text.isEmpty()) {
             socket?.send(Gson().toJson(MessagePacket(text)))
             onMessage(Message(text))
@@ -281,8 +311,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         releasePlayer()
     }
 
-    fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
-        view?.apply {
+    private fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
+        view.apply {
             visibility = View.VISIBLE
             alpha = initialAlpha
             animate()
@@ -315,7 +345,15 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
+        // Since we are using custom layouts for different configurations, we need to manually code state persistence
+        val recommendationVisibility = recommendationView?.visibility
+        val recommendationExpirationProgress = recommendationTimeout?.progress
+
         bindContentView()
+
+        // Restore state
+        recommendationVisibility?.let { recommendationView?.visibility = it }
+        recommendationExpirationProgress?.let { recommendationTimeout?.progress = it }
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
