@@ -9,14 +9,15 @@ import dk.cs.aau.envue.communication.packets.HandshakePacket
 import okhttp3.*
 import okio.ByteString
 
-class StreamCommunicationListener(private val communicationListener: CommunicationListener) : WebSocketListener() {
+class StreamCommunicationListener(private val communicationListener: CommunicationListener,
+                                  private val channelId: String) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
         communicationListener.onConnected()
         webSocket.send(Gson().toJson(
             HandshakePacket(
                 Profile.getCurrentProfile().name,
                 Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
-                "test"
+                channelId
             )
         ))
     }
@@ -60,14 +61,14 @@ class StreamCommunicationListener(private val communicationListener: Communicati
     companion object {
         const val NORMAL_CLOSURE_STATUS = 1000
 
-        fun buildSocket(communicationListener: CommunicationListener): WebSocket {
+        fun buildSocket(communicationListener: CommunicationListener, channelId: String): WebSocket {
             val client = OkHttpClient.Builder()
                 .build()
             val request = Request.Builder()
                 .url("wss://envue.me:4040")
                 .build()
 
-            return client.newWebSocket(request, StreamCommunicationListener(communicationListener))
+            return client.newWebSocket(request, StreamCommunicationListener(communicationListener, channelId))
         }
     }
 
