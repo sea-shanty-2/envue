@@ -62,7 +62,6 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun onProfileFetchFailure(e: ApolloException) {
         runOnUiThread {
-
             AlertDialog
                 .Builder(this)
                 .setTitle(e.message)

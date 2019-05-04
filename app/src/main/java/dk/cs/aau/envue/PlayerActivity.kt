@@ -137,7 +137,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         )
 
         // Create media source
-        val hlsUrl = "https://envue.me/relay/$broadcastId"  //TODO: Set this before onCreate()!
+        val hlsUrl = "https://envue.me/relay/$broadcastId"
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)

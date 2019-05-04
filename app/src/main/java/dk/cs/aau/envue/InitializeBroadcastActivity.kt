@@ -38,7 +38,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
     private var _allEmojis = ArrayList<EmojiIcon>()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_initialize_broadcast)
@@ -59,7 +58,6 @@ class InitializeBroadcastActivity : AppCompatActivity() {
                         } else {
                             // We were not able to get the location
                             Snackbar.make(view, R.string.did_not_receive_location, Snackbar.LENGTH_LONG)
-
                         }
                     }
 

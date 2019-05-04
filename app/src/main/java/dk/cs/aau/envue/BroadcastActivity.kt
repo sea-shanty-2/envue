@@ -108,7 +108,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     }
 
                     addOnFailureListener { Log.d(TAG, it.message) }
-
                     addOnCanceledListener { Log.d(TAG, "Cancelled") }
                 }
 
@@ -293,7 +292,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         counterThread?.start()
     }
 
-    fun stopCounter() {
+    private fun stopCounter() {
         this.counterThread?.interrupt()
     }
 
@@ -302,13 +301,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         startCounter()
     }
 
-    fun setLiveText(newText: String) {
+    private fun setLiveText(newText: String) {
         this.findViewById<TextView>(R.id.live_status)?.apply {
             text = newText
         }
     }
 
-    fun setLiveStatus(live: Boolean) {
+    private fun setLiveStatus(live: Boolean) {
         this.findViewById<TextView>(R.id.live_status)?.apply {
             visibility = if (live) View.VISIBLE else View.GONE
         }
@@ -334,7 +333,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onRtmpVideoBitrateChanged(bitrate: Double) {
-        Toast.makeText(applicationContext, "Bitrate: $bitrate", Toast.LENGTH_SHORT).show()
+        // Toast.makeText(applicationContext, "Bitrate: $bitrate", Toast.LENGTH_SHORT).show()
         lock.withLock { currentBitrate = bitrate.toInt() }
     }
 
@@ -378,8 +377,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val rtmp = intent.getStringExtra("RTMP")
 
         broadcastId = id
-
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
         // Get profile
@@ -412,6 +410,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         startCommunicationSocket()
 
         chatList = findViewById(R.id.chat_view)
+
+        // Add chat messages
+        onMessage(Message("hej det her er en test", "Anders Langballe Jakobsen", null))
+        onMessage(Message("hej det her er en test", "Anders Langballe Jakobsen", null))
+        onMessage(Message("hej det her er en test", "Anders Langballe Jakobsen", null))
 
         // Creates fragments for EmojiReactionsFragment
         val fragmentTransaction = supportFragmentManager.beginTransaction()
