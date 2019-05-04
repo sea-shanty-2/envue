@@ -411,11 +411,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         chatList = findViewById(R.id.chat_view)
 
-        // Add chat messages
-        onMessage(Message("hej det her er en test", "Anders Langballe Jakobsen", null))
-        onMessage(Message("hej det her er en test", "Anders Langballe Jakobsen", null))
-        onMessage(Message("hej det her er en test", "Anders Langballe Jakobsen", null))
-
         // Creates fragments for EmojiReactionsFragment
         val fragmentTransaction = supportFragmentManager.beginTransaction()
         emojiFragment = EmojiFragment()
