@@ -186,7 +186,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun startCommunicationSocket() {
-        socket = StreamCommunicationListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
     }
 
     fun calculateDirectionChanges(): Double {

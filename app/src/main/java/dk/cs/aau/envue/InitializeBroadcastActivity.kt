@@ -193,10 +193,10 @@ class InitializeBroadcastActivity : AppCompatActivity() {
         }
 
         override fun doInBackground(vararg params: Void): Boolean {
-            val starttime = System.currentTimeMillis()
+            val startTime = System.currentTimeMillis()
 
             while (id == null || rtmp == null) {
-                if (System.currentTimeMillis() - starttime > 10000) {
+                if (System.currentTimeMillis() - startTime > 10000) {
                     return false
                 }
                 Thread.sleep(500)
