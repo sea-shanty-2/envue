@@ -1,7 +1,6 @@
 package dk.cs.aau.envue
 
 import android.app.Activity
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -10,12 +9,9 @@ import android.view.View
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.facebook.Profile
 import com.facebook.login.LoginManager
-import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.shared.GatewayClient
 import kotlinx.android.synthetic.main.activity_profile.*
-import dk.cs.aau.envue.transformers.CircleTransform
 
 class ProfileActivity : AppCompatActivity() {
     companion object {
@@ -86,9 +82,9 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun onChangeInterests() {
-        val curint: CharSequence = currentInterestsView.text
+        val curInt: CharSequence = currentInterestsView.text
         val intent = Intent(this, InterestsActivity::class.java)
-        intent.putExtra(resources.getString(R.string.current_interests_key), curint)
+        intent.putExtra(resources.getString(R.string.current_interests_key), curInt)
         startActivityForResult(intent, SET_INTERESTS_REQUEST)
     }
 

@@ -94,7 +94,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var recommendedBroadcastId: String? = null
 
     private fun startCommunicationSocket() {
-        socket = StreamCommunicationListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
     }
 
     @SuppressLint("ClickableViewAccessibility")
