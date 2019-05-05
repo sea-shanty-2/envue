@@ -10,6 +10,7 @@ import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.*
 import android.widget.*
 import com.google.android.exoplayer2.DefaultRenderersFactory
@@ -72,6 +73,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private lateinit var broadcastId: String
+    private lateinit var eventIds: ArrayList<String>
 
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
@@ -103,7 +105,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
         val intentKeys = intent?.extras?.keySet()
-        broadcastId = intentKeys?.let { intent.getStringExtra(it.toTypedArray()[0]) } ?: "main"
+        broadcastId = intent.getStringExtra("broadcastId") ?: "main"
+        eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
+
+
 
         setContentView(R.layout.activity_player)
 
