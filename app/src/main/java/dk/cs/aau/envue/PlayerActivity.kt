@@ -95,6 +95,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private lateinit var broadcastId: String
     private lateinit var eventIds: ArrayList<String>
 
+    private var fingerX1 = 0.0f
+    private var fingerX2 = 0.0f
+    private val MIN_DISTANCE = 150  // Minimum distance for a swipe to be registered
+
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
@@ -215,6 +219,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             exoPlayerViewOnTouch()
         }
 
+        // Make sure we can detect swipes in portrait mode as well
+        (playerView as SimpleExoPlayerView).setOnTouchListener { view, event ->
+            changeBroadcastOnSwipe(event)
+            false
+        }
+
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
             addLocalMessage()
@@ -247,8 +257,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val chatView = chatList
         exoPlayer?.setOnClickListener { }
         chatView?.setOnTouchListener { _, event ->
+            changeBroadcastOnSwipe(event)  // Detect swipes
             if (event?.action == MotionEvent.ACTION_DOWN) {
-                //Log.e("Touch", "ACTION DOWN")
                 startX = event.x
                 startY = event.y
 
@@ -259,13 +269,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 if (Math.abs(startX - endX) < 5 || Math.abs(startY- endY) < 5) {
 
                     if (isPressed) {
-                        //Log.e("Press", "Pause")
                         exoPlayer?.controllerHideOnTouch = false
                         player?.playWhenReady = false
                         player?.playbackState
                         isPressed = false
                     } else {
-                        //Log.e("Press", "Play")
                         exoPlayer?.controllerHideOnTouch = true
                         player?.playWhenReady = true
                         player?.playbackState
@@ -403,13 +411,36 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 if (ids != null) {
                     eventIds = ids as ArrayList<String>
                 } else {
-                    Log.d("EVENTIDS", "No broadcasts in this event (broadcast id was $broadcastId).")
+                    Log.d("EVENTUPDATE", "No broadcasts in this event (broadcast id was $broadcastId).")
                 }
             }
 
             override fun onFailure(e: ApolloException) {
-                Log.d("EVENTIDS", "Something went wrong while fetching broadcasts in the event: ${e.message}")
+                Log.d("EVENTUPDATE", "Something went wrong while fetching broadcasts in the event: ${e.message}")
             }
         })
+    }
+
+    private fun changeBroadcastOnSwipe(event: MotionEvent) {
+        return when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                fingerX1 = event.x  // Maybe the start of a swipe
+            }
+
+            MotionEvent.ACTION_UP -> {
+                fingerX2 = event.x  // Maybe the end of a swipe
+
+                // Measure horizontal distance between x1 and x2 - if its big enough, change broadcast
+                val deltaX = Math.abs(fingerX2 - fingerX1)
+                if (deltaX > MIN_DISTANCE) {
+                    // This is a swipe, change broadcast
+                    Toast.makeText(this, "Nice!", Toast.LENGTH_LONG).show()  // TODO: Change broadcast
+                } else {
+                    // Do nothing, maybe display helper message
+                    Toast.makeText(this, "Swipe horizontally to see the rest of the event!", Toast.LENGTH_LONG).show()
+                }
+            }
+            else -> return
+        }
     }
 }
