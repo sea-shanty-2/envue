@@ -23,6 +23,7 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.textToBitmap
 import android.os.AsyncTask
+import android.os.Build
 import android.support.v4.app.Fragment
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -60,7 +61,12 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         mMap?.style?.addSource(geoJsonSource)
         addHeatmapLayer(style)
 
-        StreamUpdateTask().execute(style)
+        // Launch background task for updating the event markers
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+            StreamUpdateTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, style)
+        } else {
+            StreamUpdateTask().execute(style)
+        }
     }
 
     private var mMap: MapboxMap? = null

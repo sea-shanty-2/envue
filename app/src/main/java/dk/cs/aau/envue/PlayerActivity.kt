@@ -3,8 +3,12 @@ package dk.cs.aau.envue
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
+import android.app.ProgressDialog
+import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.AsyncTask
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
@@ -13,6 +17,9 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.*
 import android.widget.*
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
@@ -26,13 +33,26 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
+import com.mapbox.mapboxsdk.maps.Style
 import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
+import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
 
 
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+
+    inner class UpdateEventIdsTask(c: Context): AsyncTask<Void, Void, Void>() {
+
+        override fun doInBackground(vararg params: Void): Void {
+            while (true) {
+                updateEventIds()
+                Log.d("EVENTUPDATE", "Updated event ids.")
+                Thread.sleep(10000)  // 10 seconds}
+            }
+        }
+    }
 
     fun setConnected(state: Boolean) {
         runOnUiThread {
@@ -156,6 +176,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         bindContentView()
+
+        // Launch background task for updating event ids
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+            UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+        } else {
+            UpdateEventIdsTask(this).execute()
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -366,5 +393,23 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             ExoPlayer.STATE_READY -> loading?.visibility = View.GONE
             ExoPlayer.STATE_BUFFERING -> loading?.visibility = View.VISIBLE
         }
+    }
+
+    private fun updateEventIds() {
+        val eventQuery = EventWithIdQuery.builder().id(broadcastId).build()
+        GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
+            override fun onResponse(response: Response<EventWithIdQuery.Data>) {
+                val ids = response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }
+                if (ids != null) {
+                    eventIds = ids as ArrayList<String>
+                } else {
+                    Log.d("EVENTIDS", "No broadcasts in this event (broadcast id was $broadcastId).")
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("EVENTIDS", "Something went wrong while fetching broadcasts in the event: ${e.message}")
+            }
+        })
     }
 }
