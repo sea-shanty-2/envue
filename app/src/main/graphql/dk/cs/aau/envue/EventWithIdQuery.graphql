@@ -1,0 +1,9 @@
+query EventWithIdQuery($id: ID!) {
+    events {
+        containing(id:$id) {
+            broadcasts {
+                id
+            }
+        }
+    }
+}
