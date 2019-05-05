@@ -94,6 +94,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private lateinit var broadcastId: String
     private lateinit var eventIds: ArrayList<String>
+    private var broadcastIndex = 0
 
     private var fingerX1 = 0.0f
     private var fingerX2 = 0.0f
@@ -434,13 +435,42 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 val deltaX = Math.abs(fingerX2 - fingerX1)
                 if (deltaX > MIN_DISTANCE) {
                     // This is a swipe, change broadcast
-                    Toast.makeText(this, "Nice!", Toast.LENGTH_LONG).show()  // TODO: Change broadcast
+                    broadcastIndex++
+                    Toast.makeText(this,
+                        "Changing from $broadcastId to ${eventIds[broadcastIndex % eventIds.size]}",
+                        Toast.LENGTH_LONG)
+                        .show()
+                    changeBroadcast(eventIds[broadcastIndex % eventIds.size])  // Loop around if necessary
+
                 } else {
                     // Do nothing, maybe display helper message
                     Toast.makeText(this, "Swipe horizontally to see the rest of the event!", Toast.LENGTH_LONG).show()
                 }
             }
             else -> return
+        }
+    }
+
+    private fun changeBroadcast(id: String) {
+        val defaultBandwidthMeter = DefaultBandwidthMeter()
+        val dataSourceFactory = DefaultDataSourceFactory(
+            this,
+            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
+        )
+
+        // Create media source
+        broadcastId = id
+        val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
+        val uri = Uri.parse(hlsUrl)
+        val mainHandler = Handler()
+        val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
+
+        val listener = this
+        player?.apply {
+            seekTo(currentWindow, playbackPosition)
+            prepare(mediaSource, true, false)
+            addListener(listener)
+            playWhenReady = true
         }
     }
 }
