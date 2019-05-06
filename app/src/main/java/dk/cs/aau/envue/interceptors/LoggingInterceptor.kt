@@ -22,8 +22,9 @@ class LoggingInterceptor : Interceptor {
         Log.d(
             "OkHttp",
             String.format(
-                "<-- Received response for %s in %.1fms%n%s",
+                "<-- Received response for %s with code %s in %.1fms%n%s",
                 response.request().url(),
+                response.code(),
                 (t2 - t1) / 1e6,
                 response.headers()
             )
