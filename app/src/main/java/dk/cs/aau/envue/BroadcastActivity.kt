@@ -469,11 +469,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onDestroy() {
+        removeFromActiveEvents()
         super.onDestroy()
         lock.withLock { running = false }
         this.publisher?.stopPublish()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
-        removeFromActiveEvents()
     }
 
     private fun removeFromActiveEvents() {
