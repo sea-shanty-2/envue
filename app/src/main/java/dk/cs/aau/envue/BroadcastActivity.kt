@@ -39,6 +39,7 @@ import dk.cs.aau.envue.type.BroadcastUpdateInputType
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import android.Manifest
+import android.content.Intent
 import android.support.v4.app.ActivityCompat
 import android.view.View
 import android.widget.TextView
@@ -381,6 +382,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         broadcastId = id
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Get profile
         val profile = Profile.getCurrentProfile()
@@ -462,17 +464,17 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ) { _, _ ->
                 finish()
                 removeFromActiveEvents()
-                super.onBackPressed()
+                startStatisticsActivity()
             }
             .setNegativeButton(android.R.string.no, null).show()
     }
 
     override fun onDestroy() {
+        removeFromActiveEvents()
         super.onDestroy()
         lock.withLock { running = false }
         this.publisher?.stopPublish()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
-        removeFromActiveEvents()
     }
 
     private fun removeFromActiveEvents() {
@@ -512,6 +514,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 Log.d("VIEWERCOUNT", "Something went wrong while fetching viewer numbers for $broadcastId: $e")
             }
         })
+    }
+
+    private fun startStatisticsActivity() {
+        startActivity(Intent(this, StatisticsActivity::class.java))
     }
 }
 
