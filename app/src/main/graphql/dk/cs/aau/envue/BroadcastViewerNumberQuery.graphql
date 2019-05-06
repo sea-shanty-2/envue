@@ -1,0 +1,5 @@
+query BroadcastViewerNumberQuery($id: ID!) {
+    broadcasts {
+        viewer_count(id:$id)
+    }
+}
