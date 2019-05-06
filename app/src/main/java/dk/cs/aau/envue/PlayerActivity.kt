@@ -3,16 +3,23 @@ package dk.cs.aau.envue
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
+import android.app.ProgressDialog
+import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.AsyncTask
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.*
 import android.widget.*
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
@@ -26,13 +33,26 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
+import com.mapbox.mapboxsdk.maps.Style
 import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
+import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
 
 
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+
+    inner class UpdateEventIdsTask(c: Context): AsyncTask<Void, Void, Void>() {
+
+        override fun doInBackground(vararg params: Void): Void {
+            while (true) {
+                updateEventIds()
+                Log.d("EVENTUPDATE", "Updated event ids.")
+                Thread.sleep(10000)  // 10 seconds}
+            }
+        }
+    }
 
     fun setConnected(state: Boolean) {
         runOnUiThread {
@@ -73,12 +93,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private lateinit var broadcastId: String
+    private lateinit var eventIds: ArrayList<String>
+    private var broadcastIndex = 0
+
+    private var fingerX1 = 0.0f
+    private var fingerX2 = 0.0f
+    private val MIN_DISTANCE = 150  // Minimum distance for a swipe to be registered
 
     private var playerView: SimpleExoPlayerView? = null
     private var player: SimpleExoPlayer? = null
     private var editMessageView: EditText? = null
     private var chatList: RecyclerView? = null
     private var reactionList: RecyclerView? = null
+    private var recommendationView: View? = null
+    private var recommendationTimeout: ProgressBar? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
@@ -89,9 +117,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var messages: ArrayList<Message> = ArrayList()
     private var emojiFragment: EmojiFragment? = null
     private var lastReactionAt: Long = 0
+    private var recommendationExpirationThread: Thread? = null
+    private var recommendedBroadcastId: String? = null
 
     private fun startCommunicationSocket() {
-        socket = StreamCommunicationListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -100,7 +130,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
         val intentKeys = intent?.extras?.keySet()
-        broadcastId = intentKeys?.let { intent.getStringExtra(it.toTypedArray()[0]) } ?: "main"
+        broadcastId = intent.getStringExtra("broadcastId") ?: "main"
+        eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
+
+
 
         setContentView(R.layout.activity_player)
 
@@ -134,7 +167,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         )
 
         // Create media source
-        val hlsUrl = "https://envue.me/relay/$broadcastId"  //TODO: Set this before onCreate()!
+        val hlsUrl = "https://envue.me/relay/$broadcastId"
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
@@ -148,6 +181,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         bindContentView()
+
+        // Launch background task for updating event ids
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+            UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+        } else {
+            UpdateEventIdsTask(this).execute()
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -158,6 +198,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
         reactionList = findViewById(R.id.reaction_view)
+        recommendationView = findViewById(R.id.recommendation_view)
+        recommendationTimeout = findViewById(R.id.recommendation_timer)
 
         // Assign reaction adapter and layout manager
         val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
@@ -176,6 +218,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // When in horizontal we want to be able to click through the recycler
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             exoPlayerViewOnTouch()
+        }
+
+        // Make sure we can detect swipes in portrait mode as well
+        (playerView as SimpleExoPlayerView).setOnTouchListener { view, event ->
+            changeBroadcastOnSwipe(event)
+            false
         }
 
         // Assign send button
@@ -201,7 +249,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         this.scrollToBottom()
     }
 
-
     @SuppressLint("ClickableViewAccessibility")
     private fun exoPlayerViewOnTouch() {
         var isPressed = true
@@ -211,8 +258,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val chatView = chatList
         exoPlayer?.setOnClickListener { }
         chatView?.setOnTouchListener { _, event ->
+            changeBroadcastOnSwipe(event)  // Detect swipes
             if (event?.action == MotionEvent.ACTION_DOWN) {
-                //Log.e("Touch", "ACTION DOWN")
                 startX = event.x
                 startY = event.y
 
@@ -223,13 +270,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 if (Math.abs(startX - endX) < 5 || Math.abs(startY- endY) < 5) {
 
                     if (isPressed) {
-                        //Log.e("Press", "Pause")
                         exoPlayer?.controllerHideOnTouch = false
                         player?.playWhenReady = false
                         player?.playbackState
                         isPressed = false
                     } else {
-                        //Log.e("Press", "Play")
                         exoPlayer?.controllerHideOnTouch = true
                         player?.playWhenReady = true
                         player?.playbackState
@@ -251,15 +296,41 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    private fun addLocalMessage() {
-        val recommended = findViewById<CardView>(R.id.recommended_card)
-        if (recommended.visibility == View.VISIBLE) {
-            transitionView(recommended, 1f, 0f, View.GONE)
-        } else {
-            transitionView(recommended, 0f, 1f, View.VISIBLE)
+    private fun hideRecommendation() {
+        recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) }}
+    }
+
+    private fun showRecommendation(broadcastId: String) {
+        recommendedBroadcastId = broadcastId
+        recommendationView?.let { transitionView(it, 0f, 1f, View.VISIBLE) }
+
+        recommendationExpirationThread = Thread {
+            recommendationTimeout?.let { it.progress = it.max }
+
+            while (recommendationTimeout?.let { it.progress > 0 } == true) {
+                runOnUiThread { recommendationTimeout?.let { it.progress -= 1 } }
+                try {
+                    Thread.sleep(5)
+                } catch (interruptedException: InterruptedException) {
+                    return@Thread
+                }
+            }
+
+            hideRecommendation()
         }
+        recommendationExpirationThread?.start()
+    }
+
+    private fun cancelRecommendation() {
+        recommendedBroadcastId = null
+        recommendationExpirationThread?.interrupt()
+        hideRecommendation()
+    }
+
+    private fun addLocalMessage() {
         val messageView = findViewById<EditText>(R.id.editText)
         val text = messageView?.text.toString()
+        showRecommendation("test")
         if (!text.isEmpty()) {
             socket?.send(Gson().toJson(MessagePacket(text)))
             onMessage(Message(text))
@@ -281,8 +352,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         releasePlayer()
     }
 
-    fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
-        view?.apply {
+    private fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
+        view.apply {
             visibility = View.VISIBLE
             alpha = initialAlpha
             animate()
@@ -315,13 +386,91 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
+        // Since we are using custom layouts for different configurations, we need to manually code state persistence
+        val recommendationVisibility = recommendationView?.visibility
+        val recommendationExpirationProgress = recommendationTimeout?.progress
+
         bindContentView()
+
+        // Restore state
+        recommendationVisibility?.let { recommendationView?.visibility = it }
+        recommendationExpirationProgress?.let { recommendationTimeout?.progress = it }
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
         when (playbackState) {
             ExoPlayer.STATE_READY -> loading?.visibility = View.GONE
             ExoPlayer.STATE_BUFFERING -> loading?.visibility = View.VISIBLE
+        }
+    }
+
+    private fun updateEventIds() {
+        val eventQuery = EventWithIdQuery.builder().id(broadcastId).build()
+        GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
+            override fun onResponse(response: Response<EventWithIdQuery.Data>) {
+                val ids = response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }
+                if (ids != null) {
+                    eventIds = ids as ArrayList<String>
+                } else {
+                    Log.d("EVENTUPDATE", "No broadcasts in this event (broadcast id was $broadcastId).")
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("EVENTUPDATE", "Something went wrong while fetching broadcasts in the event: ${e.message}")
+            }
+        })
+    }
+
+    private fun changeBroadcastOnSwipe(event: MotionEvent) {
+        return when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                fingerX1 = event.x  // Maybe the start of a swipe
+            }
+
+            MotionEvent.ACTION_UP -> {
+                fingerX2 = event.x  // Maybe the end of a swipe
+
+                // Measure horizontal distance between x1 and x2 - if its big enough, change broadcast
+                val deltaX = Math.abs(fingerX2 - fingerX1)
+                if (deltaX > MIN_DISTANCE) {
+                    // This is a swipe, change broadcast
+                    broadcastIndex++
+                    Toast.makeText(this,
+                        "Changing from $broadcastId to ${eventIds[broadcastIndex % eventIds.size]}",
+                        Toast.LENGTH_LONG)
+                        .show()
+                    changeBroadcast(eventIds[broadcastIndex % eventIds.size])  // Loop around if necessary
+
+                } else {
+                    // Do nothing, maybe display helper message
+                    Toast.makeText(this, "Swipe horizontally to see the rest of the event!", Toast.LENGTH_LONG).show()
+                }
+            }
+            else -> return
+        }
+    }
+
+    private fun changeBroadcast(id: String) {
+        val defaultBandwidthMeter = DefaultBandwidthMeter()
+        val dataSourceFactory = DefaultDataSourceFactory(
+            this,
+            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
+        )
+
+        // Create media source
+        broadcastId = id
+        val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
+        val uri = Uri.parse(hlsUrl)
+        val mainHandler = Handler()
+        val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
+
+        val listener = this
+        player?.apply {
+            seekTo(currentWindow, playbackPosition)
+            prepare(mediaSource, true, false)
+            addListener(listener)
+            playWhenReady = true
         }
     }
 }

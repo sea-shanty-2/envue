@@ -78,6 +78,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var counterThread: Thread? = null
     private var running = true
     private var currentBitrate: Int = 0
+    private lateinit var broadcastId: String
 
     private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity): AsyncTask<Unit, Unit, Unit>() {
         val queryBuilder: BroadcastUpdateMutation.Builder = BroadcastUpdateMutation.builder().id(id)
@@ -107,7 +108,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     }
 
                     addOnFailureListener { Log.d(TAG, it.message) }
-
                     addOnCanceledListener { Log.d(TAG, "Cancelled") }
                 }
 
@@ -185,7 +185,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun startCommunicationSocket() {
-        socket = StreamCommunicationListener.buildSocket(this)
+        socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
     }
 
     fun calculateDirectionChanges(): Double {
@@ -292,7 +292,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         counterThread?.start()
     }
 
-    fun stopCounter() {
+    private fun stopCounter() {
         this.counterThread?.interrupt()
     }
 
@@ -301,13 +301,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         startCounter()
     }
 
-    fun setLiveText(newText: String) {
+    private fun setLiveText(newText: String) {
         this.findViewById<TextView>(R.id.live_status)?.apply {
             text = newText
         }
     }
 
-    fun setLiveStatus(live: Boolean) {
+    private fun setLiveStatus(live: Boolean) {
         this.findViewById<TextView>(R.id.live_status)?.apply {
             visibility = if (live) View.VISIBLE else View.GONE
         }
@@ -333,7 +333,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onRtmpVideoBitrateChanged(bitrate: Double) {
-        Toast.makeText(applicationContext, "Bitrate: $bitrate", Toast.LENGTH_SHORT).show()
+        // Toast.makeText(applicationContext, "Bitrate: $bitrate", Toast.LENGTH_SHORT).show()
         lock.withLock { currentBitrate = bitrate.toInt() }
     }
 
@@ -376,7 +376,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val id = intent.getStringExtra("ID")
         val rtmp = intent.getStringExtra("RTMP")
 
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        broadcastId = id
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
         // Get profile
@@ -458,7 +459,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 android.R.string.yes
             ) { _, _ ->
                 finish()
-
+                removeFromActiveEvents()
                 super.onBackPressed()
             }
             .setNegativeButton(android.R.string.no, null).show()
@@ -469,10 +470,22 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         lock.withLock { running = false }
         this.publisher?.stopPublish()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+        removeFromActiveEvents()
     }
 
     private fun removeFromActiveEvents() {
+        val removalMutation = BroadcastStopMutation.builder().id(broadcastId).build()
+        GatewayClient.mutate(removalMutation).enqueue(object: ApolloCall.Callback<BroadcastStopMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
+                val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
+                val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
+                // TODO: Use the above lists to calculate points and visualise a graph of viewership
+            }
 
+            override fun onFailure(e: ApolloException) {
+                Log.d("STOPBROADCAST", "Stop broadcast mutation failed, broadcast has not been removed from events!")
+            }
+        })
     }
 }
 

@@ -1,7 +1,6 @@
 package dk.cs.aau.envue
 
 import android.app.Activity
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -10,18 +9,9 @@ import android.view.View
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import android.util.Log
-import android.widget.ListView
-import android.widget.Toast
-import com.facebook.Profile
 import com.facebook.login.LoginManager
-import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.RemoteMessage
-import com.google.gson.GsonBuilder
-import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.shared.GatewayClient
 import kotlinx.android.synthetic.main.activity_profile.*
-import dk.cs.aau.envue.transformers.CircleTransform
 
 class ProfileActivity : AppCompatActivity() {
     companion object {
@@ -74,7 +64,6 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun onProfileFetchFailure(e: ApolloException) {
         runOnUiThread {
-
             AlertDialog
                 .Builder(this)
                 .setTitle(e.message)
@@ -94,9 +83,9 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun onChangeInterests() {
-        val curint: CharSequence = currentInterestsView.text
+        val curInt: CharSequence = currentInterestsView.text
         val intent = Intent(this, InterestsActivity::class.java)
-        intent.putExtra(resources.getString(R.string.current_interests_key), curint)
+        intent.putExtra(resources.getString(R.string.current_interests_key), curInt)
         startActivityForResult(intent, SET_INTERESTS_REQUEST)
     }
 

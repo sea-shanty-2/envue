@@ -23,13 +23,17 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.textToBitmap
 import android.os.AsyncTask
+import android.os.Build
 import android.support.v4.app.Fragment
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
 import com.google.gson.GsonBuilder
+import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.utility.Event
+import java.net.URL
+import kotlin.random.Random
 
 
 class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
@@ -57,7 +61,12 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         mMap?.style?.addSource(geoJsonSource)
         addHeatmapLayer(style)
 
-        StreamUpdateTask().execute(style)
+        // Launch background task for updating the event markers
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+            StreamUpdateTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, style)
+        } else {
+            StreamUpdateTask().execute(style)
+        }
     }
 
     private var mMap: MapboxMap? = null
@@ -95,15 +104,24 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-        val intent = Intent(activity, PlayerActivity::class.java).apply { putExtra("broadcastId", marker.title)}
-        startActivity(intent)
+        val id = marker.title
+
+        // Get the ids of all broadcasts in the same event and start a PlayerActivity with this information.
+        getEventIds(id) { broadcastId, eventIds ->
+            val intent = Intent(activity, PlayerActivity::class.java).apply {
+                putExtra("broadcastId", broadcastId)
+                putExtra("eventIds", eventIds)
+            }
+
+            startActivity(intent)
+        }
         return false
     }
 
     fun addMarker(position: LatLng, text: String, size: Int, broadcastId: String) {
         var bitmap = textToBitmap(text, size, context!!)
         var descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
-        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))
+        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))  // Title = broadcastId
         return
     }
 
@@ -134,11 +152,36 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
         geoJsonSource.setGeoJson(featureCollection)
     }
+    private fun updateStreamSource(loadedMapStyle: Style?) {
 
-    private fun updateStreamSource(loadedMapStyle: Style) {
-
+        // Create queries for
+        // - Events (so we can show their emojis)
+        // - Broadcasts (so we can show the heat map)
         val activeEventsQuery = EventsQuery.builder().build()
         val activeBroadcastsQuery = ActiveBroadcastLocationQuery.builder().build()
+
+        loadEventsToMap(activeEventsQuery)
+        loadBroadcastsToMap(activeBroadcastsQuery)
+    }
+
+    // Loads all active broadcasts to the map in the form of heat map points
+    private fun loadBroadcastsToMap(activeBroadcastsQuery: ActiveBroadcastLocationQuery) {
+        GatewayClient.query(activeBroadcastsQuery).enqueue(object: ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
+            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>) {
+
+                activity?.runOnUiThread {
+                    setHeatmap(response.data()?.broadcasts()?.active()?.items())
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("BROADCASTS", "Something went wrong: ${e.message}")
+            }
+        })
+    }
+
+    // Loads all active events to the map in the form of most frequent emoji in each event
+    private fun loadEventsToMap(activeEventsQuery: EventsQuery) {
 
         GatewayClient.query(activeEventsQuery).enqueue(object: ApolloCall.Callback<EventsQuery.Data>() {
             override fun onResponse(response: Response<EventsQuery.Data>) {
@@ -178,29 +221,12 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                             event.broadcasts?.first()?.id()!!)
                     }
                 }
-
             }
 
             override fun onFailure(e: ApolloException) {
-                Log.d("EVENTS", "Something went wrong xD: ${e.message}")
+                Log.d("EVENTS", "Something went wrong: ${e.message}")
             }
         })
-
-
-        GatewayClient.query(activeBroadcastsQuery).enqueue(object: ApolloCall.Callback<ActiveBroadcastLocationQuery.Data>() {
-            override fun onResponse(response: Response<ActiveBroadcastLocationQuery.Data>) {
-
-                activity?.runOnUiThread {
-                    setHeatmap(response.data()?.broadcasts()?.active()?.items())
-                }
-            }
-
-            override fun onFailure(e: ApolloException) {
-                Log.d("BROADCASTS", "Something went wrong xD: ${e.message}")
-            }
-        })
-
-
     }
 
     private fun addHeatmapLayer(loadedMapStyle: Style) {
@@ -319,8 +345,29 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         limitedEmojis.addAll(GsonBuilder().create().fromJson(
                 resources.openRawResource(R.raw.limited_emojis).bufferedReader(),
                 Array<EmojiIcon>::class.java).map { e -> e.char })
+    }
 
+    fun updateMap() {
+        activity?.runOnUiThread {
+            mMap?.markers?.forEach { mMap?.removeMarker(it) }
+            updateStreamSource(null)
+        }
+    }
 
+    fun getEventIds(id: String, callback: (id:String, ids:ArrayList<String>) -> Unit) {
+        val eventQuery = EventWithIdQuery.builder().id(id).build()
+        GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
+            override fun onResponse(response: Response<EventWithIdQuery.Data>) {
+                val ids = response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }
+                if (ids != null) {
+                    callback(id, ids as ArrayList<String>)
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("GETEVENTS", "Something went wrong while getting events for broadcast id $id")
+            }
+        })
     }
 
 }
