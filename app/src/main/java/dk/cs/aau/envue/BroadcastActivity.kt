@@ -379,6 +379,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         broadcastId = id
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Get profile
         val profile = Profile.getCurrentProfile()
