@@ -17,7 +17,7 @@ class ProfileActivity : AppCompatActivity() {
     companion object {
         internal val SET_INTERESTS_REQUEST = 0
         internal val TAG = ProfileActivity::class.java.simpleName ?: "ProfileActivity"
-        internal val SENDER_ID = 3317625636
+        internal val SENDER_ID = 296179613557
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
