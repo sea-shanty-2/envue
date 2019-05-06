@@ -95,4 +95,8 @@ dependencies {
     // location support
     implementation "com.google.android.gms:play-services-location:16.0.0"
     // end location support
+
+    // chart support
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    // end chart support
 }

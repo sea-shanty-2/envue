@@ -180,6 +180,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             playWhenReady = true
         }
 
+        joinBroadcast(broadcastId)  // Update viewer counts
+
         bindContentView()
 
         // Launch background task for updating event ids
@@ -350,6 +352,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onStop() {
         super.onStop()
         releasePlayer()
+        leaveBroadcast(broadcastId)
     }
 
     private fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
@@ -370,6 +373,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onDestroy() {
         super.onDestroy()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+        leaveBroadcast(broadcastId)
     }
 
     private fun releasePlayer() {
@@ -457,9 +461,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             this,
             Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
         )
+        // Leave current broadcast
+        leaveBroadcast(broadcastId)
+
+        // Modify broadcast id
+        broadcastId = id
 
         // Create media source
-        broadcastId = id
         val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
@@ -472,5 +480,34 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             addListener(listener)
             playWhenReady = true
         }
+
+        // Join this broadcast
+        joinBroadcast(broadcastId)
+    }
+
+    private fun leaveBroadcast(id: String) {
+        val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
+        GatewayClient.mutate(leaveMutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
+                // No action required
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("LEAVE", "Something went wrong while leaving $id: $e")
+            }
+        })
+    }
+
+    private fun joinBroadcast(id: String) {
+        val joinMutation = BroadcastJoinMutation.builder().id(id).build()
+        GatewayClient.mutate(joinMutation).enqueue(object: ApolloCall.Callback<BroadcastJoinMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastJoinMutation.Data>) {
+                // No action required
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("JOIN", "Something went wrong while joining $id: $e")
+            }
+        })
     }
 }

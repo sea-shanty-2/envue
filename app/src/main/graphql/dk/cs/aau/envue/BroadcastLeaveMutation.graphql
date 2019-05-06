@@ -1,0 +1,5 @@
+mutation BroadcastLeaveMutation ($id: ID!) {
+    broadcasts {
+        leave(id:$id)
+    }
+}
