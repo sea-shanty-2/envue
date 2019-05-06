@@ -1,0 +1,5 @@
+mutation BroadcastJoinMutation ($id: ID!) {
+    broadcasts {
+        join(id:$id)
+    }
+}
