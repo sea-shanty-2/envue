@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
-import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
 import android.support.v7.app.AppCompatActivity
@@ -22,7 +21,6 @@ import java.security.NoSuchAlgorithmException
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE_BROADCAST = 42
-    private val BASE_URL="http://envue.me:8000/graphql"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (!AccessToken.isCurrentAccessTokenActive()) {
@@ -42,11 +40,9 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
-
         // Update map on button press
         findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
             (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()

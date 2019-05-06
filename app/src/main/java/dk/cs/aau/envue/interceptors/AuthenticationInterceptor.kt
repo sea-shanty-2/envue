@@ -1,16 +1,41 @@
 package dk.cs.aau.envue.interceptors
 
+import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.Interceptor
 import okhttp3.Response
-import okhttp3.ResponseBody
 
 class AuthenticationInterceptor : Interceptor {
     companion object {
-        var token = ""
+        var token: String? = null
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request().newBuilder().addHeader("Authorization", "Bearer $token").build()
-        return chain.proceed(request)
+        var request = chain
+            .request()
+            .newBuilder()
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        val response = chain.proceed(request)
+
+        /**
+         * If request failed, fetch a new authentication token and retry the request
+         */
+        if (!response.isSuccessful) {
+
+            token = GatewayClient.fetchToken()
+
+            request = chain
+                .request()
+                .newBuilder()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+
+            return chain.proceed(request)
+        }
+
+        token = null
+
+        return response
     }
 }

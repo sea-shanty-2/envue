@@ -23,6 +23,7 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.textToBitmap
 import android.os.AsyncTask
+import android.os.Build
 import android.support.v4.app.Fragment
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -60,7 +61,12 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         mMap?.style?.addSource(geoJsonSource)
         addHeatmapLayer(style)
 
-        StreamUpdateTask().execute(style)
+        // Launch background task for updating the event markers
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+            StreamUpdateTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, style)
+        } else {
+            StreamUpdateTask().execute(style)
+        }
     }
 
     private var mMap: MapboxMap? = null
@@ -98,9 +104,17 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-        // Start a viewing session passing the broadcaster id so the client is redirected to the broadcast they pressed
-        val intent = Intent(activity, PlayerActivity::class.java).apply { putExtra("broadcastId", marker.title)}
-        startActivity(intent)
+        val id = marker.title
+
+        // Get the ids of all broadcasts in the same event and start a PlayerActivity with this information.
+        getEventIds(id) { broadcastId, eventIds ->
+            val intent = Intent(activity, PlayerActivity::class.java).apply {
+                putExtra("broadcastId", broadcastId)
+                putExtra("eventIds", eventIds)
+            }
+
+            startActivity(intent)
+        }
         return false
     }
 
@@ -338,6 +352,22 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             mMap?.markers?.forEach { mMap?.removeMarker(it) }
             updateStreamSource(null)
         }
+    }
+
+    fun getEventIds(id: String, callback: (id:String, ids:ArrayList<String>) -> Unit) {
+        val eventQuery = EventWithIdQuery.builder().id(id).build()
+        GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
+            override fun onResponse(response: Response<EventWithIdQuery.Data>) {
+                val ids = response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }
+                if (ids != null) {
+                    callback(id, ids as ArrayList<String>)
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("GETEVENTS", "Something went wrong while getting events for broadcast id $id")
+            }
+        })
     }
 
 }
