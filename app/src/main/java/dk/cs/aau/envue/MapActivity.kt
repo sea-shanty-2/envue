@@ -1,5 +1,6 @@
 package dk.cs.aau.envue
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
@@ -32,11 +33,17 @@ import com.google.gson.GsonBuilder
 import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.utility.Event
+import kotlinx.android.synthetic.main.activity_map.*
+import kotlinx.android.synthetic.main.activity_profile.*
 import java.net.URL
 import kotlin.random.Random
 
 
 class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
+    companion object {
+        internal const val SET_FILTERS_REQUEST = 41
+    }
+
     // private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
     private val STREAM_SOURCE_ID = "stream"
     private val HEATMAP_LAYER_ID = "stream-heat"
@@ -45,6 +52,7 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     private val TAG = "MapActivity"
     private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID)
     private var limitedEmojis = ArrayList<String>()
+    private var filters: DoubleArray? = null
 
     private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
         override fun doInBackground(vararg params: Style): Void {
@@ -90,6 +98,8 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         mapView.id = R.id.mapView
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this) // Fragment mapper
+
+        filterButton.setOnClickListener() {this.onFilter()}
 
         return mapView
     }
@@ -205,9 +215,14 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
                     val mostFrequentIndex = emojiIndexCounts.indexOf(emojiIndexCounts.max())
                     val mostFrequentEmoji = limitedEmojis[mostFrequentIndex]
-                    val event = Event(qEvent.broadcasts()?.toTypedArray(), mostFrequentEmoji)
-                    events.add(event)
-                    Log.d("EVENTS", "Added event with $mostFrequentEmoji as the emoji and ${event.center} as the center.")
+
+                    if (filters != null && filters!![mostFrequentIndex] != 1.0) {
+                        continue
+                    } else {
+                        val event = Event(qEvent.broadcasts()?.toTypedArray(), mostFrequentEmoji)
+                        events.add(event)
+                        Log.d("EVENTS", "Added event with $mostFrequentEmoji as the emoji and ${event.center} as the center.")
+                    }
                 }
 
                 activity?.runOnUiThread {
@@ -370,4 +385,19 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         })
     }
 
+    private fun onFilter() {
+        val curInt: CharSequence = currentInterestsView.text
+        val intent = Intent(context, InterestsActivity::class.java)
+        startActivityForResult(intent, MapActivity.SET_FILTERS_REQUEST)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            MapActivity.SET_FILTERS_REQUEST ->
+                if (resultCode == Activity.RESULT_OK) {
+                    filters = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
+                }
+        }
+    }
 }

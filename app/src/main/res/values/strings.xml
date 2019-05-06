@@ -51,6 +51,18 @@
     <string name="notification_channel_name">Envue</string>
     <string name="notification_channel_id">"Envue"</string>
     <string name="notification_channel_description">Envue notification channel</string>
+
+    <!-- Filter -->
+    <string name="title_activity_filter">Envue</string>
+    <string name="accept_filters_button_text">OK</string>
+    <string name="filter_response_key">FILTER_RESPONSE_KEY</string>
+
+
+    <!-- Filter -->
+    <string name="category_selection_header">Select categories</string>
+    <string name="category_selection_button_text">OK</string>
+
+
     <string name="title_activity_choose_broadcast">ChooseBroadcastActivity</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"

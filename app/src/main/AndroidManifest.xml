@@ -19,8 +19,8 @@
         <activity
             android:name=".BrowseEventsActivity"
             android:label="@string/title_activity_choose_broadcast"
-            android:theme="@style/NoActionBar"></activity>
-        <activity android:name=".MapActivity"></activity>
+            android:theme="@style/NoActionBar"/>
+        <activity android:name=".MapActivity"/>
         <activity
             android:name=".InterestsActivity"
             android:label="@string/title_activity_interests"
@@ -32,7 +32,7 @@
         </activity>
         <activity
             android:name=".PlayerActivity"
-            android:configChanges="screenSize|orientation"></activity>
+            android:configChanges="screenSize|orientation"/>
         <activity
             android:name=".InitializeBroadcastActivity"
             android:label="@string/title_activity_initialize_broadcast"
@@ -57,6 +57,10 @@
         </activity>
         <activity android:name=".LoginActivity" />
         <activity android:name=".ProfileActivity" />
+        <activity android:name=".FilterActivity"
+                  android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+                  android:label="@string/title_activity_filter"
+                  android:theme="@style/FullscreenTheme" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"

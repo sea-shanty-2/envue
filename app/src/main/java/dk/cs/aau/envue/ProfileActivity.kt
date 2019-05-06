@@ -15,7 +15,7 @@ import kotlinx.android.synthetic.main.activity_profile.*
 
 class ProfileActivity : AppCompatActivity() {
     companion object {
-        internal const val SET_INTERESTS_REQUEST = 0
+        internal const val SET_INTERESTS_REQUEST = 7
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
