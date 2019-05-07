@@ -34,15 +34,11 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.utility.Event
 import kotlinx.android.synthetic.main.activity_map.*
-import kotlinx.android.synthetic.main.activity_profile.*
 import java.net.URL
 import kotlin.random.Random
 
 
 class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
-    companion object {
-        internal const val SET_FILTERS_REQUEST = 41
-    }
 
     // private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
     private val STREAM_SOURCE_ID = "stream"
@@ -79,6 +75,10 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     private var mMap: MapboxMap? = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
@@ -98,8 +98,6 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         mapView.id = R.id.mapView
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this) // Fragment mapper
-
-        filterButton.setOnClickListener() {this.onFilter()}
 
         return mapView
     }
@@ -385,19 +383,8 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         })
     }
 
-    private fun onFilter() {
-        val curInt: CharSequence = currentInterestsView.text
-        val intent = Intent(context, InterestsActivity::class.java)
-        startActivityForResult(intent, MapActivity.SET_FILTERS_REQUEST)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            MapActivity.SET_FILTERS_REQUEST ->
-                if (resultCode == Activity.RESULT_OK) {
-                    filters = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
-                }
-        }
+    fun updateFilters(filterArray: DoubleArray?){
+        filters = filterArray
+        updateMap()
     }
 }

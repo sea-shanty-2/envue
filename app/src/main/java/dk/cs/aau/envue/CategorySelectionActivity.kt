@@ -1,46 +1,22 @@
 package dk.cs.aau.envue
 
-import android.Manifest
-import android.app.ProgressDialog
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.Location
-import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.text.emoji.EmojiCompat
 import android.support.text.emoji.bundled.BundledEmojiCompatConfig
-import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
-import android.view.View
 import android.widget.ListView
 import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.utility.EmojiIcon
-import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
-import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
-import android.util.Log
-import com.apollographql.apollo.ApolloCall
-import com.apollographql.apollo.api.Response
-import com.apollographql.apollo.exception.ApolloException
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import dk.cs.aau.envue.shared.GatewayClient
-import dk.cs.aau.envue.type.BroadcastInputType
-import dk.cs.aau.envue.type.LocationInputType
-import kotlinx.android.synthetic.main.activity_category_selection.*
+import dk.cs.aau.envue.workers.CategoryListAdapter
 
 
 abstract class CategorySelectionActivity : AppCompatActivity() {
     private val tag = "CategorySelectionActivity"
-    private var id: String? = null
-    private var rtmp: String? = null
-    private var _allEmojis = ArrayList<EmojiIcon>()
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    internal var _allEmojis = ArrayList<EmojiIcon>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_category_selection)
         EmojiCompat.init(BundledEmojiCompatConfig(this))
 
@@ -63,7 +39,6 @@ abstract class CategorySelectionActivity : AppCompatActivity() {
         return joined.removeSuffix(this)
     }
 
-
     /** Creates a one-hot vector of selected emojis */
     internal fun getCategoryVector(selectedEmojis: List<EmojiIcon>): Array<Double> {
         val categoryVector = Array(_allEmojis.size) {i -> 0.0}
@@ -77,7 +52,7 @@ abstract class CategorySelectionActivity : AppCompatActivity() {
 
     /** Loads emojis from a JSON file provided by the resource id.
      * Emojis are loaded directly into a list adapter used by the
-     * broadcast category list view. */
+     * category selection list view. */
     internal fun loadEmojis(resourceId: Int, targetResourceId: Int) {
         // Load all emojis into local storage
         _allEmojis = _allEmojis.plus(GsonBuilder().create().fromJson(
@@ -96,7 +71,7 @@ abstract class CategorySelectionActivity : AppCompatActivity() {
 
         // Provide an item adapter to the ListView
         findViewById<ListView>(targetResourceId).apply {
-            this.adapter = BroadcastCategoryListAdapter(this.context, emojiRows)
+            this.adapter = CategoryListAdapter(this.context, emojiRows)
         }
     }
 
@@ -105,7 +80,7 @@ abstract class CategorySelectionActivity : AppCompatActivity() {
      * Includes emojis chosen in the grid view as well
      * as emojis searched by the user. */
     internal fun getSelectedCategories(): List<EmojiIcon> =
-        (findViewById<ListView>(R.id.broadcastCategoryListView).adapter as BroadcastCategoryListAdapter)
+        (findViewById<ListView>(R.id.categorySelectionListView).adapter as CategoryListAdapter)
             .getAllEmojis()
             .filter {it.isSelected}
             .map {it.getEmoji()}
