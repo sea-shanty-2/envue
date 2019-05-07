@@ -36,13 +36,13 @@ import java.net.URL
 import kotlin.random.Random
 
 
-class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
+class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
     // private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
     private val STREAM_SOURCE_ID = "stream"
     private val HEATMAP_LAYER_ID = "stream-heat"
     private val HEATMAP_LAYER_SOURCE = "streams"
     private val CIRCLE_LAYER_ID = "earthquakes-circle"
-    private val TAG = "MapActivity"
+    private val TAG = "MapFragment"
     private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID)
     private var limitedEmojis = ArrayList<String>()
 

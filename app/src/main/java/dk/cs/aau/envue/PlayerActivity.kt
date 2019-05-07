@@ -128,7 +128,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
+        // Get the broadcastId as sent from the MapFragment (determined by which event was pressed)
         val intentKeys = intent?.extras?.keySet()
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }

@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(my_toolbar)
         // Update map on button press
         findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
-            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
+            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
         }
     }
 
@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_map -> {
-            startActivity(Intent(this, MapActivity::class.java))
+            startActivity(Intent(this, MapFragment::class.java))
 
             true
         }
