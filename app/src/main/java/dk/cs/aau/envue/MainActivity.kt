@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
+import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
@@ -130,7 +131,11 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             SET_FILTERS_REQUEST ->
                 if (resultCode == Activity.RESULT_OK) {
-                    val categories = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
+                    var categories = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
+                    //if (categories != null) Snackbar.make(findViewById<FloatingActionButton>(R.id.update_map_button),
+                    // categories!!.contentToString(),
+                    // Snackbar.LENGTH_LONG).show()
+                    if (categories != null && !categories.contains(1.0)) categories = null
                     (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateFilters(categories)
                 }
         }

@@ -23,10 +23,8 @@ class FilterActivity : CategorySelectionActivity() {
 
     /** Returns the currently selected filters to the initiating activity */
     private fun onAccept() {
-        val data = Intent()
-            .putExtra(  resources.getString(R.string.filter_response_key),
-                        getCategoryVector(getSelectedCategories()))
-
+        val doubleArray = getCategoryVector(getSelectedCategories()).toDoubleArray()
+        val data = Intent().putExtra(  resources.getString(R.string.filter_response_key), doubleArray)
         setResult(Activity.RESULT_OK, data)
         finish()
     }
