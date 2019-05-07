@@ -99,6 +99,7 @@ dependencies {
     // push notification support
     implementation 'com.google.firebase:firebase-core:16.0.8'
     // end push notification support
+    implementation 'com.google.firebase:firebase-messaging:17.6.0'
 
     // chart support
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
