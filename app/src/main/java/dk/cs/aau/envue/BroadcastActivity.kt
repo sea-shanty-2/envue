@@ -434,7 +434,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
 
-        joinBroadcast(broadcastId)
+        //joinBroadcast(broadcastId)
     }
 
     override fun onResume() {
@@ -524,7 +524,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
         leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?) {
 
-        leaveBroadcast(broadcastId)
+        //leaveBroadcast(broadcastId)
 
         val joined = joinedTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
         val left = leftTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
