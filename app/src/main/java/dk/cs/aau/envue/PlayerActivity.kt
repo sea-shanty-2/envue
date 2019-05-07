@@ -453,6 +453,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
+    // The param "id" is the Id of the broadcast to change to.
+    // First leave the current broadcast, then update broadcastId to id
+    // and join that.
     private fun changeBroadcast(id: String) {
         val defaultBandwidthMeter = DefaultBandwidthMeter()
         val dataSourceFactory = DefaultDataSourceFactory(
@@ -484,7 +487,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
         GatewayClient.mutate(leaveMutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
             override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
-                continueWith()
+                continueWith()  // Callback
             }
 
             override fun onFailure(e: ApolloException) {
