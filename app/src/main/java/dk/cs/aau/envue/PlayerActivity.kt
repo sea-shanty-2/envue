@@ -133,14 +133,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
-
         setContentView(R.layout.activity_player)
 
         // Initially disable the ability to send messages
         setConnected(false)
-
-        // Prevent dimming
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
@@ -203,6 +199,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         recommendationTimeout = findViewById(R.id.recommendation_timer)
         recommendationImageView = findViewById(R.id.recommendation_image)
 
+        // Prevent dimming
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         // Listen for clicks on recommendations
         recommendationImageView?.setOnClickListener {
             acceptRecommendation()
@@ -213,6 +212,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         reactionList?.apply {
             adapter = reactionAdapter
             layoutManager = reactionLayoutManager
+        }
+
+        // Update chat adapter
+        chatAdapter?.apply {
+            setLandscapeMode(this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
         }
 
         // Assign chat adapter and layout manager
