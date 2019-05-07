@@ -15,8 +15,8 @@ import dk.cs.aau.envue.R
 import dk.cs.aau.envue.utility.EmojiIcon
 
 
-class BroadcastCategoryListAdapter(private val context: Context,
-                                   private val dataSource: ArrayList<ArrayList<EmojiIcon>>) : BaseAdapter() {
+class CategoryListAdapter(private val context: Context,
+                          private val dataSource: ArrayList<ArrayList<EmojiIcon>>) : BaseAdapter() {
 
     private val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
     private val emojiRows = ArrayList<View>()  // Persistent storage of Emoji views (so we don't lose selection status when scrolling)
