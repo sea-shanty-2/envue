@@ -380,6 +380,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val rtmp = intent.getStringExtra("RTMP")
 
         broadcastId = id
+        Log.d("BROADIDTIMES", id)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -433,6 +434,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         sensor =  sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
+
+        //joinBroadcast(broadcastId)
     }
 
     override fun onResume() {
@@ -464,7 +467,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ) { _, _ ->
                 finish()
                 removeFromActiveEvents()
-                startStatisticsActivity()
             }
             .setNegativeButton(android.R.string.no, null).show()
     }
@@ -483,7 +485,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
                 val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
                 val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
-                // TODO: Use the above lists to calculate points and visualise a graph of viewership
+
+                // Start statistics activity with viewer count stats
+                startStatisticsActivity(joinedTimeStamps?.toTypedArray(), leftTimeStamps?.toTypedArray())
             }
 
             override fun onFailure(e: ApolloException) {
@@ -501,6 +505,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     if (viewerCount != null) {
                         // Update viewer count in activity
                         findViewById<TextView>(R.id.viewer_count).text = viewerCount.toString()
+                        Log.d("VIEWERCOUNT", "Successfully received viewer count for $broadcastId which is ${viewerCount}")
                     } else {
                         findViewById<TextView>(R.id.viewer_count).text = "?"
                     }
@@ -516,8 +521,47 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         })
     }
 
-    private fun startStatisticsActivity() {
-        startActivity(Intent(this, StatisticsActivity::class.java))
+    private fun startStatisticsActivity(
+        joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
+        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?) {
+
+        //leaveBroadcast(broadcastId)
+
+        val joined = joinedTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
+        val left = leftTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
+
+        val intent = Intent(this, StatisticsActivity::class.java).apply {
+            putExtra("joinedTimestamps", joined)
+            putExtra("leftTimestamps", left)
+        }
+
+        startActivity(intent)
+    }
+
+    private fun leaveBroadcast(id: String) {
+        val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
+        GatewayClient.mutate(leaveMutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
+                // No action required
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("LEAVE", "Something went wrong while leaving $id: $e")
+            }
+        })
+    }
+
+    private fun joinBroadcast(id: String) {
+        val joinMutation = BroadcastJoinMutation.builder().id(id).build()
+        GatewayClient.mutate(joinMutation).enqueue(object: ApolloCall.Callback<BroadcastJoinMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastJoinMutation.Data>) {
+                // No action required
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("JOIN", "Something went wrong while joining $id: $e")
+            }
+        })
     }
 }
 
