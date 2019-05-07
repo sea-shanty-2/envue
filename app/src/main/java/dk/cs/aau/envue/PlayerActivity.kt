@@ -352,7 +352,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onStop() {
         super.onStop()
         releasePlayer()
-        leaveBroadcast(broadcastId)
     }
 
     private fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
@@ -467,6 +466,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Modify broadcast id
         broadcastId = id
 
+        // Join this broadcast
+        joinBroadcast(broadcastId)
+
         // Create media source
         val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
         val uri = Uri.parse(hlsUrl)
@@ -481,8 +483,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             playWhenReady = true
         }
 
-        // Join this broadcast
-        joinBroadcast(broadcastId)
     }
 
     private fun leaveBroadcast(id: String) {
@@ -494,6 +494,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
             override fun onFailure(e: ApolloException) {
                 Log.d("LEAVE", "Something went wrong while leaving $id: $e")
+                Toast.makeText(this@PlayerActivity, "Something went wrong while leaving $id :(", Toast.LENGTH_SHORT)
+
             }
         })
     }
@@ -507,6 +509,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
             override fun onFailure(e: ApolloException) {
                 Log.d("JOIN", "Something went wrong while joining $id: $e")
+                Toast.makeText(this@PlayerActivity, "Something went wrong while joining $id :(", Toast.LENGTH_SHORT)
             }
         })
     }

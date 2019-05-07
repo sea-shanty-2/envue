@@ -380,6 +380,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val rtmp = intent.getStringExtra("RTMP")
 
         broadcastId = id
+        Log.d("BROADIDTIMES", id)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
@@ -463,7 +464,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ) { _, _ ->
                 finish()
                 removeFromActiveEvents()
-                startStatisticsActivity()
             }
             .setNegativeButton(android.R.string.no, null).show()
     }
@@ -482,7 +482,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
                 val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
                 val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
-                // TODO: Use the above lists to calculate points and visualise a graph of viewership
+
+                // Start statistics activity with viewer count stats
+                startStatisticsActivity(joinedTimeStamps?.toTypedArray(), leftTimeStamps?.toTypedArray())
             }
 
             override fun onFailure(e: ApolloException) {
@@ -500,6 +502,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     if (viewerCount != null) {
                         // Update viewer count in activity
                         findViewById<TextView>(R.id.viewer_count).text = viewerCount.toString()
+                        Log.d("VIEWERCOUNT", "Successfully received viewer count for $broadcastId which is ${viewerCount}")
                     } else {
                         findViewById<TextView>(R.id.viewer_count).text = "?"
                     }
@@ -515,8 +518,19 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         })
     }
 
-    private fun startStatisticsActivity() {
-        startActivity(Intent(this, StatisticsActivity::class.java))
+    private fun startStatisticsActivity(
+        joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
+        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?) {
+
+        val times = joinedTimestamps?.map { i -> i?.time() }
+        Log.d("BROADIDTIMES", times.toString())
+
+        val intent = Intent(this, StatisticsActivity::class.java).apply {
+            putExtra("joinedTimestamps", joinedTimestamps)
+            putExtra("leftTimestamps", leftTimestamps)
+        }
+
+        startActivity(intent)
     }
 }
 

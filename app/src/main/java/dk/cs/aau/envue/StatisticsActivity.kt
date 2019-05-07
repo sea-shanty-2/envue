@@ -2,6 +2,7 @@ package dk.cs.aau.envue
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.data.*
@@ -13,6 +14,11 @@ class StatisticsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistics)
+
+        val joined = intent.getParcelableArrayExtra("joinedTimestamps") as Array<BroadcastStopMutation.JoinedTimeStamp>
+        val left = intent.getParcelableArrayExtra("leftTimestamps") as Array<BroadcastStopMutation.LeftTimeStamp>
+
+        Log.d("Hello!!", joined.toString())
 
         val chart = findViewById<View>(R.id.chart) as BarChart
 
