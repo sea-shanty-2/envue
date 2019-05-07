@@ -372,7 +372,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onDestroy() {
         super.onDestroy()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
-        leaveBroadcast(broadcastId)
     }
 
     private fun releasePlayer() {
@@ -460,14 +459,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             this,
             Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
         )
-        // Leave current broadcast
-        leaveBroadcast(broadcastId)
+        // Leave current broadcast, join the new one
+        leaveBroadcast(broadcastId, continueWith = {
+            broadcastId = id; joinBroadcast(id)
+        })
 
-        // Modify broadcast id
-        broadcastId = id
-
-        // Join this broadcast
-        joinBroadcast(broadcastId)
 
         // Create media source
         val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
@@ -482,20 +478,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             addListener(listener)
             playWhenReady = true
         }
-
     }
 
-    private fun leaveBroadcast(id: String) {
+    private fun leaveBroadcast(id: String, continueWith: () -> Unit) {
         val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
         GatewayClient.mutate(leaveMutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
             override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
-                // No action required
+                continueWith()
             }
 
             override fun onFailure(e: ApolloException) {
                 Log.d("LEAVE", "Something went wrong while leaving $id: $e")
                 Toast.makeText(this@PlayerActivity, "Something went wrong while leaving $id :(", Toast.LENGTH_SHORT)
-
             }
         })
     }

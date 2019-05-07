@@ -433,6 +433,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         sensor =  sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
+
+        joinBroadcast(broadcastId)
     }
 
     override fun onResume() {
@@ -522,15 +524,43 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
         leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?) {
 
-        val times = joinedTimestamps?.map { i -> i?.time() }
-        Log.d("BROADIDTIMES", times.toString())
+        leaveBroadcast(broadcastId)
+
+        val joined = joinedTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
+        val left = leftTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
 
         val intent = Intent(this, StatisticsActivity::class.java).apply {
-            putExtra("joinedTimestamps", joinedTimestamps)
-            putExtra("leftTimestamps", leftTimestamps)
+            putExtra("joinedTimestamps", joined)
+            putExtra("leftTimestamps", left)
         }
 
         startActivity(intent)
+    }
+
+    private fun leaveBroadcast(id: String) {
+        val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
+        GatewayClient.mutate(leaveMutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
+                // No action required
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("LEAVE", "Something went wrong while leaving $id: $e")
+            }
+        })
+    }
+
+    private fun joinBroadcast(id: String) {
+        val joinMutation = BroadcastJoinMutation.builder().id(id).build()
+        GatewayClient.mutate(joinMutation).enqueue(object: ApolloCall.Callback<BroadcastJoinMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastJoinMutation.Data>) {
+                // No action required
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("JOIN", "Something went wrong while joining $id: $e")
+            }
+        })
     }
 }
 

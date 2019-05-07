@@ -15,29 +15,62 @@ class StatisticsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistics)
 
-        val joined = intent.getParcelableArrayExtra("joinedTimestamps") as Array<BroadcastStopMutation.JoinedTimeStamp>
-        val left = intent.getParcelableArrayExtra("leftTimestamps") as Array<BroadcastStopMutation.LeftTimeStamp>
+        val keys = intent.extras?.keySet()
+        val extrasFromKeys = keys?.map { k -> intent.extras?.get(k) }
 
-        Log.d("Hello!!", joined.toString())
+        val joined = intent.extras?.get("joinedTimestamps") as Array<Int>
+        val left = intent.extras?.get("leftTimestamps") as Array<Int>
+
 
         val chart = findViewById<View>(R.id.chart) as BarChart
 
-        var s = 0
-        val entries = ArrayList<BarEntry>()
-        for (i in 0 until 100) {
-            val r = Random.nextFloat()
-            if (r > 0.5) {
-                s++
-            } else {
-                if (s > 0) {
-                    s--
-                }
-            }
-            entries.add(BarEntry(1f * i, 1f * s))
-        }
-        val dataSet = BarDataSet(entries.toMutableList(), "The data")
+        val dataSet = BarDataSet(generateChartData(joined, left), "The data")
         chart.setDrawGridBackground(false)
         chart.data = BarData(dataSet)
         chart.invalidate()  // Refresh
+
+    }
+
+    private fun generateChartData(u: Array<Int>, v: Array<Int>): MutableList<BarEntry> {
+        val chartData = ArrayList<Int>()
+        var i=0; var j=0; var numCurrentViewers=0
+
+        // Increment the num viewers when finding a smaller joined
+        // timestamp (from vector u) and decrement in left time stamps
+        // (vector v).
+        while (i < u.size && j < v.size) {
+            when {
+                u[i] < v[j] -> {
+                    numCurrentViewers++; i++
+                    chartData.add(numCurrentViewers)
+                }
+                u[i] > v[j] -> {
+                    numCurrentViewers--; j++
+                    chartData.add(numCurrentViewers)
+                }
+                else -> {
+                    i++; j++
+                    chartData.add(numCurrentViewers)
+                }
+            }
+        }
+
+        // Now either u or v is done, so process the rest of the lists
+        while (i < u.size) {
+            numCurrentViewers++; i++
+            chartData.add(numCurrentViewers)
+        }
+
+        while (j < v.size) {
+            numCurrentViewers--; j++
+            chartData.add(numCurrentViewers)
+        }
+
+        Log.d("BROADIDTIMES", "Merged: $chartData")
+
+        // Convert to BarChart entries
+        val barChartEntries = (0 until chartData.size).map { i -> BarEntry(i * 1f, chartData[i] * 1f) }
+
+        return barChartEntries.toMutableList()
     }
 }
