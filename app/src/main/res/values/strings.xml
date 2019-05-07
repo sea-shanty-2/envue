@@ -10,6 +10,7 @@
     <string name="profile_picture">Profile picture</string>
     <string name="profile_name">Name placeholder</string>
     <string name="log_out">Log out</string>
+    <string name="ChangeDisplayName">Change display name</string>
     <string name="invalid_access_token">Invalid access token</string>
     <string name="action_profile">Profile</string>
     <string name="action_broadcast">Broadcast</string>

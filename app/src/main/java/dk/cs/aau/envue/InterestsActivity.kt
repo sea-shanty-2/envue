@@ -16,9 +16,10 @@ import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.facebook.Profile
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.GsonBuilder
+import dk.cs.aau.envue.shared.GatewayClient
+import dk.cs.aau.envue.type.AccountUpdateInputType
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
 import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
@@ -58,9 +59,10 @@ class InterestsActivity : AppCompatActivity() {
         val selectedEmojis = getSelectedCategories()  // TODO: Do something with this
 
         //Snackbar.make(view, " and ".join(selectedEmojis), Snackbar.LENGTH_LONG).show()  // For testing
-
+        val getCategories = getCategoryVector(selectedEmojis)
         // Subscribe to new interests and unsubscribe from old.
-        updateSubscriptions(getCategoryVector(selectedEmojis))
+        updateInterests(getCategories)
+        updateSubscriptions(getCategories)
 
         val data = Intent().putExtra(resources.getString(R.string.interests_response_key), "".join(selectedEmojis.map {it.char}))
         //startActivity(Intent(this, BroadcastActivity::class.java))
@@ -93,7 +95,21 @@ class InterestsActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateInterests (categories : Array<Double>) {
+        val temp = AccountUpdateInputType.builder().categories(categories.asList()).build()
+        val updateCategories = ProfileUpdateMutation.builder().account(temp).build()
 
+        GatewayClient.mutate(updateCategories).enqueue(object: ApolloCall.Callback<ProfileUpdateMutation.Data>(){
+            override fun onFailure(e: ApolloException) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun onResponse(response: Response<ProfileUpdateMutation.Data>) {
+
+            }
+
+        })
+    }
     /** Creates a one-hot vector of selected emojis */
     private fun getCategoryVector(selectedEmojis: List<EmojiIcon>): Array<Double> {
         val categoryVector = Array(_allEmojis.size) {i -> 0.0}
@@ -114,7 +130,6 @@ class InterestsActivity : AppCompatActivity() {
             .getAllEmojis()
             .filter {it.isSelected}
             .map {it.getEmoji()}
-
 
     /** Pre-selects the users current interests */
     private fun selectCurrentInterests(selected: CharSequence){
@@ -147,6 +162,8 @@ class InterestsActivity : AppCompatActivity() {
             this.adapter = BroadcastCategoryListAdapter(this.context, emojiRows)
         }
     }
+
+
     /** Returns a string of elements in the provided list joined by the origin string. */
     fun <T> String.join(other: Iterable<T>): String {
         var joined = ""
