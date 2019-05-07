@@ -51,7 +51,8 @@ class ProfileActivity : AppCompatActivity() {
 
                 if (profile != null) {
                     onProfileFetch(profile!!)
-                } else {
+                }
+                else {
                     TODO("Handle null response")
                 }
             }
@@ -75,10 +76,9 @@ class ProfileActivity : AppCompatActivity() {
                 .Builder(this)
                 .setTitle(e.message)
                 .setMessage(
-                    "There was an issue with fetching your profile data." +
-                            "To resolve the issue, you can try relogging."
-                )
-                .setNegativeButton("log out") { _, _ -> logOut() }
+                    "There was an issue fetching your profile data." +
+                    "Check your internet connection or you can try relogging.")
+                .setNegativeButton("log out") { _, _ ->  logOut() }
                 .setPositiveButton("return") { _, _ -> finish() }
                 .create()
                 .show()
@@ -102,8 +102,7 @@ class ProfileActivity : AppCompatActivity() {
         when (requestCode) {
             SET_INTERESTS_REQUEST ->
                 if (resultCode == Activity.RESULT_OK) {
-                    currentInterestsView.text =
-                        data?.getStringExtra(resources.getString(R.string.interests_response_key))
+                    currentInterestsView.text = data?.getStringExtra(resources.getString(R.string.interests_response_key))
                 }
         }
     }

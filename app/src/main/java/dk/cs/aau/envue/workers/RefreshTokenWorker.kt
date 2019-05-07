@@ -1,47 +1,46 @@
 package dk.cs.aau.envue.workers
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.content.DialogInterface
-import android.content.Intent
-import android.support.v7.app.AlertDialog
 import android.util.Log
-import androidx.work.Worker
-import androidx.work.WorkerParameters
+import com.facebook.AccessToken
+import com.facebook.FacebookException
+import com.google.common.util.concurrent.ListenableFuture
+import androidx.work.*
+import androidx.work.impl.utils.futures.SettableFuture
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloCallback
-import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.facebook.AccessToken
 import dk.cs.aau.envue.GatewayAuthenticationQuery
-import dk.cs.aau.envue.LoginActivity
-import dk.cs.aau.envue.R
 import dk.cs.aau.envue.interceptors.AuthenticationInterceptor
 import dk.cs.aau.envue.shared.GatewayClient
 
+@SuppressLint("RestrictedApi")
+class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : ListenableWorker(context, workerParams) {
 
-class RefreshTokenWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+    override fun startWork(): ListenableFuture<Result> {
+        Log.d("TOKEN_REFRESH_WORKER", "STARTED")
+        var future = SettableFuture.create<Result>()
+        AccessToken.refreshCurrentAccessTokenAsync(facebookAccessTokenRefreshCallback(future))
+        return future
+    }
 
-    override fun doWork(): Result {
+    private fun facebookAccessTokenRefreshCallback(future: SettableFuture<Result>):
+            AccessToken.AccessTokenRefreshCallback {
 
-        // validate current access token
-        val isValid = AccessToken.isCurrentAccessTokenActive()
+        return object : AccessToken.AccessTokenRefreshCallback {
 
-        return if (isValid) {
-            AccessToken.refreshCurrentAccessTokenAsync()
-            GatewayClient.authenticate()
-            Result.success()
-        } else {
-            AlertDialog.Builder(applicationContext)
-                .setMessage(applicationContext.resources.getString(R.string.invalid_access_token))
-                .setPositiveButton(R.string.com_facebook_loginview_log_in_button) { _: DialogInterface, _: Int -> run{
-                    applicationContext.startActivity(Intent(applicationContext, LoginActivity::class.java))
-                }}
-                .create()
-                .show()
-            Result.failure()
+            override fun OnTokenRefreshed(accessToken: AccessToken?) {
+                Log.d("FACEBOOK_TOKEN_REFRESH", "SUCCEEDED")
+                future.set(Result.success())
+            }
+
+            override fun OnTokenRefreshFailed(exception: FacebookException?) {
+                Log.d("FACEBOOK_TOKEN_REFRESH", "FAILED")
+                future.set(Result.failure())
+            }
+
         }
-
-
     }
 }

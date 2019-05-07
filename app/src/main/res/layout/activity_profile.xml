@@ -6,23 +6,11 @@
         android:layout_height="match_parent"
         tools:context="dk.cs.aau.envue.ProfileActivity">
 
-    <ImageView
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="32dp"
-        android:id="@+id/profilePictureView"
-        android:contentDescription="@string/profile_picture"
-        android:minWidth="128dp"
-        android:minHeight="128dp"/>
-
-    <TextView
-        android:text="@string/profile_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/profilePictureView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="8dp"
         android:textSize="24sp"
         android:textStyle="bold"
         android:id="@+id/profileNameView"/>

@@ -50,55 +50,25 @@ class LoginActivity : AppCompatActivity() {
         // remove login button (to avoid interrupts)
         login_button.visibility = View.GONE
 
-        var query = GatewayAuthenticationQuery
-            .builder()
-            .token(AccessToken.getCurrentAccessToken().token)
+        // set a unique work name for periodic token refresh
+        val uniqueWorkName = "periodic_token_refresh"
+
+        // build token refresh worker
+        val periodicWorkRequest = PeriodicWorkRequest
+            .Builder(RefreshTokenWorker::class.java, 1, TimeUnit.HOURS)
             .build()
 
-        GatewayClient.query(query).enqueue(object: ApolloCall.Callback<GatewayAuthenticationQuery.Data>() {
-            override fun onResponse(response: com.apollographql.apollo.api.Response<GatewayAuthenticationQuery.Data>) {
+        // start periodic token refresh worker
+        WorkManager
+            .getInstance()
+            .enqueueUniquePeriodicWork(
+                uniqueWorkName,
+                ExistingPeriodicWorkPolicy.REPLACE,
+                periodicWorkRequest)
 
-                val token = response.data()?.authenticate()?.facebook()
 
-                GatewayClient.setAuthenticationToken(token!!)
-
-                // set a unique work name for periodic token refresh
-                val uniqueWorkName = "periodic_token_refresh"
-
-                // build token refresh worker
-                val periodicWorkRequest = PeriodicWorkRequest
-                    .Builder(RefreshTokenWorker::class.java, 1, TimeUnit.HOURS)
-                    .build()
-
-                // start periodic token refresh worker
-                WorkManager
-                    .getInstance()
-                    .enqueueUniquePeriodicWork(
-                        uniqueWorkName,
-                        ExistingPeriodicWorkPolicy.KEEP,
-                        periodicWorkRequest)
-
-                // return to prev activity
-                finish()
-            }
-
-            override fun onFailure(e: ApolloException) {
-
-                login_button.visibility = View.VISIBLE
-
-                runOnUiThread {
-
-                    AlertDialog
-                        .Builder(this@LoginActivity)
-                        .setTitle(e.message)
-                        .setMessage(
-                            "There was an issue logging you in." +
-                            "Could not authenticate with the envue api.")
-                        .create()
-                        .show()
-                }
-            }
-        })
+        // return to prev activity
+        finish()
     }
 
     fun onCancel() {

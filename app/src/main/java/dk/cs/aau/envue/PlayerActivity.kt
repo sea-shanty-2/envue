@@ -3,7 +3,6 @@ package dk.cs.aau.envue
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
-import android.app.ProgressDialog
 import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
@@ -33,7 +32,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import com.mapbox.mapboxsdk.maps.Style
+import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
@@ -113,6 +112,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var loading: ProgressBar? = null
     private var chatAdapter: MessageListAdapter? = null
     private var reactionAdapter: ReactionListAdapter? = null
+    private var recommendationImageView: ImageView? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
     private var emojiFragment: EmojiFragment? = null
@@ -132,7 +132,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val intentKeys = intent?.extras?.keySet()
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
-
 
 
         setContentView(R.layout.activity_player)
@@ -180,6 +179,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             playWhenReady = true
         }
 
+        joinBroadcast(broadcastId)  // Update viewer counts
+
         bindContentView()
 
         // Launch background task for updating event ids
@@ -200,6 +201,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         reactionList = findViewById(R.id.reaction_view)
         recommendationView = findViewById(R.id.recommendation_view)
         recommendationTimeout = findViewById(R.id.recommendation_timer)
+        recommendationImageView = findViewById(R.id.recommendation_image)
+
+        // Listen for clicks on recommendations
+        recommendationImageView?.setOnClickListener {
+            acceptRecommendation()
+        }
 
         // Assign reaction adapter and layout manager
         val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
@@ -300,9 +307,22 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) }}
     }
 
+    private fun updateRecommendationThumbnail() {
+        recommendedBroadcastId?.let { broadcast ->
+            recommendationImageView?.let {
+                Picasso
+                    .get()
+                    .load("https://envue.me/relay/$broadcast/thumbnail")
+                    .placeholder(R.drawable.ic_live_tv_48dp)
+                    .error(R.drawable.ic_live_tv_48dp)
+                    .into(recommendationImageView)
+            }
+        }
+    }
     private fun showRecommendation(broadcastId: String) {
         recommendedBroadcastId = broadcastId
         recommendationView?.let { transitionView(it, 0f, 1f, View.VISIBLE) }
+        updateRecommendationThumbnail()
 
         recommendationExpirationThread = Thread {
             recommendationTimeout?.let { it.progress = it.max }
@@ -350,6 +370,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onStop() {
         super.onStop()
         releasePlayer()
+        leaveBroadcast(broadcastId)
     }
 
     private fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
@@ -370,6 +391,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onDestroy() {
         super.onDestroy()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
+        leaveBroadcast(broadcastId)
     }
 
     private fun releasePlayer() {
@@ -390,11 +412,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val recommendationVisibility = recommendationView?.visibility
         val recommendationExpirationProgress = recommendationTimeout?.progress
 
+        // Bind new content view
         bindContentView()
 
         // Restore state
         recommendationVisibility?.let { recommendationView?.visibility = it }
         recommendationExpirationProgress?.let { recommendationTimeout?.progress = it }
+        updateRecommendationThumbnail()
+    }
+
+    private fun acceptRecommendation() {
+        cancelRecommendation()
+        recommendedBroadcastId?.let { changeBroadcast(it) }
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
@@ -441,7 +470,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                         Toast.LENGTH_LONG)
                         .show()
                     changeBroadcast(eventIds[broadcastIndex % eventIds.size])  // Loop around if necessary
-
                 } else {
                     // Do nothing, maybe display helper message
                     Toast.makeText(this, "Swipe horizontally to see the rest of the event!", Toast.LENGTH_LONG).show()
@@ -457,9 +485,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             this,
             Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
         )
+        // Leave current broadcast
+        leaveBroadcast(broadcastId)
+
+        // Modify broadcast id
+        broadcastId = id
 
         // Create media source
-        broadcastId = id
         val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
@@ -472,5 +504,34 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             addListener(listener)
             playWhenReady = true
         }
+
+        // Join this broadcast
+        joinBroadcast(broadcastId)
+    }
+
+    private fun leaveBroadcast(id: String) {
+        val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
+        GatewayClient.mutate(leaveMutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
+                // No action required
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("LEAVE", "Something went wrong while leaving $id: $e")
+            }
+        })
+    }
+
+    private fun joinBroadcast(id: String) {
+        val joinMutation = BroadcastJoinMutation.builder().id(id).build()
+        GatewayClient.mutate(joinMutation).enqueue(object: ApolloCall.Callback<BroadcastJoinMutation.Data>() {
+            override fun onResponse(response: Response<BroadcastJoinMutation.Data>) {
+                // No action required
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("JOIN", "Something went wrong while joining $id: $e")
+            }
+        })
     }
 }

@@ -28,11 +28,19 @@
                                                 android:fadingEdge="horizontal"
                                                 android:layout_gravity="end"/>
     </LinearLayout>
-    
-    <TextView
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
             android:id="@+id/live_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:layout_gravity="start|top"
             android:layout_margin="12dp"
             android:background="@drawable/rounded_live"
@@ -42,6 +50,36 @@
             android:textStyle="bold"
             android:text="@string/live"
             android:visibility="gone"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <ImageView
+                android:layout_width="@dimen/viewer_count_size"
+                android:layout_height="@dimen/viewer_count_size"
+                android:src="@drawable/red_user_simple"/>
+
+            <TextView
+                android:id="@+id/viewer_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAlignment="center"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:text=""/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+    
+
 
     <FrameLayout
             android:layout_width="match_parent"
