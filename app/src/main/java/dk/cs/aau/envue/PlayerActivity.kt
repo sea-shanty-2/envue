@@ -230,7 +230,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Make sure we can detect swipes in portrait mode as well
         (playerView as SimpleExoPlayerView).setOnTouchListener { view, event ->
             changeBroadcastOnSwipe(event)
-            true
+            false
         }
 
         // Assign send button
