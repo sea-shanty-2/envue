@@ -38,10 +38,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/recommendation_timer" android:max="5000" android:progress="100"/>
-            <TextView
-                    android:text="big boi"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:id="@+id/test" android:textSize="36sp"/>
+
+            <ImageView
+                    android:layout_gravity="center"
+                    android:id="@+id/recommendation_image"
+                    android:layout_width="160dp"
+                    android:layout_height="90dp"
+                    android:scaleType="fitXY"
+                    android:contentDescription="@string/recommendation_thumbnail"/>
+
         </LinearLayout>
     </android.support.v7.widget.CardView>
     <android.support.v7.widget.CardView
