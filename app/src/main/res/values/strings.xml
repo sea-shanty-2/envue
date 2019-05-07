@@ -143,5 +143,6 @@
     </string>
     <string name="action_settings">Settings</string>
     <string name="live">LIVE</string>
+    <string name="recommendation_thumbnail">Recommendation thumbnail</string>
 
 </resources>
