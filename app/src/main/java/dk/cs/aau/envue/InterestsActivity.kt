@@ -4,17 +4,17 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
+import kotlinx.android.synthetic.main.activity_category_selection.*
 
 class InterestsActivity : CategorySelectionActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Modify layout
-        this.initializeBroadcastHeader.text = resources.getString(R.string.interests_dialog_title)
-        this.startBroadcastButtonText.text = resources.getString(R.string.interests_dialog_possitive)
+        this.categorySelectionHeader.text = resources.getString(R.string.interests_dialog_title)
+        this.categorySelectionButtonText.text = resources.getString(R.string.interests_dialog_possitive)
 
-        startBroadcastButton.setOnClickListener { view ->
+        categorySelectionButton.setOnClickListener { view ->
             setInterests(view)
         }
 

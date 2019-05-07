@@ -16,13 +16,13 @@ class FilterActivity : CategorySelectionActivity() {
 
         // Add button listener
         categorySelectionButtonText.setOnClickListener { view ->
-            onSetFilters()
+            onAccept()
         }
 
     }
 
     /** Returns the currently selected filters to the initiating activity */
-    private fun onSetFilters() {
+    private fun onAccept() {
         val data = Intent()
             .putExtra(  resources.getString(R.string.filter_response_key),
                         getCategoryVector(getSelectedCategories()))

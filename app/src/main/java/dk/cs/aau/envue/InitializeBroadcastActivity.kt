@@ -12,7 +12,7 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.view.View
-import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
+import kotlinx.android.synthetic.main.activity_category_selection.*
 import android.util.Log
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
@@ -22,7 +22,6 @@ import com.google.android.gms.location.LocationServices
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.type.BroadcastInputType
 import dk.cs.aau.envue.type.LocationInputType
-import kotlinx.android.synthetic.main.activity_category_selection.*
 
 
 class InitializeBroadcastActivity : CategorySelectionActivity() {
@@ -39,7 +38,7 @@ class InitializeBroadcastActivity : CategorySelectionActivity() {
         this.categorySelectionButtonText.text = getString(R.string.start_broadcast_button_text)
 
         // Create a broadcaster and start the stream when "GO" is pressed
-        startBroadcastButton.setOnClickListener { view ->
+        categorySelectionButton.setOnClickListener { view ->
             // Check if we have the required permission
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {

@@ -25,6 +25,8 @@ import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.textToBitmap
 import android.os.AsyncTask
 import android.os.Build
+import android.support.design.widget.FloatingActionButton
+import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -385,6 +387,16 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     fun updateFilters(filterArray: DoubleArray?){
         filters = filterArray
+        var emojiString = ""
+        if (filterArray != null){
+            for (i in 0 until filterArray.size){
+                if (filterArray[i] == 1.0){
+                    emojiString = emojiString + limitedEmojis[i]
+                }
+            }
+
+            Snackbar.make(view!!, emojiString, Snackbar.LENGTH_LONG).show()
+        }
         updateMap()
     }
 }
