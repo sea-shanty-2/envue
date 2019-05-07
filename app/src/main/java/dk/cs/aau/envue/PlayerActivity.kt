@@ -3,7 +3,6 @@ package dk.cs.aau.envue
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
-import android.app.ProgressDialog
 import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
@@ -33,7 +32,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import com.mapbox.mapboxsdk.maps.Style
+import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
@@ -113,6 +112,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var loading: ProgressBar? = null
     private var chatAdapter: MessageListAdapter? = null
     private var reactionAdapter: ReactionListAdapter? = null
+    private var recommendationImageView: ImageView? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
     private var emojiFragment: EmojiFragment? = null
@@ -133,15 +133,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
-
-
         setContentView(R.layout.activity_player)
 
         // Initially disable the ability to send messages
         setConnected(false)
-
-        // Prevent dimming
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
@@ -202,12 +197,26 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         reactionList = findViewById(R.id.reaction_view)
         recommendationView = findViewById(R.id.recommendation_view)
         recommendationTimeout = findViewById(R.id.recommendation_timer)
+        recommendationImageView = findViewById(R.id.recommendation_image)
+
+        // Prevent dimming
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Listen for clicks on recommendations
+        recommendationImageView?.setOnClickListener {
+            acceptRecommendation()
+        }
 
         // Assign reaction adapter and layout manager
         val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
         reactionList?.apply {
             adapter = reactionAdapter
             layoutManager = reactionLayoutManager
+        }
+
+        // Update chat adapter
+        chatAdapter?.apply {
+            setLandscapeMode(this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
         }
 
         // Assign chat adapter and layout manager
@@ -302,9 +311,22 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) }}
     }
 
+    private fun updateRecommendationThumbnail() {
+        recommendedBroadcastId?.let { broadcast ->
+            recommendationImageView?.let {
+                Picasso
+                    .get()
+                    .load("https://envue.me/relay/$broadcast/thumbnail")
+                    .placeholder(R.drawable.ic_live_tv_48dp)
+                    .error(R.drawable.ic_live_tv_48dp)
+                    .into(recommendationImageView)
+            }
+        }
+    }
     private fun showRecommendation(broadcastId: String) {
         recommendedBroadcastId = broadcastId
         recommendationView?.let { transitionView(it, 0f, 1f, View.VISIBLE) }
+        updateRecommendationThumbnail()
 
         recommendationExpirationThread = Thread {
             recommendationTimeout?.let { it.progress = it.max }
@@ -393,11 +415,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val recommendationVisibility = recommendationView?.visibility
         val recommendationExpirationProgress = recommendationTimeout?.progress
 
+        // Bind new content view
         bindContentView()
 
         // Restore state
         recommendationVisibility?.let { recommendationView?.visibility = it }
         recommendationExpirationProgress?.let { recommendationTimeout?.progress = it }
+        updateRecommendationThumbnail()
+    }
+
+    private fun acceptRecommendation() {
+        cancelRecommendation()
+        recommendedBroadcastId?.let { changeBroadcast(it) }
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
@@ -444,7 +473,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                         Toast.LENGTH_LONG)
                         .show()
                     changeBroadcast(eventIds[broadcastIndex % eventIds.size])  // Loop around if necessary
-
                 } else {
                     // Do nothing, maybe display helper message
                     Toast.makeText(this, "Swipe horizontally to see the rest of the event!", Toast.LENGTH_LONG).show()

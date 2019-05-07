@@ -275,7 +275,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     override fun onRtmpConnecting(msg: String?) {
     }
 
-    fun startCounter() {
+    private fun startCounter() {
         val startedAt = System.currentTimeMillis()
         counterThread = Thread {
             while (true) {
@@ -383,6 +383,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         Log.d("BROADIDTIMES", id)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Get profile
         val profile = Profile.getCurrentProfile()
@@ -408,7 +409,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
 
         // Create chat adapter
-        chatAdapter = MessageListAdapter(this, messages, streamerView = true)
+        chatAdapter = MessageListAdapter(this, messages, isStreamerView = true)
 
         // Initialize communication socket
         startCommunicationSocket()
