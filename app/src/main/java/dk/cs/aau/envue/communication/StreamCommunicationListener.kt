@@ -106,7 +106,7 @@ class StreamCommunicationListener(private val communicationListener: Communicati
             val client = OkHttpClient.Builder()
                 .build()
             val request = Request.Builder()
-                .url("wss://envue.me:4040")
+                .url("wss://envue.me:443/comms")
                 .build()
 
             return client.newWebSocket(request, StreamCommunicationListener(communicationListener, channelId))
