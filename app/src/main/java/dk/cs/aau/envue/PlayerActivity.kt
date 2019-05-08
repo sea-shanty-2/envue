@@ -42,6 +42,44 @@ import okhttp3.WebSocket
 
 
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+    private lateinit var broadcastId: String
+    private var eventIds: ArrayList<String> = ArrayList()
+        set(value) {
+            field = value
+            this.nearbyBroadcastsAdapter?.apply {
+                broadcastList = eventIds
+                runOnUiThread { notifyDataSetChanged() }
+            }
+        }
+
+    private var broadcastIndex = 0
+
+    private var fingerX1 = 0.0f
+    private var fingerX2 = 0.0f
+    private val minScrollDistance = 150  // Minimum distance for a swipe to be registered
+
+    private var playerView: SimpleExoPlayerView? = null
+    private var player: SimpleExoPlayer? = null
+    private var editMessageView: EditText? = null
+    private var chatList: RecyclerView? = null
+    private var reactionList: RecyclerView? = null
+    private var nearbyBroadcastsList: RecyclerView? = null
+    private var recommendationView: View? = null
+    private var recommendationTimeout: ProgressBar? = null
+    private var playWhenReady = true
+    private var currentWindow = 0
+    private var playbackPosition: Long = 0
+    private var loading: ProgressBar? = null
+    private var chatAdapter: MessageListAdapter? = null
+    private var reactionAdapter: ReactionListAdapter? = null
+    private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
+    private var recommendationImageView: ImageView? = null
+    private var socket: WebSocket? = null
+    private var messages: ArrayList<Message> = ArrayList()
+    private var emojiFragment: EmojiFragment? = null
+    private var lastReactionAt: Long = 0
+    private var recommendationExpirationThread: Thread? = null
+    private var recommendedBroadcastId: String? = null
 
     inner class UpdateEventIdsTask(c: Context): AsyncTask<Void, Void, Void>() {
 
@@ -92,37 +130,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
-    private lateinit var broadcastId: String
-    private lateinit var eventIds: ArrayList<String>
-    private var broadcastIndex = 0
-
-    private var fingerX1 = 0.0f
-    private var fingerX2 = 0.0f
-    private val MIN_DISTANCE = 150  // Minimum distance for a swipe to be registered
-
-    private var playerView: SimpleExoPlayerView? = null
-    private var player: SimpleExoPlayer? = null
-    private var editMessageView: EditText? = null
-    private var chatList: RecyclerView? = null
-    private var reactionList: RecyclerView? = null
-    private var nearbyBroadcastsList: RecyclerView? = null
-    private var recommendationView: View? = null
-    private var recommendationTimeout: ProgressBar? = null
-    private var playWhenReady = true
-    private var currentWindow = 0
-    private var playbackPosition: Long = 0
-    private var loading: ProgressBar? = null
-    private var chatAdapter: MessageListAdapter? = null
-    private var reactionAdapter: ReactionListAdapter? = null
-    private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
-    private var recommendationImageView: ImageView? = null
-    private var socket: WebSocket? = null
-    private var messages: ArrayList<Message> = ArrayList()
-    private var emojiFragment: EmojiFragment? = null
-    private var lastReactionAt: Long = 0
-    private var recommendationExpirationThread: Thread? = null
-    private var recommendedBroadcastId: String? = null
-
     private fun startCommunicationSocket() {
         socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
     }
@@ -132,7 +139,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         super.onCreate(savedInstanceState)
 
         // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
-        val intentKeys = intent?.extras?.keySet()
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
@@ -142,7 +148,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         setConnected(false)
 
         // Create nearby broadcasts adapter
-        nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(listOf(broadcastId), broadcastId, null, this::changeBroadcast)
+        nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(eventIds, broadcastId, null, this::updateSelectedBroadcast)
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
@@ -160,8 +166,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             DefaultTrackSelector(adaptiveTrackSelection)
         )
 
+        // Produces DataSource instances through which media data is loaded
         val defaultBandwidthMeter = DefaultBandwidthMeter()
-        // Produces DataSource instances through which media data is loaded.
         val dataSourceFactory = DefaultDataSourceFactory(
             this,
             Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
@@ -181,8 +187,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             playWhenReady = true
         }
 
-        joinBroadcast(broadcastId)  // Update viewer counts
+        // Update viewer counts
+        joinBroadcast(broadcastId)
 
+        // Bind content
         bindContentView()
 
         // Launch background task for updating event ids
@@ -193,21 +201,27 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    private fun updateNearbyBroadcastList(nearbyBroadcasts: List<String>) {
+    private fun updateSelectedBroadcast(broadcastId: String, position: Int) {
+        this.changeBroadcast(broadcastId)
+
+        this.nearbyBroadcastsList?.apply {
+            layoutManager?.smoothScrollToPosition(this, null, position)
+        }
+
         this.nearbyBroadcastsAdapter?.apply {
-            broadcastList = nearbyBroadcasts
-            selectedBroadcast = this@PlayerActivity.broadcastId
+            currentBroadcastId = this@PlayerActivity.broadcastId
             notifyDataSetChanged()
         }
     }
 
-    private fun updateSelectedBroadcast() {
-        TODO()
+    private fun updateRecommendedBroadcast(broadcastId: String) {
+        this.recommendedBroadcastId = broadcastId
+        this.nearbyBroadcastsAdapter?.apply {
+            recommendedBroadcastId = this@PlayerActivity.recommendedBroadcastId
+            notifyDataSetChanged()
+        }
     }
 
-    private fun updateRecommendedBroadcast() {
-        TODO()
-    }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun bindContentView() {
@@ -259,7 +273,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         // Make sure we can detect swipes in portrait mode as well
-        (playerView as SimpleExoPlayerView).setOnTouchListener { view, event ->
+        (playerView as SimpleExoPlayerView).setOnTouchListener { _, event ->
             changeBroadcastOnSwipe(event)
             false
         }
@@ -492,7 +506,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
                 // Measure horizontal distance between x1 and x2 - if its big enough, change broadcast
                 val deltaX = Math.abs(fingerX2 - fingerX1)
-                if (deltaX > MIN_DISTANCE) {
+                if (deltaX > minScrollDistance) {
                     // This is a swipe, change broadcast
                     broadcastIndex++
                     Toast.makeText(this,
@@ -513,6 +527,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     // First leave the current broadcast, then update broadcastId to id
     // and join that.
     private fun changeBroadcast(id: String) {
+        this.broadcastId = id
         val defaultBandwidthMeter = DefaultBandwidthMeter()
         val dataSourceFactory = DefaultDataSourceFactory(
             this,

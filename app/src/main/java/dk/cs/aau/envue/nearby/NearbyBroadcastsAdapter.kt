@@ -6,14 +6,16 @@ import android.view.ViewGroup
 import dk.cs.aau.envue.R
 
 class NearbyBroadcastsAdapter(var broadcastList: List<String> = ArrayList(),
-                              var selectedBroadcast: String? = null,
+                              var currentBroadcastId: String? = null,
                               var recommendedBroadcastId: String? = null,
-                              private val onClick: (String) -> Unit): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+                              private val onClick: (String, Int) -> Unit): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val broadcastId = broadcastList[position]
+        holder.itemView.setOnClickListener { onClick(broadcastId, position) }
+
         return (holder as NearbyBroadcastHolder).bind(broadcastId, recommendedBroadcastId?.equals(broadcastId) ?: false,
-            selectedBroadcast?.equals(broadcastId) ?: false)
+            currentBroadcastId?.equals(broadcastId) ?: false)
     }
 
     override fun getItemCount(): Int {

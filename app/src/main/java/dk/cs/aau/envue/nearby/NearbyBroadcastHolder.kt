@@ -10,10 +10,15 @@ import dk.cs.aau.envue.R
 class NearbyBroadcastHolder internal constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private var thumbnail: ImageView? = itemView.findViewById(R.id.broadcast_thumbnail)
     private var outerLayout: RelativeLayout? = itemView.findViewById(R.id.broadcast_outer_layout)
+    private var recommendedView: ImageView? = itemView.findViewById(R.id.recommended_star)
 
     internal fun bind(broadcastId: String, recommended: Boolean, selected: Boolean) {
         outerLayout?.apply {
-            setBackgroundResource(if (selected) R.drawable.border else 0)
+            setBackgroundResource(if (selected) R.drawable.selected else 0)
+        }
+
+        recommendedView?.apply {
+            visibility = if (recommended) View.VISIBLE else View.GONE
         }
 
         thumbnail?.let {

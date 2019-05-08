@@ -163,5 +163,6 @@
     <string name="recommendation_thumbnail">Recommendation thumbnail</string>
     <string name="viewer">Viewer</string>
     <string name="recommended">Recommended</string>
+    <string name="_0">0</string>
 
 </resources>
