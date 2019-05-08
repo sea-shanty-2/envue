@@ -54,6 +54,9 @@ class MainActivity : AppCompatActivity() {
             (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
         }
 
+        // Update map. Needed to handle orientation changes.
+        (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
+
         // Open category selection on button press
         filter_categories_button.setOnClickListener() { this.onFilter()}
     }
@@ -76,7 +79,6 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.RECORD_AUDIO,
                     Manifest.permission.ACCESS_FINE_LOCATION))) {
                 startActivity(Intent(this, InitializeBroadcastActivity::class.java))
-
             }
             true
         }
@@ -100,7 +102,6 @@ class MainActivity : AppCompatActivity() {
         if (!arePermissionsGranted(permissions)) {
             requestPermissions(permissions)
         }
-
         return arePermissionsGranted(permissions)
     }
 
@@ -140,5 +141,4 @@ class MainActivity : AppCompatActivity() {
                 }
         }
     }
-
 }
