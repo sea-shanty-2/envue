@@ -1,37 +1,19 @@
 package dk.cs.aau.envue
 
-import android.widget.SeekBar
-import android.content.pm.PackageManager
-import android.Manifest.permission
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.support.v4.content.ContextCompat
-import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import android.support.v4.content.ContextCompat.startActivity
-import android.content.Intent
 import android.graphics.Color
 import com.github.mikephil.charting.data.LineData
-import android.graphics.drawable.Drawable
-import com.github.mikephil.charting.utils.Utils.getSDKInt
-import com.github.mikephil.charting.interfaces.dataprovider.LineDataProvider
 import com.github.mikephil.charting.formatter.IFillFormatter
 import android.graphics.DashPathEffect
 import com.github.mikephil.charting.components.Legend.LegendForm
-import com.github.mikephil.charting.components.Legend
-import com.github.mikephil.charting.components.LimitLine.LimitLabelPosition
-import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.components.XAxis
-import android.view.WindowManager
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.widget.TextView
+import android.view.*
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
-import android.widget.SeekBar.OnSeekBarChangeListener
-import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.utils.Utils
@@ -39,61 +21,61 @@ import dk.cs.aau.envue.utility.BarChartMarker
 import dk.cs.aau.envue.utility.ChartBase
 
 
-class LineChartActivity1 : ChartBase(), OnChartValueSelectedListener {
+class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
 
     private var chart: LineChart? = null
-    private var seekBarX: SeekBar? = null
-    private var seekBarY: SeekBar? = null
-    private var tvX: TextView? = null
-    private var tvY: TextView? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        getWindow().setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
-        setContentView(R.layout.activity_statistics)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.activity_viewership, container, false)
+    }
 
-        setTitle("LineChartActivity1")
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
 
-        tvX = findViewById(R.id.tvXMax)
-        tvY = findViewById(R.id.tvYMax)
+        // // Chart Style // //
+        chart = view?.findViewById(R.id.chart1)
 
+        // background color
+        chart!!.setBackgroundColor(Color.WHITE)
 
-        run {
-            // // Chart Style // //
-            chart = findViewById(R.id.chart1)
+        // disable description text
+        chart!!.description.isEnabled = false
 
-            // background color
-            chart!!.setBackgroundColor(Color.WHITE)
+        // enable touch gestures
+        chart!!.setTouchEnabled(true)
 
-            // disable description text
-            chart!!.description.isEnabled = false
+        // set listeners
+        chart!!.setOnChartValueSelectedListener(this)
+        chart!!.setDrawGridBackground(false)
 
-            // enable touch gestures
-            chart!!.setTouchEnabled(true)
+        // create marker to display box when values are selected
+        val mv = BarChartMarker(context!!, R.layout.marker_barchart)
 
-            // set listeners
-            chart!!.setOnChartValueSelectedListener(this)
-            chart!!.setDrawGridBackground(false)
+        // Set the marker to the chart
+        mv.setChartView(chart)
+        chart!!.marker = mv
 
-            // create marker to display box when values are selected
-            val mv = BarChartMarker(this, R.layout.marker_barchart)
+        // enable scaling and dragging
+        chart!!.isDragEnabled = true
+        chart!!.setScaleEnabled(true)
+        // chart.setScaleXEnabled(true);
+        // chart.setScaleYEnabled(true);
 
-            // Set the marker to the chart
-            mv.setChartView(chart)
-            chart!!.marker = mv
+        // force pinch zoom along both axis
+        chart!!.setPinchZoom(true)
 
-            // enable scaling and dragging
-            chart!!.isDragEnabled = true
-            chart!!.setScaleEnabled(true)
-            // chart.setScaleXEnabled(true);
-            // chart.setScaleYEnabled(true);
+        val keys = activity?.intent?.extras?.keySet()
 
-            // force pinch zoom along both axis
-            chart!!.setPinchZoom(true)
-        }
+        //val joined = (intent.extras?.get("joinedTimestamps") as Array<Int>).apply {sort()}
+        //val left = (intent.extras?.get("leftTimestamps") as Array<Int>).apply {sort()}
+
+        val joined = arrayOf(12340, 12345, 12350)
+        val left = arrayOf(12360, 12380, 12382)
+
+        // add data
+
+        val maxY = setData(joined.map { i -> i - joined.min()!! }.toTypedArray(),
+            left.map { i -> i - joined.min()!! }.toTypedArray())
+
 
         val xAxis: XAxis
         run {
@@ -101,7 +83,8 @@ class LineChartActivity1 : ChartBase(), OnChartValueSelectedListener {
             xAxis = chart!!.xAxis
 
             // vertical grid lines
-            xAxis.enableGridDashedLine(10f, 10f, 0f)
+            //xAxis.enableGridDashedLine(10f, 10f, 0f)
+            xAxis.isEnabled = false
         }
 
         val yAxis: YAxis
@@ -116,55 +99,13 @@ class LineChartActivity1 : ChartBase(), OnChartValueSelectedListener {
             yAxis.enableGridDashedLine(10f, 10f, 0f)
 
             // axis range
-            yAxis.axisMaximum = 200f
-            yAxis.axisMinimum = -50f
+            yAxis.axisMaximum = maxY!! + 1
+            yAxis.axisMinimum = 0f
+            yAxis.labelCount = maxY.toInt()
         }
 
+        chart!!.axisRight.isEnabled = false
 
-        run {
-            // // Create Limit Lines // //
-            val llXAxis = LimitLine(9f, "Index 10")
-            llXAxis.lineWidth = 4f
-            llXAxis.enableDashedLine(10f, 10f, 0f)
-            llXAxis.labelPosition = LimitLabelPosition.RIGHT_BOTTOM
-            llXAxis.textSize = 10f
-
-            val ll1 = LimitLine(150f, "Upper Limit")
-            ll1.lineWidth = 4f
-            ll1.enableDashedLine(10f, 10f, 0f)
-            ll1.labelPosition = LimitLabelPosition.RIGHT_TOP
-            ll1.textSize = 10f
-
-            val ll2 = LimitLine(-30f, "Lower Limit")
-            ll2.lineWidth = 4f
-            ll2.enableDashedLine(10f, 10f, 0f)
-            ll2.labelPosition = LimitLabelPosition.RIGHT_BOTTOM
-            ll2.textSize = 10f
-
-            // draw limit lines behind data instead of on top
-            yAxis.setDrawLimitLinesBehindData(true)
-            xAxis.setDrawLimitLinesBehindData(true)
-
-            // add limit lines
-            yAxis.addLimitLine(ll1)
-            yAxis.addLimitLine(ll2)
-            //xAxis.addLimitLine(llXAxis);
-        }
-
-        val keys = intent.extras?.keySet()
-        val extrasFromKeys = keys?.map { k -> intent.extras?.get(k) }
-
-        //val joined = (intent.extras?.get("joinedTimestamps") as Array<Int>).apply {sort()}
-        //val left = (intent.extras?.get("leftTimestamps") as Array<Int>).apply {sort()}
-
-        val joined = arrayOf(12340, 12345, 12350)
-        val left = arrayOf(12360, 12380, 12382)
-
-        // add data
-        seekBarX!!.progress = 45
-        seekBarY!!.progress = 180
-        setData(joined.map { i -> i - joined.min()!! }.toTypedArray(),
-            left.map { i -> i - joined.min()!! }.toTypedArray())
 
         // draw points over time
         chart!!.animateX(1500)
@@ -174,10 +115,14 @@ class LineChartActivity1 : ChartBase(), OnChartValueSelectedListener {
 
         // draw legend entries as lines
         l.form = LegendForm.LINE
+
+        super.onActivityCreated(savedInstanceState)
     }
 
-    private fun setData(u: Array<Int>, v: Array<Int>) {
+
+    private fun setData(u: Array<Int>, v: Array<Int>): Float? {
         val values = generateChartData(u, v)
+        val maxY = values.map { i -> i.y }.max()
 
         val set1: LineDataSet
 
@@ -225,7 +170,7 @@ class LineChartActivity1 : ChartBase(), OnChartValueSelectedListener {
             // set color of filled area
             if (Utils.getSDKInt() >= 18) {
                 // drawables only supported on api level 18 and above
-                val drawable = ContextCompat.getDrawable(this, R.drawable.fade_green)
+                val drawable = ContextCompat.getDrawable(context!!, R.drawable.fade_green)
                 set1.fillDrawable = drawable
             } else {
                 set1.fillColor = Color.BLACK
@@ -235,14 +180,17 @@ class LineChartActivity1 : ChartBase(), OnChartValueSelectedListener {
             dataSets.add(set1) // add the data sets
 
             // create a data object with the data sets
-            val data = LineData(dataSets.toList())
+            val data = LineData(dataSets.toList()).apply { setDrawValues(false) }
 
             // set data
             chart!!.data = data
+            chart!!.background = resources.getDrawable(android.R.color.transparent)
         }
+
+        return maxY
     }
 
-    protected override fun saveToGallery() {
+    override fun saveToGallery() {
         saveToGallery(chart!!, "LineChartActivity1")
     }
 
