@@ -36,11 +36,70 @@ import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
+import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
 
 
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+    private var broadcastId: String = "main"
+        set(value) {
+            field = value
+
+            this.nearbyBroadcastsList?.apply {
+                runOnUiThread { scrollToCurrentBroadcast() }
+            }
+
+            this.nearbyBroadcastsAdapter?.apply {
+                currentBroadcastId = value
+                runOnUiThread { notifyDataSetChanged() }
+            }
+        }
+
+    private var eventIds: ArrayList<String> = ArrayList()
+        set(value) {
+            field = value
+            this.nearbyBroadcastsAdapter?.apply {
+                broadcastList = eventIds
+                runOnUiThread { notifyDataSetChanged() }
+            }
+        }
+
+    private var broadcastIndex = 0
+
+    private var fingerX1 = 0.0f
+    private var fingerX2 = 0.0f
+    private val minScrollDistance = 150  // Minimum distance for a swipe to be registered
+
+    private var playerView: SimpleExoPlayerView? = null
+    private var player: SimpleExoPlayer? = null
+    private var editMessageView: EditText? = null
+    private var chatList: RecyclerView? = null
+    private var reactionList: RecyclerView? = null
+    private var nearbyBroadcastsList: RecyclerView? = null
+    private var recommendationView: View? = null
+    private var recommendationTimeout: ProgressBar? = null
+    private var playWhenReady = true
+    private var currentWindow = 0
+    private var playbackPosition: Long = 0
+    private var loading: ProgressBar? = null
+    private var chatAdapter: MessageListAdapter? = null
+    private var reactionAdapter: ReactionListAdapter? = null
+    private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
+    private var recommendationImageView: ImageView? = null
+    private var socket: WebSocket? = null
+    private var messages: ArrayList<Message> = ArrayList()
+    private var emojiFragment: EmojiFragment? = null
+    private var lastReactionAt: Long = 0
+    private var recommendationExpirationThread: Thread? = null
+    private var recommendedBroadcastId: String? = null
+        set(value) {
+            field = value
+            this.nearbyBroadcastsAdapter?.apply {
+                this.recommendedBroadcastId = value
+                runOnUiThread { notifyDataSetChanged() }
+            }
+        }
 
     inner class UpdateEventIdsTask(c: Context): AsyncTask<Void, Void, Void>() {
 
@@ -91,35 +150,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
-    private lateinit var broadcastId: String
-    private lateinit var eventIds: ArrayList<String>
-    private var broadcastIndex = 0
-
-    private var fingerX1 = 0.0f
-    private var fingerX2 = 0.0f
-    private val MIN_DISTANCE = 150  // Minimum distance for a swipe to be registered
-
-    private var playerView: SimpleExoPlayerView? = null
-    private var player: SimpleExoPlayer? = null
-    private var editMessageView: EditText? = null
-    private var chatList: RecyclerView? = null
-    private var reactionList: RecyclerView? = null
-    private var recommendationView: View? = null
-    private var recommendationTimeout: ProgressBar? = null
-    private var playWhenReady = true
-    private var currentWindow = 0
-    private var playbackPosition: Long = 0
-    private var loading: ProgressBar? = null
-    private var chatAdapter: MessageListAdapter? = null
-    private var reactionAdapter: ReactionListAdapter? = null
-    private var recommendationImageView: ImageView? = null
-    private var socket: WebSocket? = null
-    private var messages: ArrayList<Message> = ArrayList()
-    private var emojiFragment: EmojiFragment? = null
-    private var lastReactionAt: Long = 0
-    private var recommendationExpirationThread: Thread? = null
-    private var recommendedBroadcastId: String? = null
-
     private fun startCommunicationSocket() {
         socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
     }
@@ -129,7 +159,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         super.onCreate(savedInstanceState)
 
         // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
-        val intentKeys = intent?.extras?.keySet()
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
@@ -137,6 +166,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Initially disable the ability to send messages
         setConnected(false)
+
+        // Create nearby broadcasts adapter
+        nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(eventIds, broadcastId, null, this::changeBroadcast)
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
@@ -154,8 +186,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             DefaultTrackSelector(adaptiveTrackSelection)
         )
 
+        // Produces DataSource instances through which media data is loaded
         val defaultBandwidthMeter = DefaultBandwidthMeter()
-        // Produces DataSource instances through which media data is loaded.
         val dataSourceFactory = DefaultDataSourceFactory(
             this,
             Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
@@ -175,8 +207,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             playWhenReady = true
         }
 
-        joinBroadcast(broadcastId)  // Update viewer counts
+        // Update viewer counts
+        joinBroadcast(broadcastId)
 
+        // Bind content
         bindContentView()
 
         // Launch background task for updating event ids
@@ -184,6 +218,23 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
         } else {
             UpdateEventIdsTask(this).execute()
+        }
+    }
+
+    private fun updateRecommendedBroadcast(broadcastId: String) {
+        this.recommendedBroadcastId = broadcastId
+        this.nearbyBroadcastsAdapter?.apply {
+            recommendedBroadcastId = this@PlayerActivity.recommendedBroadcastId
+            notifyDataSetChanged()
+        }
+    }
+
+
+    private fun scrollToCurrentBroadcast() {
+        nearbyBroadcastsAdapter?.let {
+            nearbyBroadcastsList?.apply {
+                this.layoutManager?.smoothScrollToPosition(this, null, it.getSelectedPosition())
+            }
         }
     }
 
@@ -195,9 +246,30 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
         reactionList = findViewById(R.id.reaction_view)
+        nearbyBroadcastsList = findViewById(R.id.nearby_broadcasts_list)
         recommendationView = findViewById(R.id.recommendation_view)
         recommendationTimeout = findViewById(R.id.recommendation_timer)
         recommendationImageView = findViewById(R.id.recommendation_image)
+
+        // Add click listener to add reaction button
+        findViewById<ImageView>(R.id.reaction_add)?.setOnClickListener {
+            val inflater = getSystemService(LAYOUT_INFLATER_SERVICE)
+            val view = LayoutInflater.from(this).inflate(R.layout.fragment_reaction_list, null);
+            val reactionList = view.findViewById<RecyclerView>(R.id.reaction_view).apply {
+                setHasFixedSize(true)
+                layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+                adapter = reactionAdapter
+            }
+
+            // Create popup window
+            PopupWindow(view, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, true).apply {
+                elevation = 20f
+                showAtLocation(playerView, Gravity.CENTER, 0, playerView?.height?.plus(this.height)?.times(-1) ?: 0)
+            }
+        }
+
+        // Scroll to selected
+        scrollToCurrentBroadcast()
 
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -207,11 +279,16 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             acceptRecommendation()
         }
 
+        // Assign nearby broadcasts adapter and layout manager
+        nearbyBroadcastsList?.apply {
+            adapter = nearbyBroadcastsAdapter
+            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { orientation = 0}
+        }
+
         // Assign reaction adapter and layout manager
-        val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
         reactionList?.apply {
             adapter = reactionAdapter
-            layoutManager = reactionLayoutManager
+            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { orientation = 0}
         }
 
         // Update chat adapter
@@ -220,10 +297,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         // Assign chat adapter and layout manager
-        val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         chatList?.apply {
             adapter = chatAdapter
-            layoutManager = chatLayoutManager
+            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { stackFromEnd = true }
         }
 
         // When in horizontal we want to be able to click through the recycler
@@ -232,7 +308,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         // Make sure we can detect swipes in portrait mode as well
-        (playerView as SimpleExoPlayerView).setOnTouchListener { view, event ->
+        (playerView as SimpleExoPlayerView).setOnTouchListener { _, event ->
             changeBroadcastOnSwipe(event)
             false
         }
@@ -465,7 +541,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
                 // Measure horizontal distance between x1 and x2 - if its big enough, change broadcast
                 val deltaX = Math.abs(fingerX2 - fingerX1)
-                if (deltaX > MIN_DISTANCE) {
+                if (deltaX > minScrollDistance) {
                     // This is a swipe, change broadcast
                     broadcastIndex++
                     Toast.makeText(this,
@@ -486,19 +562,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     // First leave the current broadcast, then update broadcastId to id
     // and join that.
     private fun changeBroadcast(id: String) {
+        this.broadcastId = id
         val defaultBandwidthMeter = DefaultBandwidthMeter()
         val dataSourceFactory = DefaultDataSourceFactory(
             this,
             Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
         )
+
         // Leave current broadcast, join the new one
         leaveBroadcast(broadcastId, continueWith = {
             broadcastId = id; joinBroadcast(id)
         })
 
-
         // Create media source
-        val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
+        val hlsUrl = "https://envue.me/relay/$broadcastId"
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
@@ -521,7 +598,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
             override fun onFailure(e: ApolloException) {
                 Log.d("LEAVE", "Something went wrong while leaving $id: $e")
-                Toast.makeText(this@PlayerActivity, "Something went wrong while leaving $id :(", Toast.LENGTH_SHORT)
+                // We don't need to show a toast here
             }
         })
     }
@@ -535,7 +612,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
             override fun onFailure(e: ApolloException) {
                 Log.d("JOIN", "Something went wrong while joining $id: $e")
-                Toast.makeText(this@PlayerActivity, "Something went wrong while joining $id :(", Toast.LENGTH_SHORT)
+                // Do we need to show a toast here? As long as the player starts, it does not matter
+                runOnUiThread {
+                    Toast.makeText(this@PlayerActivity, "Something went wrong while joining $id \uD83D\uDE22",
+                        Toast.LENGTH_SHORT).show()
+                }
             }
         })
     }

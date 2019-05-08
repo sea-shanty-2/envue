@@ -461,7 +461,7 @@ static void x264_mb_analyse_init( x264_t *h, x264_mb_analysis_t *a, int qp )
         h->mb.mv_max_spel[0] = X264_MIN( h->mb.mv_max[0], i_fmv_range-1 );
         if( h->param.b_intra_refresh && h->sh.i_type == SLICE_TYPE_P )
         {
-            int max_x = (h->fref[0][0]->i_pir_end_col * 16 - 3)*4; /* 3 pixels of hpel border */
+            int max_x = (h->fref[0][0]->i_pir_end_col * 16 - 3)*4; /* 3 pixels of hpel selected */
             int max_mv = max_x - 4*16*h->mb.i_mb_x;
             /* If we're left of the refresh bar, don't reference right of it. */
             if( max_mv > 0 && h->mb.i_mb_x < h->fdec->i_pir_start_col )
