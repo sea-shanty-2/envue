@@ -3,6 +3,7 @@ package dk.cs.aau.envue
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ListView
@@ -16,8 +17,9 @@ import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.type.AccountUpdateInputType
 import dk.cs.aau.envue.utility.EmojiIcon
-import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
-import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
+//import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
+import kotlinx.android.synthetic.main.activity_category_selection.*
+//import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
 
 
 class InterestsActivity : CategorySelectionActivity() {
