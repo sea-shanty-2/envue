@@ -22,6 +22,7 @@ jobs:
           paths:
             - ~/.gradle
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+      - run: npx apollo schema:download --endpoint=https://envue.me/api app/source/main/graphql/dk/cs/aau/envue/schema.json
       - run:
           name: Run Tests
           command: ./gradlew lint test
