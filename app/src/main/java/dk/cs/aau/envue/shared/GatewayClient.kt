@@ -40,13 +40,17 @@ class GatewayClient {
             var httpClient = OkHttpClient.Builder().build()
             var apolloClient = ApolloClient.builder().serverUrl(endpoint).okHttpClient(httpClient).build()
 
-            var query = GatewayAuthenticationQuery
-                .builder()
-                .token(AccessToken.getCurrentAccessToken().token)
-                .build()
+            if (AccessToken.isCurrentAccessTokenActive()) {
+                var query = GatewayAuthenticationQuery
+                    .builder()
+                    .token(AccessToken.getCurrentAccessToken().token)
+                    .build()
 
-            // Perform a blocking authentication request
-            return apolloClient.query(query).execute().data()?.authenticate()?.facebook()
+                // Perform a blocking authentication request
+                return apolloClient.query(query).execute().data()?.authenticate()?.facebook()
+            }
+
+            return null
         }
 
 
