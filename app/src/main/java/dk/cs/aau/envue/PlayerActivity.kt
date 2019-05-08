@@ -42,7 +42,20 @@ import okhttp3.WebSocket
 
 
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
-    private lateinit var broadcastId: String
+    private var broadcastId: String = "main"
+        set(value) {
+            field = value
+
+            this.nearbyBroadcastsList?.apply {
+                runOnUiThread { scrollToCurrentBroadcast() }
+            }
+
+            this.nearbyBroadcastsAdapter?.apply {
+                currentBroadcastId = value
+                runOnUiThread { notifyDataSetChanged() }
+            }
+        }
+
     private var eventIds: ArrayList<String> = ArrayList()
         set(value) {
             field = value
@@ -80,6 +93,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var lastReactionAt: Long = 0
     private var recommendationExpirationThread: Thread? = null
     private var recommendedBroadcastId: String? = null
+        set(value) {
+            field = value
+            this.nearbyBroadcastsAdapter?.apply {
+                this.recommendedBroadcastId = value
+                runOnUiThread { notifyDataSetChanged() }
+            }
+        }
 
     inner class UpdateEventIdsTask(c: Context): AsyncTask<Void, Void, Void>() {
 
@@ -148,7 +168,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         setConnected(false)
 
         // Create nearby broadcasts adapter
-        nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(eventIds, broadcastId, null, this::updateSelectedBroadcast)
+        nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(eventIds, broadcastId, null, this::changeBroadcast)
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
@@ -201,19 +221,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    private fun updateSelectedBroadcast(broadcastId: String, position: Int) {
-        this.changeBroadcast(broadcastId)
-
-        this.nearbyBroadcastsList?.apply {
-            layoutManager?.smoothScrollToPosition(this, null, position)
-        }
-
-        this.nearbyBroadcastsAdapter?.apply {
-            currentBroadcastId = this@PlayerActivity.broadcastId
-            notifyDataSetChanged()
-        }
-    }
-
     private fun updateRecommendedBroadcast(broadcastId: String) {
         this.recommendedBroadcastId = broadcastId
         this.nearbyBroadcastsAdapter?.apply {
@@ -222,6 +229,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
+
+    private fun scrollToCurrentBroadcast() {
+        nearbyBroadcastsAdapter?.let {
+            nearbyBroadcastsList?.apply {
+                this.layoutManager?.smoothScrollToPosition(this, null, it.getSelectedPosition())
+            }
+        }
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun bindContentView() {
@@ -235,6 +250,26 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         recommendationView = findViewById(R.id.recommendation_view)
         recommendationTimeout = findViewById(R.id.recommendation_timer)
         recommendationImageView = findViewById(R.id.recommendation_image)
+
+        // Add click listener to add reaction button
+        findViewById<ImageView>(R.id.reaction_add)?.setOnClickListener {
+            val inflater = getSystemService(LAYOUT_INFLATER_SERVICE)
+            val view = LayoutInflater.from(this).inflate(R.layout.fragment_reaction_list, null);
+            val reactionList = view.findViewById<RecyclerView>(R.id.reaction_view).apply {
+                setHasFixedSize(true)
+                layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+                adapter = reactionAdapter
+            }
+
+            // Create popup window
+            PopupWindow(view, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, true).apply {
+                elevation = 20f
+                showAtLocation(playerView, Gravity.CENTER, 0, playerView?.height?.plus(this.height)?.times(-1) ?: 0)
+            }
+        }
+
+        // Scroll to selected
+        scrollToCurrentBroadcast()
 
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

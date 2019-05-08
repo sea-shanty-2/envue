@@ -164,5 +164,7 @@
     <string name="viewer">Viewer</string>
     <string name="recommended">Recommended</string>
     <string name="_0">0</string>
+    <string name="react">React</string>
+    <string name="report">Report</string>
 
 </resources>

@@ -24,6 +24,7 @@
                    android:layout_width="16dp"
                    android:layout_height="16dp"
                    android:background="@drawable/ic_star_black_24dp"
+                   android:padding="4dp"
                    android:contentDescription="@string/recommended"/>
 
         <TextView android:id="@+id/viewer_count_nearby"
