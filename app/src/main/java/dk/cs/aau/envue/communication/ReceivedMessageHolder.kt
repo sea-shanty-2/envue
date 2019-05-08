@@ -18,15 +18,15 @@ class ReceivedMessageHolder internal constructor(itemView: View): RecyclerView.V
         nameText.text = message.author
 
         // Set avatar
-        message.avatar?.let {
-            Picasso
-                .get()
-                .load(message.avatar)
-                .placeholder(R.drawable.ic_profile_picture_placeholder)
-                .error(R.drawable.ic_profile_picture_placeholder)
-                .resize(256, 256)
-                .transform(CircleTransform())
-                .into(avatar)
-        }
+       // message.avatar?.let {
+       //     Picasso
+       //         .get()
+       //         .load(message.avatar)
+       //         .placeholder(R.drawable.ic_profile_picture_placeholder)
+       //         .error(R.drawable.ic_profile_picture_placeholder)
+       //         .resize(256, 256)
+       //         .transform(CircleTransform())
+       //         .into(avatar)
+       // }
     }
 }

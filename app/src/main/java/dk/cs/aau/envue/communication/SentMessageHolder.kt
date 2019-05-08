@@ -19,15 +19,15 @@ class SentMessageHolder internal constructor(itemView: View) : RecyclerView.View
         nameText?.text = Profile.getCurrentProfile().name
 
         // Set avatar
-        avatar?.let {
-            Picasso
-                .get()
-                .load(Profile.getCurrentProfile().getProfilePictureUri(256, 256))
-                .placeholder(R.drawable.ic_profile_picture_placeholder)
-                .error(R.drawable.ic_profile_picture_placeholder)
-                .resize(256, 256)
-                .transform(CircleTransform())
-                .into(it)
-        }
+//        avatar?.let {
+//            Picasso
+//                .get()
+//                .load(Profile.getCurrentProfile().getProfilePictureUri(256, 256))
+//                .placeholder(R.drawable.ic_profile_picture_placeholder)
+//                .error(R.drawable.ic_profile_picture_placeholder)
+//                .resize(256, 256)
+//                .transform(CircleTransform())
+//                .into(it)
+//        }
     }
 }
