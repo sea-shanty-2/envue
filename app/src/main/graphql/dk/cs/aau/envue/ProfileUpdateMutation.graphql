@@ -1,0 +1,7 @@
+mutation ProfileUpdateMutation($account: AccountUpdateInputType!){
+  accounts{
+    me(account: $account){
+      categories
+    }
+  }
+}

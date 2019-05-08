@@ -3,6 +3,7 @@ query ProfileQuery {
         me {
             id
             displayName
+	    categories
         }
     }
 }
