@@ -18,6 +18,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
+        <service
+                android:name=".EnvueMessagingService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
+
         <activity android:name=".StatisticsActivity"></activity>
         <activity
             android:name=".BrowseEventsActivity"
@@ -80,6 +86,9 @@
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
         </activity>
+        <meta-data
+                android:name="com.google.firebase.messaging.default_notification_icon"
+                android:resource="@drawable/ic_launcher_foreground" />
     </application>
 
 </manifest>

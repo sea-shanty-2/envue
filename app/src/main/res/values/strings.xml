@@ -10,6 +10,7 @@
     <string name="profile_picture">Profile picture</string>
     <string name="profile_name">Name placeholder</string>
     <string name="log_out">Log out</string>
+    <string name="ChangeDisplayName">Change display name</string>
     <string name="invalid_access_token">Invalid access token</string>
     <string name="action_profile">Profile</string>
     <string name="action_broadcast">Broadcast</string>
@@ -63,6 +64,10 @@
     <string name="category_selection_button_text">OK</string>
 
 
+    <string name="msg_subscribed">Subscribed</string>
+    <string name="msg_subscribe_failed">Subscribe failed</string>
+    <string name="msg_unsubscribed">Unsubscribed</string>
+    <string name="msg_unsubscribe_failed">Unsubscribe failed</string>
     <string name="title_activity_choose_broadcast">ChooseBroadcastActivity</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
