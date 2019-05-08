@@ -66,6 +66,10 @@
         </activity>
         <activity android:name=".LoginActivity" />
         <activity android:name=".ProfileActivity" />
+        <activity android:name=".FilterActivity"
+                  android:label="@string/title_activity_filter"
+                  android:noHistory="true"
+                  android:theme="@style/NoActionBar" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"

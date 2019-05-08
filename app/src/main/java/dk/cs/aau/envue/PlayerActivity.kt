@@ -133,14 +133,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
-
         setContentView(R.layout.activity_player)
 
         // Initially disable the ability to send messages
         setConnected(false)
-
-        // Prevent dimming
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
@@ -203,6 +199,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         recommendationTimeout = findViewById(R.id.recommendation_timer)
         recommendationImageView = findViewById(R.id.recommendation_image)
 
+        // Prevent dimming
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         // Listen for clicks on recommendations
         recommendationImageView?.setOnClickListener {
             acceptRecommendation()
@@ -213,6 +212,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         reactionList?.apply {
             adapter = reactionAdapter
             layoutManager = reactionLayoutManager
+        }
+
+        // Update chat adapter
+        chatAdapter?.apply {
+            setLandscapeMode(this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
         }
 
         // Assign chat adapter and layout manager
@@ -370,7 +374,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onStop() {
         super.onStop()
         releasePlayer()
-        leaveBroadcast(broadcastId)
     }
 
     private fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
@@ -389,9 +392,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     override fun onDestroy() {
+        leaveBroadcast(broadcastId) { /* Do nothing */ }
         super.onDestroy()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
-        leaveBroadcast(broadcastId)
     }
 
     private fun releasePlayer() {
@@ -479,17 +482,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
+    // The param "id" is the Id of the broadcast to change to.
+    // First leave the current broadcast, then update broadcastId to id
+    // and join that.
     private fun changeBroadcast(id: String) {
         val defaultBandwidthMeter = DefaultBandwidthMeter()
         val dataSourceFactory = DefaultDataSourceFactory(
             this,
             Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
         )
-        // Leave current broadcast
-        leaveBroadcast(broadcastId)
+        // Leave current broadcast, join the new one
+        leaveBroadcast(broadcastId, continueWith = {
+            broadcastId = id; joinBroadcast(id)
+        })
 
-        // Modify broadcast id
-        broadcastId = id
 
         // Create media source
         val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
@@ -504,20 +510,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             addListener(listener)
             playWhenReady = true
         }
-
-        // Join this broadcast
-        joinBroadcast(broadcastId)
     }
 
-    private fun leaveBroadcast(id: String) {
+    private fun leaveBroadcast(id: String, continueWith: () -> Unit) {
         val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
         GatewayClient.mutate(leaveMutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
             override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
-                // No action required
+                continueWith()  // Callback
             }
 
             override fun onFailure(e: ApolloException) {
                 Log.d("LEAVE", "Something went wrong while leaving $id: $e")
+                Toast.makeText(this@PlayerActivity, "Something went wrong while leaving $id :(", Toast.LENGTH_SHORT)
             }
         })
     }
@@ -531,6 +535,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
             override fun onFailure(e: ApolloException) {
                 Log.d("JOIN", "Something went wrong while joining $id: $e")
+                Toast.makeText(this@PlayerActivity, "Something went wrong while joining $id :(", Toast.LENGTH_SHORT)
             }
         })
     }

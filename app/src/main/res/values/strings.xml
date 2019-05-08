@@ -52,6 +52,18 @@
     <string name="notification_channel_name">Envue</string>
     <string name="notification_channel_id">"Envue"</string>
     <string name="notification_channel_description">Envue notification channel</string>
+
+    <!-- Filter -->
+    <string name="title_activity_filter">FilterActivity</string>
+    <string name="accept_filters_button_text">OK</string>
+    <string name="filter_response_key">FILTER_RESPONSE_KEY</string>
+
+
+    <!-- Filter -->
+    <string name="category_selection_header">Select categories</string>
+    <string name="category_selection_button_text">OK</string>
+
+
     <string name="msg_subscribed">Subscribed</string>
     <string name="msg_subscribe_failed">Subscribe failed</string>
     <string name="msg_unsubscribed">Unsubscribed</string>
@@ -149,5 +161,6 @@
     <string name="action_settings">Settings</string>
     <string name="live">LIVE</string>
     <string name="recommendation_thumbnail">Recommendation thumbnail</string>
+    <string name="viewer">Viewer</string>
 
 </resources>
