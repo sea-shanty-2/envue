@@ -36,6 +36,7 @@ import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
+import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
 
@@ -104,6 +105,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var editMessageView: EditText? = null
     private var chatList: RecyclerView? = null
     private var reactionList: RecyclerView? = null
+    private var nearbyBroadcastsList: RecyclerView? = null
     private var recommendationView: View? = null
     private var recommendationTimeout: ProgressBar? = null
     private var playWhenReady = true
@@ -112,6 +114,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var loading: ProgressBar? = null
     private var chatAdapter: MessageListAdapter? = null
     private var reactionAdapter: ReactionListAdapter? = null
+    private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
     private var recommendationImageView: ImageView? = null
     private var socket: WebSocket? = null
     private var messages: ArrayList<Message> = ArrayList()
@@ -137,6 +140,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Initially disable the ability to send messages
         setConnected(false)
+
+        // Create nearby broadcasts adapter
+        nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(listOf(broadcastId), broadcastId, null, this::changeBroadcast)
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
@@ -187,6 +193,22 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
+    private fun updateNearbyBroadcastList(nearbyBroadcasts: List<String>) {
+        this.nearbyBroadcastsAdapter?.apply {
+            broadcastList = nearbyBroadcasts
+            selectedBroadcast = this@PlayerActivity.broadcastId
+            notifyDataSetChanged()
+        }
+    }
+
+    private fun updateSelectedBroadcast() {
+        TODO()
+    }
+
+    private fun updateRecommendedBroadcast() {
+        TODO()
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private fun bindContentView() {
         setContentView(R.layout.activity_player)
@@ -195,6 +217,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         editMessageView = findViewById(R.id.editText)
         chatList = findViewById(R.id.chat_view)
         reactionList = findViewById(R.id.reaction_view)
+        nearbyBroadcastsList = findViewById(R.id.nearby_broadcasts_list)
         recommendationView = findViewById(R.id.recommendation_view)
         recommendationTimeout = findViewById(R.id.recommendation_timer)
         recommendationImageView = findViewById(R.id.recommendation_image)
@@ -207,11 +230,16 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             acceptRecommendation()
         }
 
+        // Assign nearby broadcasts adapter and layout manager
+        nearbyBroadcastsList?.apply {
+            adapter = nearbyBroadcastsAdapter
+            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { orientation = 0}
+        }
+
         // Assign reaction adapter and layout manager
-        val reactionLayoutManager = LinearLayoutManager(this).apply { orientation = 0}
         reactionList?.apply {
             adapter = reactionAdapter
-            layoutManager = reactionLayoutManager
+            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { orientation = 0}
         }
 
         // Update chat adapter
@@ -220,10 +248,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         // Assign chat adapter and layout manager
-        val chatLayoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         chatList?.apply {
             adapter = chatAdapter
-            layoutManager = chatLayoutManager
+            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { stackFromEnd = true }
         }
 
         // When in horizontal we want to be able to click through the recycler
@@ -491,14 +518,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             this,
             Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
         )
+
         // Leave current broadcast, join the new one
         leaveBroadcast(broadcastId, continueWith = {
             broadcastId = id; joinBroadcast(id)
         })
 
-
         // Create media source
-        val hlsUrl = "https://envue.me/relay/$broadcastId"  // Loop around if necessary
+        val hlsUrl = "https://envue.me/relay/$broadcastId"
         val uri = Uri.parse(hlsUrl)
         val mainHandler = Handler()
         val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
@@ -521,7 +548,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
             override fun onFailure(e: ApolloException) {
                 Log.d("LEAVE", "Something went wrong while leaving $id: $e")
-                Toast.makeText(this@PlayerActivity, "Something went wrong while leaving $id :(", Toast.LENGTH_SHORT)
+                // We don't need to show a toast here
             }
         })
     }
@@ -535,7 +562,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
             override fun onFailure(e: ApolloException) {
                 Log.d("JOIN", "Something went wrong while joining $id: $e")
-                Toast.makeText(this@PlayerActivity, "Something went wrong while joining $id :(", Toast.LENGTH_SHORT)
+                // Do we need to show a toast here? As long as the player starts, it does not matter
+                runOnUiThread {
+                    Toast.makeText(this@PlayerActivity, "Something went wrong while joining $id \uD83D\uDE22",
+                        Toast.LENGTH_SHORT).show()
+                }
             }
         })
     }
