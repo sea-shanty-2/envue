@@ -1,10 +1,13 @@
 package dk.cs.aau.envue
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
+import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
@@ -21,6 +24,9 @@ import java.security.NoSuchAlgorithmException
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE_BROADCAST = 42
+    companion object {
+        internal const val SET_FILTERS_REQUEST = 57
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (!AccessToken.isCurrentAccessTokenActive()) {
@@ -47,6 +53,12 @@ class MainActivity : AppCompatActivity() {
         findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
             (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
         }
+
+        // Update map. Needed to handle orientation changes.
+        (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
+
+        // Open category selection on button press
+        filter_categories_button.setOnClickListener() { this.onFilter()}
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -67,7 +79,6 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.RECORD_AUDIO,
                     Manifest.permission.ACCESS_FINE_LOCATION))) {
                 startActivity(Intent(this, InitializeBroadcastActivity::class.java))
-
             }
             true
         }
@@ -91,7 +102,6 @@ class MainActivity : AppCompatActivity() {
         if (!arePermissionsGranted(permissions)) {
             requestPermissions(permissions)
         }
-
         return arePermissionsGranted(permissions)
     }
 
@@ -112,4 +122,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun onFilter() {
+        val intent = Intent(this, FilterActivity::class.java)
+        startActivityForResult(intent, SET_FILTERS_REQUEST)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            SET_FILTERS_REQUEST ->
+                if (resultCode == Activity.RESULT_OK) {
+                    var categories = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
+                    //if (categories != null) Snackbar.make(findViewById<FloatingActionButton>(R.id.update_map_button),
+                    // categories!!.contentToString(),
+                    // Snackbar.LENGTH_LONG).show()
+                    if (categories != null && !categories.contains(1.0)) categories = null
+                    (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateFilters(categories)
+                }
+        }
+    }
 }

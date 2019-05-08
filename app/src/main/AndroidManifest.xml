@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="dk.cs.aau.envue"
-    xmlns:tools="http://schemas.android.com/tools" >
+    xmlns:tools="http://schemas.android.com/tools"
+    package="dk.cs.aau.envue">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -18,7 +18,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
+        <service
+                android:name=".EnvueMessagingService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
+
         <activity android:name=".StatisticsActivity"></activity>
+        <activity android:name=".ViewershipActivity" />
         <activity
             android:name=".BrowseEventsActivity"
             android:label="@string/title_activity_choose_broadcast"
@@ -60,6 +67,10 @@
         </activity>
         <activity android:name=".LoginActivity" />
         <activity android:name=".ProfileActivity" />
+        <activity android:name=".FilterActivity"
+                  android:label="@string/title_activity_filter"
+                  android:noHistory="true"
+                  android:theme="@style/NoActionBar" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -76,6 +87,9 @@
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
         </activity>
+        <meta-data
+                android:name="com.google.firebase.messaging.default_notification_icon"
+                android:resource="@drawable/ic_launcher_foreground" />
     </application>
 
 </manifest>
