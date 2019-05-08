@@ -7,12 +7,28 @@ import android.util.Log
 import android.view.View
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.*
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import kotlinx.android.synthetic.main.activity_statistics.*
 import kotlin.random.Random
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import com.github.mikephil.charting.model.GradientColor
+import dk.cs.aau.envue.utility.BarChartMarker
 
 
-class StatisticsActivity : AppCompatActivity() {
+class StatisticsActivity : AppCompatActivity(), OnChartValueSelectedListener {
+    override fun onValueSelected(e: Entry?, h: Highlight?) {
+        Log.i("Entry selected", e.toString());
+        Log.i("LOW HIGH", "low: " + chart.getLowestVisibleX() + ", high: " + chart.getHighestVisibleX());
+        Log.i("MIN MAX", "xMin: " + chart.getXChartMin() + ", xMax: " + chart.getXChartMax() + ", yMin: " + chart.getYChartMin() + ", yMax: " + chart.getYChartMax());
+    }
+
+    override fun onNothingSelected() {
+        Log.i("Nothing selected", "Nothing selected.");
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,30 +37,60 @@ class StatisticsActivity : AppCompatActivity() {
         val keys = intent.extras?.keySet()
         val extrasFromKeys = keys?.map { k -> intent.extras?.get(k) }
 
-        val joined = (intent.extras?.get("joinedTimestamps") as Array<Int>).apply {sort()}
-        val left = (intent.extras?.get("leftTimestamps") as Array<Int>).apply {sort()}
+        //val joined = (intent.extras?.get("joinedTimestamps") as Array<Int>).apply {sort()}
+        //val left = (intent.extras?.get("leftTimestamps") as Array<Int>).apply {sort()}
 
-        val chart = findViewById<View>(R.id.chart) as LineChart
+        val joined = arrayOf(12340, 12345, 12350)
+        val left = arrayOf(12360, 12380, 12382)
+
 
         if (!joined.isEmpty() || !left.isEmpty()) {
-            val dataSet = LineDataSet(generateChartData(
+            val dataSet = BarDataSet(generateChartData(
                 joined.map { i -> i - joined.min()!! }.toTypedArray(),
                 left.map { i -> i - joined.min()!! }.toTypedArray()),
-                "Viewer numbers")
+                "Viewer numbers").apply {
+                setDrawValues(false)
+            }
 
-            chart.setDrawGridBackground(false)
-            chart.data = LineData(dataSet.apply {
-                setDrawFilled(true)
-                setDrawCircleHole(false)
-                setDrawCircles(false)
-                lineWidth = 0f
-                fillDrawable = ContextCompat.getDrawable(this@StatisticsActivity, R.drawable.fade_green)
-            })
-            chart.invalidate()  // Refresh
+            runOnUiThread {
+                val chart = (findViewById<View>(R.id.chart) as BarChart).apply {
+                    // set listeners
+                    setOnChartValueSelectedListener(this@StatisticsActivity)
+
+                    setDrawGridBackground(false)
+                    setDrawBorders(false)
+                    setDrawMarkers(true)
+                    xAxis.isEnabled = false
+                    axisRight.isEnabled = false
+                    axisLeft.setDrawZeroLine(true)
+
+                    marker = BarChartMarker(
+                        this@StatisticsActivity, R.layout.marker_barchart).apply {
+                        chartView = chart
+                    }
+
+
+                    // Force y-labels to be integers
+                    axisLeft.apply {
+//                        valueFormatter = object : ValueFormatter() {
+//                            override fun getFormattedValue(value: Float): String {
+//                                return Math.floor(value.toDouble()).toInt().toString()
+//                            }
+//                        }
+                        labelCount = 3
+                    }
+                }
+
+
+                chart.data = BarData(dataSet.apply {
+                    setGradientColor(android.R.color.transparent, R.color.envue_neutral)
+                })
+                chart.invalidate()  // Refresh
+            }
         }
     }
 
-    private fun generateChartData(u: Array<Int>, v: Array<Int>): MutableList<Entry> {
+    private fun generateChartData(u: Array<Int>, v: Array<Int>): MutableList<BarEntry> {
         // Generate placeholders for y
 
         fun merge(u: Array<Int>, v: Array<Int>): ArrayList<Pair<Int, Boolean>> {
@@ -91,9 +137,9 @@ class StatisticsActivity : AppCompatActivity() {
             numCurrentViewers += if (pair.second) 1 else -1
         }
 
-        val barChartData = ArrayList<Entry>()
+        val barChartData = ArrayList<BarEntry>()
         for (pair in xs.zip(ys)) {
-            barChartData.add(Entry(1f * pair.first, 1f * pair.second))
+            barChartData.add(BarEntry(1f * pair.first, 1f * pair.second))
         }
 
         return barChartData.toMutableList()
