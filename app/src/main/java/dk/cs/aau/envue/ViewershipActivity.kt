@@ -7,8 +7,6 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.formatter.IFillFormatter
 import android.graphics.DashPathEffect
 import com.github.mikephil.charting.components.Legend.LegendForm
-import com.github.mikephil.charting.components.YAxis
-import com.github.mikephil.charting.components.XAxis
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -32,89 +30,66 @@ class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
 
         // // Chart Style // //
-        chart = view?.findViewById(R.id.chart1)
+        chart = view?.findViewById(R.id.chart1)!!
 
-        // background color
-        chart!!.setBackgroundColor(Color.WHITE)
+        chart!!.apply {
+            description.isEnabled = false
+            setTouchEnabled(true)
+            setOnChartValueSelectedListener(this@ViewershipActivity)
+            setDrawGridBackground(false)
 
-        // disable description text
-        chart!!.description.isEnabled = false
+            // create marker to display box when values are selected
+            val mv = BarChartMarker(context!!, R.layout.marker_barchart)
 
-        // enable touch gestures
-        chart!!.setTouchEnabled(true)
+            // Set the marker to the chart
+            mv.setChartView(chart)
+            marker = mv
 
-        // set listeners
-        chart!!.setOnChartValueSelectedListener(this)
-        chart!!.setDrawGridBackground(false)
+            // enable scaling and dragging
+            isDragEnabled = true
+            setScaleEnabled(true)
 
-        // create marker to display box when values are selected
-        val mv = BarChartMarker(context!!, R.layout.marker_barchart)
+            // force pinch zoom along both axis
+            setPinchZoom(true)
+        }
 
-        // Set the marker to the chart
-        mv.setChartView(chart)
-        chart!!.marker = mv
+        // Load data from Bundle
+        val joined = (activity?.intent?.extras?.get("joinedTimestamps") as Array<Int>).apply {sort()}
+        val left = (activity?.intent?.extras?.get("leftTimestamps") as Array<Int>).apply {sort()}
 
-        // enable scaling and dragging
-        chart!!.isDragEnabled = true
-        chart!!.setScaleEnabled(true)
-        // chart.setScaleXEnabled(true);
-        // chart.setScaleYEnabled(true);
-
-        // force pinch zoom along both axis
-        chart!!.setPinchZoom(true)
-
-        val keys = activity?.intent?.extras?.keySet()
-
-        //val joined = (intent.extras?.get("joinedTimestamps") as Array<Int>).apply {sort()}
-        //val left = (intent.extras?.get("leftTimestamps") as Array<Int>).apply {sort()}
-
-        val joined = arrayOf(12340, 12345, 12350)
-        val left = arrayOf(12360, 12380, 12382)
-
-        // add data
+        //val joined = arrayOf(12340, 12345, 12350)
+        //val left = arrayOf(12360, 12380, 12382)
 
         val maxY = setData(joined.map { i -> i - joined.min()!! }.toTypedArray(),
             left.map { i -> i - joined.min()!! }.toTypedArray())
 
 
-        val xAxis: XAxis
-        run {
-            // // X-Axis Style // //
-            xAxis = chart!!.xAxis
-
-            // vertical grid lines
-            //xAxis.enableGridDashedLine(10f, 10f, 0f)
-            xAxis.isEnabled = false
+        chart!!.xAxis.apply {
+            isEnabled = false
         }
 
-        val yAxis: YAxis
-        run {
-            // // Y-Axis Style // //
-            yAxis = chart!!.axisLeft
+        chart!!.axisLeft.apply {
+            // Horizontal grid lines
+            enableAxisLineDashedLine(10f, 10f, 0f)
 
-            // disable dual axis (only use LEFT axis)
-            chart!!.axisRight.isEnabled = false
-
-            // horizontal grid lines
-            yAxis.enableGridDashedLine(10f, 10f, 0f)
-
-            // axis range
-            yAxis.axisMaximum = maxY!! + 1
-            yAxis.axisMinimum = 0f
-            yAxis.labelCount = maxY.toInt()
+            // Axis range
+            axisMaximum = maxY!! + 1
+            axisMinimum = 0f
+            labelCount = maxY.toInt()
         }
 
-        chart!!.axisRight.isEnabled = false
+        chart!!.axisRight.apply {
+            isEnabled = false
+        }
 
-
-        // draw points over time
+        // Draw points over time
         chart!!.animateX(1500)
 
-        // get the legend (only possible after setting data)
-        val l = chart!!.legend
+        // Get the legend (only possible after setting data)
+        val legend = chart!!.legend
 
-        // draw legend entries as lines
-        l.form = LegendForm.LINE
+        // Draw legend entries as lines
+        legend.form = LegendForm.LINE
 
         super.onActivityCreated(savedInstanceState)
     }
@@ -124,65 +99,67 @@ class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
         val values = generateChartData(u, v)
         val maxY = values.map { i -> i.y }.max()
 
-        val set1: LineDataSet
+        val dataSet: LineDataSet
 
         if (chart!!.data != null && chart!!.data.dataSetCount > 0) {
-            set1 = chart!!.data.getDataSetByIndex(0) as LineDataSet
-            set1.values = values
-            set1.notifyDataSetChanged()
+            dataSet = chart!!.data.getDataSetByIndex(0) as LineDataSet
+            dataSet.values = values
+            dataSet.notifyDataSetChanged()
             chart!!.data.notifyDataChanged()
             chart!!.notifyDataSetChanged()
         } else {
-            // create a dataset and give it a type
-            set1 = LineDataSet(values, "DataSet 1")
+            // Create a dataset and give it a type
+            dataSet = LineDataSet(values, "Total number of viewers")
 
-            set1.setDrawIcons(false)
+            dataSet.setDrawIcons(false)
 
-            // draw dashed line
-            set1.enableDashedLine(10f, 5f, 0f)
+            // Draw dashed line
+            dataSet.enableDashedLine(10f, 5f, 0f)
 
-            // black lines and points
-            set1.color = Color.BLACK
-            set1.setCircleColor(Color.BLACK)
+            // Black lines and points
+            dataSet.color = Color.BLACK
+            dataSet.setCircleColor(Color.BLACK)
 
-            // line thickness and point size
-            set1.lineWidth = 1f
-            set1.circleRadius = 3f
+            // Line thickness and point size
+            dataSet.lineWidth = 1f
+            dataSet.circleRadius = 3f
 
-            // draw points as solid circles
-            set1.setDrawCircleHole(false)
+            // Draw points as solid circles
+            dataSet.setDrawCircleHole(false)
 
-            // customize legend entry
-            set1.formLineWidth = 1f
-            set1.formLineDashEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
-            set1.formSize = 15f
+            // Customize legend entry
+            dataSet.formLineWidth = 1f
+            dataSet.formLineDashEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
+            dataSet.formSize = 15f
 
-            // text size of values
-            set1.valueTextSize = 9f
+            // Text size of values
+            dataSet.valueTextSize = 9f
 
-            // draw selection line as dashed
-            set1.enableDashedHighlightLine(10f, 5f, 0f)
+            // Draw selection line as dashed
+            dataSet.enableDashedHighlightLine(10f, 5f, 0f)
 
-            // set the filled area
-            set1.setDrawFilled(true)
-            set1.fillFormatter = IFillFormatter { dataSet, dataProvider -> chart!!.axisLeft.axisMinimum }
+            // Set the filled area
+            dataSet.setDrawFilled(true)
+            dataSet.fillFormatter = IFillFormatter { dataSet, dataProvider -> chart!!.axisLeft.axisMinimum }
+            dataSet.setDrawCircles(false)
+            dataSet.setDrawCircleHole(false)
 
-            // set color of filled area
+            // Set color of filled area
             if (Utils.getSDKInt() >= 18) {
-                // drawables only supported on api level 18 and above
+                // Drawables only supported on api level 18 and above
                 val drawable = ContextCompat.getDrawable(context!!, R.drawable.fade_green)
-                set1.fillDrawable = drawable
+                dataSet.fillDrawable = drawable
             } else {
-                set1.fillColor = Color.BLACK
+                dataSet.fillColor = Color.BLACK
             }
 
             val dataSets = ArrayList<LineDataSet>()
-            dataSets.add(set1) // add the data sets
+            dataSets.add(dataSet) // Add the data set(s)
 
-            // create a data object with the data sets
+            // Create a data object with the data sets
             val data = LineData(dataSets.toList()).apply { setDrawValues(false) }
 
-            // set data
+            // Set data
             chart!!.data = data
             chart!!.background = resources.getDrawable(android.R.color.transparent)
         }
@@ -207,9 +184,13 @@ class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
         Log.i("Nothing selected", "Nothing selected.")
     }
 
+    /** Takes two sorted lists of integers (joined- and left timestamps, respectively)
+     * and generates a line chart data set of viewer numbers. */
     private fun generateChartData(u: Array<Int>, v: Array<Int>): MutableList<Entry> {
-        // Generate placeholders for y
 
+        // Helper function for merging the sorted lists into a single labelled
+        // list that can be traversed linearly while incrementing/decrementing
+        // viewer numbers.
         fun merge(u: Array<Int>, v: Array<Int>): ArrayList<Pair<Int, Boolean>> {
             var i = 0
             var j = 0
