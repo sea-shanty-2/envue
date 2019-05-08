@@ -13,7 +13,7 @@ class NearbyBroadcastHolder internal constructor(itemView: View) : RecyclerView.
 
     internal fun bind(broadcastId: String, recommended: Boolean, selected: Boolean) {
         outerLayout?.apply {
-            background = if (selected) R.drawable.border else null
+            setBackgroundResource(if (selected) R.drawable.border else 0)
         }
 
         thumbnail?.let {
