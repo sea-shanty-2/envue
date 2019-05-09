@@ -64,13 +64,17 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun onProfileFetch(profile: ProfileQuery.Me) {
         runOnUiThread {
-            oneHotVectorToEmoji(profile)
+            if (profile.categories() != null)
+                oneHotVectorToEmoji(profile.categories()!!)
+
             profileNameView.text = profile.displayName()
             container.visibility = View.VISIBLE
         }
     }
 
     private fun onProfileFetchFailure(e: ApolloException) {
+        if (this.isDestroyed) finish()
+
         runOnUiThread {
             AlertDialog
                 .Builder(this)
@@ -107,7 +111,7 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun oneHotVectorToEmoji(categories: ProfileQuery.Me) {
+    private fun oneHotVectorToEmoji(categories: List<Double>) {
         var allEmojis = ArrayList<EmojiIcon>()
         allEmojis = allEmojis.plus(
             GsonBuilder().create().fromJson(
@@ -118,14 +122,15 @@ class ProfileActivity : AppCompatActivity() {
 
 
         var temp = ""
-        if (categories.categories().isNotEmpty()) {
-            for (i in categories.categories().indices) {
-                if (categories.categories()[i] == 1.0) {
-                    temp += allEmojis[i].char
-                }
+
+        for (i in categories.indices) {
+            if (categories[i] == 1.0) {
+                temp += allEmojis[i].char
             }
-            currentInterestsView.text = temp
         }
+
+        currentInterestsView.text = temp
+
     }
 
     private fun openDialog() {
