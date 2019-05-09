@@ -51,6 +51,7 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID)
     private var limitedEmojis = ArrayList<String>()
     private var filters: DoubleArray? = null
+    private var eventClicked = false
 
     private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
         override fun doInBackground(vararg params: Style): Void {
@@ -61,6 +62,11 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                 Thread.sleep(   300000)
             }
         }
+    }
+
+    override fun onResume() {
+        eventClicked = false
+        super.onResume()
     }
 
     override fun onStyleLoaded(style: Style) {
@@ -114,6 +120,8 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
+        if (eventClicked) { Log.d("MULTICLICK", "Already clicked an event"); return false }  // Disable spam-clicks
+
         val id = marker.title
 
         // Get the ids of all broadcasts in the same event and start a PlayerActivity with this information.
@@ -125,6 +133,8 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
             startActivity(intent)
         }
+
+        eventClicked = true
         return false
     }
 
