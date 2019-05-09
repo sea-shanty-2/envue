@@ -71,6 +71,8 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun onProfileFetchFailure(e: ApolloException) {
+        if (this.isDestroyed) finish()
+
         runOnUiThread {
             AlertDialog
                 .Builder(this)

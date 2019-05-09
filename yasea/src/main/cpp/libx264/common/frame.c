@@ -580,7 +580,7 @@ void x264_frame_expand_border( x264_t *h, x264_frame_t *frame, int mb_y )
         int starty = 16*mb_y - 4*!b_start;
         if( SLICE_MBAFF )
         {
-            // border samples for each field are extended separately
+            // selected samples for each field are extended separately
             pix = frame->plane_fld[i] + (starty*stride >> v_shift);
             plane_expand_border( pix, stride*2, width, height, padh, padv, pad_top, pad_bot, h_shift );
             plane_expand_border( pix+stride, stride*2, width, height, padh, padv, pad_top, pad_bot, h_shift );
@@ -603,7 +603,7 @@ void x264_frame_expand_border_filtered( x264_t *h, x264_frame_t *frame, int mb_y
 {
     /* during filtering, 8 extra pixels were filtered on each edge,
      * but up to 3 of the horizontal ones may be wrong.
-       we want to expand border from the last filtered pixel */
+       we want to expand selected from the last filtered pixel */
     int b_start = !mb_y;
     int width = 16*h->mb.i_mb_width + 8;
     int height = b_end ? (16*(h->mb.i_mb_height - mb_y) >> SLICE_MBAFF) + 16 : 16;

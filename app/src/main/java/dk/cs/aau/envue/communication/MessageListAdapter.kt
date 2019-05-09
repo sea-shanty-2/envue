@@ -15,10 +15,6 @@ class MessageListAdapter(private val context: Context, private val messageList: 
     private var lastPosition = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-
-        val holder =
-        print("create view holder")
-
         // Select layout
         val layout = if (isLandscape || isStreamerView) R.layout.viewer_message else when (viewType) {
             VIEW_TYPE_MESSAGE_RECEIVED -> R.layout.other_message
