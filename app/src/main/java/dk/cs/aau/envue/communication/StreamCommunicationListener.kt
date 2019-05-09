@@ -24,7 +24,7 @@ class StreamCommunicationListener(private val communicationListener: Communicati
                 val profile = response2.data()?.accounts()?.me()
 
                 if (profile != null) {
-                    Log.e("DisplayName","$displayName + Profile not null")
+                   // Log.e("DisplayName","$displayName Profile not null")
                     displayName = profile.displayName()
 
                 }

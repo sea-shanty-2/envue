@@ -1,0 +1,8 @@
+mutation BroadcastReportMutation($id: ID!,$message: String!) {
+    broadcasts {
+        report(id: $id) {
+	    id
+            reports
+        }
+    }
+}
