@@ -16,6 +16,7 @@ import okio.ByteString
 class StreamCommunicationListener(private val communicationListener: CommunicationListener,
                                   private val channelId: String) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
+        communicationListener.onConnected()
 
         val profileQuery = ProfileQuery.builder().build()
         var displayName = ""
@@ -29,7 +30,7 @@ class StreamCommunicationListener(private val communicationListener: Communicati
 
                     webSocket.send(Gson().toJson(
                         HandshakePacket(
-                            displayName,//Profile.getCurrentProfile().name,
+                            displayName,
                             Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
                             channelId
                         )
@@ -50,16 +51,6 @@ class StreamCommunicationListener(private val communicationListener: Communicati
             override fun onFailure(e: ApolloException){}
 
         })
-        //Log.e("DisplayName", "$displayName Profile after query")
-        communicationListener.onConnected()
-
-        webSocket.send(Gson().toJson(
-            HandshakePacket(
-                displayName,//Profile.getCurrentProfile().name,
-                Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
-                channelId
-            )
-        ))
 
     }
 
