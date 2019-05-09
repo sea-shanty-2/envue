@@ -20,11 +20,21 @@
     <fragment
         android:id="@+id/viewership_fragment"
         android:name="dk.cs.aau.envue.ViewershipActivity"
-        android:layout_width="match_parent"
-        android:layout_height="351dp"
+        android:layout_width="412dp"
+        android:layout_height="247dp"
         android:layout_below="@+id/viewership_text"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@+id/viewership_text" />
+
+    <fragment
+        android:id="@+id/viewership_fragment2"
+        android:name="dk.cs.aau.envue.ViewershipActivity"
+        android:layout_width="411dp"
+        android:layout_height="242dp"
+        android:layout_below="@+id/viewership_text"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewership_fragment" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/close_statistics_button"
