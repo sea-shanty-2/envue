@@ -62,7 +62,22 @@
                   android:gravity="center_vertical"
                   android:layout_gravity="center_vertical"
                   android:textStyle="bold"
+                  android:layout_marginEnd="10dp"
                   android:text="" />
+
+        <TextView android:id="@+id/like_ratio"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:drawableStart="@drawable/ic_thumb_up_24dp"
+                  android:textSize="16sp"
+                  android:ellipsize="end"
+                  android:maxLines="1"
+                  android:textColor="@color/white"
+                  android:textAlignment="center"
+                  android:gravity="center_vertical"
+                  android:layout_gravity="center_vertical"
+                  android:textStyle="bold"
+                  android:text="13%" />
     </LinearLayout>
     
 
