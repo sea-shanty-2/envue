@@ -1,25 +1,51 @@
 package dk.cs.aau.envue.communication
 
 import android.util.Log
+import com.apollographql.apollo.ApolloCall
+import com.apollographql.apollo.exception.ApolloException
 import com.facebook.Profile
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import dk.cs.aau.envue.ProfileQuery
 import dk.cs.aau.envue.communication.packets.HandshakePacket
+import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.*
 import okio.ByteString
 
 class StreamCommunicationListener(private val communicationListener: CommunicationListener,
                                   private val channelId: String) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
+
+        val profileQuery = ProfileQuery.builder().build()
+        var displayName = ""
+         GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
+            override fun onResponse(response2: com.apollographql.apollo.api.Response<ProfileQuery.Data>) {
+                val profile = response2.data()?.accounts()?.me()
+
+                if (profile != null) {
+                    Log.e("DisplayName","$displayName + Profile not null")
+                    displayName = profile.displayName()
+
+                }
+                else {
+                    displayName = "FFS"
+                }
+            }
+
+            override fun onFailure(e: ApolloException){}
+
+        })
         communicationListener.onConnected()
+
         webSocket.send(Gson().toJson(
             HandshakePacket(
-                Profile.getCurrentProfile().name,
+                displayName,
                 Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
                 channelId
             )
         ))
+
     }
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {
@@ -65,7 +91,7 @@ class StreamCommunicationListener(private val communicationListener: Communicati
             val client = OkHttpClient.Builder()
                 .build()
             val request = Request.Builder()
-                .url("wss://envue.me:4040")
+                .url("wss://envue.me:443/comms")
                 .build()
 
             return client.newWebSocket(request, StreamCommunicationListener(communicationListener, channelId))

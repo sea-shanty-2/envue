@@ -36,13 +36,12 @@
 
         <TextView
             android:id="@+id/live_status"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
             android:layout_gravity="start|top"
-            android:layout_margin="12dp"
+            android:layout_margin="6dp"
             android:background="@drawable/rounded_live"
             android:padding="10dp"
             android:textColor="@android:color/white"
@@ -51,33 +50,34 @@
             android:text="@string/live"
             android:visibility="gone"/>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
+        <TextView android:id="@+id/viewer_count"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:drawableStart="@drawable/ic_person_red_24dp"
+                  android:textSize="16sp"
+                  android:ellipsize="end"
+                  android:maxLines="1"
+                  android:textColor="@color/white"
+                  android:textAlignment="center"
+                  android:gravity="center_vertical"
+                  android:layout_gravity="center_vertical"
+                  android:textStyle="bold"
+                  android:layout_marginEnd="10dp"
+                  android:text="" />
 
-            <ImageView
-                    android:layout_width="@dimen/viewer_count_size"
-                    android:layout_height="@dimen/viewer_count_size"
-                    android:src="@drawable/red_user_simple"
-                    android:contentDescription="@string/viewer"/>
-
-            <TextView
-                android:id="@+id/viewer_count"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAlignment="center"
-                android:textColor="@android:color/white"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:text=""/>
-
-        </LinearLayout>
-
+        <TextView android:id="@+id/like_ratio"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:drawableStart="@drawable/ic_thumb_up_24dp"
+                  android:textSize="16sp"
+                  android:ellipsize="end"
+                  android:maxLines="1"
+                  android:textColor="@color/white"
+                  android:textAlignment="center"
+                  android:gravity="center_vertical"
+                  android:layout_gravity="center_vertical"
+                  android:textStyle="bold"
+                  android:text="13%" />
     </LinearLayout>
     
 

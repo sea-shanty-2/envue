@@ -15,4 +15,14 @@
             mapbox:mapbox_cameraTargetLng="-73.99155"
             mapbox:mapbox_cameraZoom="11" />
 
+    <Button
+            android:text="Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/filterButton"
+            android:layout_margin="16dp"
+            android:layout_marginTop="8dp"
+            mapbox:layout_constraintTop_toTopOf="@+id/mapView" android:layout_marginStart="8dp"
+            mapbox:layout_constraintStart_toStartOf="@+id/mapView"/>
+
 </android.support.constraint.ConstraintLayout>

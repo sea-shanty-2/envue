@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "296179613557",
+    "firebase_url": "https://envue-test-21a09.firebaseio.com",
+    "project_id": "envue-test-21a09",
+    "storage_bucket": "envue-test-21a09.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296179613557:android:b67962f4b7f427e8",
+        "android_client_info": {
+          "package_name": "dk.cs.aau.envue"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "296179613557-f343bh58cnb62erlmv9f6u1edh3imob4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAI1II5Eq77vULXfwnAMWRzLLwFH0hJ-S4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "296179613557-f343bh58cnb62erlmv9f6u1edh3imob4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

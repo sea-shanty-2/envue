@@ -16,7 +16,7 @@ class AuthenticationInterceptor : Interceptor {
             .addHeader("Authorization", "Bearer $token")
             .build()
 
-        val response = chain.proceed(request)
+        var response = chain.proceed(request)
 
         /**
          * If request failed, fetch a new authentication token and retry the request
@@ -31,10 +31,11 @@ class AuthenticationInterceptor : Interceptor {
                 .addHeader("Authorization", "Bearer $token")
                 .build()
 
-            return chain.proceed(request)
+            response = chain.proceed(request)
+
+            return response
         }
 
-        token = null
 
         return response
     }
