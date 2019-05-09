@@ -168,18 +168,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_player)
 
         // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
-
-        setContentView(R.layout.activity_player)
 
         // Initially disable the ability to send messages
         communicationConnected = false
 
         // Create nearby broadcasts adapter
         nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(eventIds, broadcastId, null, this::changeBroadcast)
+
+        // Use the initial broadcast as the recommended id
+        recommendedBroadcastId = broadcastId
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
