@@ -1,0 +1,22 @@
+query LeaderboardQuery{
+    accounts{
+        me{
+            rank
+            score
+            percentile
+            broadcasts(first: 30){
+                items{
+                    activity
+                    joinedTimeStamps{
+                        id
+                        time
+                    }
+                    leftTimeStamps{
+                        id
+                        time
+                    }
+                }
+            }
+        }
+    }
+}
