@@ -11,8 +11,6 @@ import kotlinx.android.synthetic.main.fragment_reaction.view.*
 
 
 class ReactionListAdapter(private val onClick: (String) -> Unit, private val emojiList: Array<String>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder.itemView.setOnClickListener {
             onClick(emojiList[position])

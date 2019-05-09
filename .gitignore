@@ -66,5 +66,3 @@ fastlane/readme.md
 *.directory
 
 *.DS_Store
-
-schema.json

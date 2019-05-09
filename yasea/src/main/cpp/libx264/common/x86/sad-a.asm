@@ -1841,7 +1841,7 @@ SAD_X_W16_AVX512 4, 16 ; x4_16x16
 ;=============================================================================
 
 ; Core2 (Conroe) can load unaligned data just as quickly as aligned data...
-; unless the unaligned data spans the border between 2 cachelines, in which
+; unless the unaligned data spans the selected between 2 cachelines, in which
 ; case it's really slow. The exact numbers may differ, but all Intel cpus prior
 ; to Nehalem have a large penalty for cacheline splits.
 ; (8-byte alignment exactly half way between two cachelines is ok though.)
