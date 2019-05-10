@@ -354,7 +354,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun reportContentDialog(){
         val displayNameDialog = AlertDialog.Builder(this)
-        displayNameDialog.setTitle("Change display name")
+        displayNameDialog.setTitle("Report video")
 
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_TEXT

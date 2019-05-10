@@ -1,6 +1,6 @@
-mutation BroadcastReportMutation($id: ID!,$message: String!) {
+mutation BroadcastReportMutation($id: ID!, $message: String!) {
     broadcasts {
-        report(id: $id) {
+        report(id: $id message: $message) {
 	    id
             reports
         }
