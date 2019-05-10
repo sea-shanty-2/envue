@@ -3,7 +3,6 @@ package dk.cs.aau.envue
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
-import android.widget.Button
 
 class StatisticsActivity : AppCompatActivity() {
 
@@ -13,7 +12,7 @@ class StatisticsActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
 
             // Pass on viewership data to the ViewershipFragment
-            val viewership = ViewershipActivity()
+            val viewership = ViewershipFragment()
             viewership.arguments = intent.extras
             supportFragmentManager
                 .beginTransaction()

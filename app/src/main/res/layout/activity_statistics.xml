@@ -19,19 +19,17 @@
 
     <fragment
         android:id="@+id/viewership_fragment"
-        android:name="dk.cs.aau.envue.ViewershipActivity"
+        android:name="dk.cs.aau.envue.ViewershipFragment"
         android:layout_width="412dp"
         android:layout_height="247dp"
-        android:layout_below="@+id/viewership_text"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@+id/viewership_text" />
 
     <fragment
-        android:id="@+id/viewership_fragment2"
-        android:name="dk.cs.aau.envue.ViewershipActivity"
+        android:id="@+id/leaderboard_fragment"
+        android:name="dk.cs.aau.envue.LeaderboardFragment"
         android:layout_width="411dp"
         android:layout_height="242dp"
-        android:layout_below="@+id/viewership_text"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/viewership_fragment" />
