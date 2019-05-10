@@ -30,7 +30,7 @@
             android:name=".BrowseEventsActivity"
             android:label="@string/title_activity_choose_broadcast"
             android:theme="@style/NoActionBar" />
-        <activity android:name=".MapActivity" />
+        <activity android:name=".MapFragment" />
         <activity
             android:name=".InterestsActivity"
             android:label="@string/title_activity_interests"

@@ -1,0 +1,12 @@
+query EventBroadcastsWithStatsQuery($id: ID!) {
+    events {
+        containing(id:$id) {
+            broadcasts {
+                id
+                viewer_count
+                positiveRatings
+                negativeRatings
+            }
+        }
+    }
+}
