@@ -85,7 +85,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
-
     private var fingerX1 = 0.0f
     private var fingerX2 = 0.0f
     private val minScrollDistance = 150  // Minimum distance for a swipe to be registered
@@ -111,6 +110,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var emojiFragment: EmojiFragment? = null
     private var lastReactionAt: Long = 0
     private var recommendationExpirationThread: Thread? = null
+
     private var recommendedBroadcastId: String? = null
         set(value) {
             field = value
@@ -120,12 +120,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
-    inner class UpdateEventIdsTask(c: Context): AsyncTask<Void, Void, Void>() {
-        override fun doInBackground(vararg params: Void): Void {
-            while (true) {
+    inner class UpdateEventIdsTask(c: Context): AsyncTask<Unit, Unit, Unit>() {
+        override fun doInBackground(vararg params: Unit?) {
+            while (!isCancelled) {
                 updateEventIds()
                 Log.d("EVENTUPDATE", "Updated event ids.")
-                Thread.sleep(10000)  // 10 seconds}
+                Thread.sleep(5000)  // 10 seconds}
             }
         }
     }
@@ -134,7 +134,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         communicationConnected = false
 
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
-            Thread.sleep(500)
+            Thread.sleep(1000)
 
             startCommunicationSocket()
         }
