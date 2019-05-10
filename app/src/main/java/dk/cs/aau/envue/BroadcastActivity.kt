@@ -56,7 +56,6 @@ import kotlin.math.sign
  */
 class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEncodeHandler.SrsEncodeListener,
     CommunicationListener, SensorEventListener {
-
     private var publisher: SrsPublisher? = null
     private val TAG = "ENVUE-BROADCAST"
     private var chatList: RecyclerView? = null

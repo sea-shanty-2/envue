@@ -1,6 +1,5 @@
 package dk.cs.aau.envue.utility
 
-import android.location.Location
 import dk.cs.aau.envue.type.LocationInputType
 
 /**
