@@ -59,11 +59,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
-    private var eventIds: ArrayList<String> = ArrayList()
+    private var nearbyBroadcasts: List<EventBroadcastsWithStatsQuery.Broadcast> = ArrayList()
         set(value) {
             field = value
             this.nearbyBroadcastsAdapter?.apply {
-                broadcastList = eventIds
+                broadcastList = nearbyBroadcasts
                 runOnUiThread { notifyDataSetChanged() }
             }
         }
@@ -77,11 +77,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
     private var broadcastIndex
-        get() = this.nearbyBroadcastsAdapter?.let { it.getSelectedPosition() } ?: 0
+        get() = this.nearbyBroadcastsAdapter?.getSelectedPosition() ?: 0
         set(value) {
             this.nearbyBroadcastsAdapter?.apply {
                 val newValue = if (value < 0) this.broadcastList.size - 1 else value
-                this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size])
+                this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
             }
         }
 
@@ -121,7 +121,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
     inner class UpdateEventIdsTask(c: Context): AsyncTask<Void, Void, Void>() {
-
         override fun doInBackground(vararg params: Void): Void {
             while (true) {
                 updateEventIds()
@@ -174,13 +173,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Get the broadcastId as sent from the MapFragment (determined by which event was pressed)
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
-        eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
+        // TODO: Load nearby broadcasts (with stats) from intent
+        // eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
         // Initially disable the ability to send messages
         communicationConnected = false
 
         // Create nearby broadcasts adapter
-        nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(eventIds, broadcastId, null, this::changeBroadcast)
+        nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(nearbyBroadcasts, broadcastId, null, this::changeBroadcast)
 
         // Use the initial broadcast as the recommended id
         recommendedBroadcastId = broadcastId
@@ -556,12 +556,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun updateEventIds() {
-        val eventQuery = EventWithIdQuery.builder().id(broadcastId).build()
-        GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
-            override fun onResponse(response: Response<EventWithIdQuery.Data>) {
-                val ids = response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }
-                if (ids != null) {
-                    eventIds = ids as ArrayList<String>
+        val eventQuery = EventBroadcastsWithStatsQuery.builder().id(broadcastId).build()
+        GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventBroadcastsWithStatsQuery.Data>() {
+            override fun onResponse(response: Response<EventBroadcastsWithStatsQuery.Data>) {
+                val broadcasts = response.data()?.events()?.containing()?.broadcasts()?.toList()
+
+                if (broadcasts != null) {
+                    nearbyBroadcasts = broadcasts
                 } else {
                     Log.d("EVENTUPDATE", "No broadcasts in this event (broadcast id was $broadcastId).")
                 }
@@ -595,7 +596,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    private fun getHlsUri(fromBroadcastId: String) = Uri.parse("https://envue.me/relay/$broadcastId")
+    private fun getHlsUri(fromBroadcastId: String) = Uri.parse("https://envue.me/relay/$fromBroadcastId")
 
     private fun getDataSource() = DefaultDataSourceFactory(this, Util.getUserAgent(this, "Exo2"), DefaultBandwidthMeter())
 
