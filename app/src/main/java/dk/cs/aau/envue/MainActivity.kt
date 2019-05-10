@@ -3,11 +3,9 @@ package dk.cs.aau.envue
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
-import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
@@ -51,11 +49,11 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(my_toolbar)
         // Update map on button press
         findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
-            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
+            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
         }
 
         // Update map. Needed to handle orientation changes.
-        (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
+        (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
 
         // Open category selection on button press
         filter_categories_button.setOnClickListener() { this.onFilter()}
@@ -87,7 +85,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_map -> {
-            startActivity(Intent(this, MapActivity::class.java))
+            startActivity(Intent(this, MapFragment::class.java))
 
             true
         }
@@ -137,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                     // categories!!.contentToString(),
                     // Snackbar.LENGTH_LONG).show()
                     if (categories != null && !categories.contains(1.0)) categories = null
-                    (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateFilters(categories)
+                    (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateFilters(categories)
                 }
         }
     }
