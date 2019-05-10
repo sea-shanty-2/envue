@@ -22,7 +22,11 @@
         android:name="dk.cs.aau.envue.ViewershipFragment"
         android:layout_width="412dp"
         android:layout_height="247dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/viewership_text" />
 
     <fragment
@@ -32,6 +36,8 @@
         android:layout_height="242dp"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/viewership_fragment" />
 
     <android.support.design.widget.FloatingActionButton
