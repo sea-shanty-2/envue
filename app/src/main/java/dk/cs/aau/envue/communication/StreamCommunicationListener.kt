@@ -16,20 +16,17 @@ import okio.ByteString
 class StreamCommunicationListener(private val communicationListener: CommunicationListener,
                                   private val channelId: String) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
-
         val profileQuery = ProfileQuery.builder().build()
         var displayName = ""
          GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
             override fun onResponse(response2: com.apollographql.apollo.api.Response<ProfileQuery.Data>) {
                 val profile = response2.data()?.accounts()?.me()
 
-                if (profile != null) {
+                displayName = if (profile != null) {
                     Log.e("DisplayName","$displayName + Profile not null")
-                    displayName = profile.displayName()
-
-                }
-                else {
-                    displayName = "FFS"
+                    profile.displayName()
+                } else {
+                    "FFS"
                 }
             }
 
@@ -45,7 +42,6 @@ class StreamCommunicationListener(private val communicationListener: Communicati
                 channelId
             )
         ))
-
     }
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {

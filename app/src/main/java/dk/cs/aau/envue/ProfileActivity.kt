@@ -122,7 +122,6 @@ class ProfileActivity : AppCompatActivity() {
 
 
         var temp = ""
-
         for (i in categories.indices) {
             if (categories[i] == 1.0) {
                 temp += allEmojis[i].char
