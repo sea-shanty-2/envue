@@ -16,7 +16,6 @@ import okio.ByteString
 class StreamCommunicationListener(private val communicationListener: CommunicationListener,
                                   private val channelId: String) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
-
         val profileQuery = ProfileQuery.builder().build()
         var displayName = ""
          GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
@@ -29,7 +28,7 @@ class StreamCommunicationListener(private val communicationListener: Communicati
 
                 }
                 else {
-                    displayName = "FFS"
+                    displayName = "Anon"
                 }
             }
 
@@ -45,7 +44,6 @@ class StreamCommunicationListener(private val communicationListener: Communicati
                 channelId
             )
         ))
-
     }
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {
