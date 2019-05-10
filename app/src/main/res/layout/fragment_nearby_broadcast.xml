@@ -31,7 +31,15 @@
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:drawableStart="@drawable/ic_person_red_24dp"
-                  android:text="@string/_0" />
+                  android:text="@string/n_a" />
+
+        <TextView android:id="@+id/like_ratio_nearby"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_marginStart="4dp"
+                  android:drawableStart="@drawable/ic_thumb_up_24dp"
+                  android:visibility="gone"
+                  android:text="@string/n_a" />
     </LinearLayout>
 
 </RelativeLayout>

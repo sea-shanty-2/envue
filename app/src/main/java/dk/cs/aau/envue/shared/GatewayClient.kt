@@ -13,13 +13,9 @@ import dk.cs.aau.envue.interceptors.LoggingInterceptor
 import okhttp3.OkHttpClient
 
 
-class GatewayClient {
-
-    private constructor() {}
-
+class GatewayClient private constructor() {
     companion object {
-
-        const val endpoint = "https://envue.me/api"
+        private const val endpoint = "https://envue.me/api"
 
         private fun okHttpClient() : OkHttpClient.Builder {
             return OkHttpClient.Builder()
@@ -28,20 +24,18 @@ class GatewayClient {
         }
 
         private fun apolloClient() : ApolloClient.Builder {
-
             return ApolloClient.builder()
                 .serverUrl(endpoint)
                 .okHttpClient(okHttpClient().build())
         }
 
         fun fetchToken(): String? {
-
             // Build new client instances without interceptors
-            var httpClient = OkHttpClient.Builder().build()
-            var apolloClient = ApolloClient.builder().serverUrl(endpoint).okHttpClient(httpClient).build()
+            val httpClient = OkHttpClient.Builder().build()
+            val apolloClient = ApolloClient.builder().serverUrl(endpoint).okHttpClient(httpClient).build()
 
             if (AccessToken.isCurrentAccessTokenActive()) {
-                var query = GatewayAuthenticationQuery
+                val query = GatewayAuthenticationQuery
                     .builder()
                     .token(AccessToken.getCurrentAccessToken().token)
                     .build()
@@ -52,7 +46,6 @@ class GatewayClient {
 
             return null
         }
-
 
         fun <D: Operation.Data, T: Any, V: Operation.Variables>query(query: Query<D, T, V>): ApolloQueryCall<T> {
             return apolloClient().build().query(query)

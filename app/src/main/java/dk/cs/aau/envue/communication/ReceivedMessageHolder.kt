@@ -19,15 +19,15 @@ class ReceivedMessageHolder internal constructor(itemView: View): RecyclerView.V
         nameText.text = message.author
 
         // Set avatar
-        avatar?.let {
+        message.avatar?.let {
             Picasso
                 .get()
-                .load(Profile.getCurrentProfile().getProfilePictureUri(256, 256))
+                .load(message.avatar)
                 .placeholder(R.drawable.ic_profile_picture_placeholder)
                 .error(R.drawable.ic_profile_picture_placeholder)
                 .resize(256, 256)
                 .transform(CircleTransform())
-                .into(it)
+                .into(avatar)
         }
     }
 }

@@ -37,7 +37,7 @@ class StreamCommunicationListener(private val communicationListener: Communicati
 
         webSocket.send(Gson().toJson(
             HandshakePacket(
-                displayName,
+                Profile.getCurrentProfile().name,
                 Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
                 channelId
             )
