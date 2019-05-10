@@ -593,6 +593,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             addListener(listener)
             playWhenReady = true
         }
+
+        // Close current comm socket
+        this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Changed broadcast")
+
+        // Start comm socket with new broadcastId
+        startCommunicationSocket()
     }
 
     private fun leaveBroadcast(id: String, continueWith: () -> Unit) {
