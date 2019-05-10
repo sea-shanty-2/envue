@@ -22,11 +22,13 @@ class StreamCommunicationListener(private val communicationListener: Communicati
             override fun onResponse(response2: com.apollographql.apollo.api.Response<ProfileQuery.Data>) {
                 val profile = response2.data()?.accounts()?.me()
 
-                displayName = if (profile != null) {
-                    Log.e("DisplayName","$displayName + Profile not null")
-                    profile.displayName()
-                } else {
-                    "FFS"
+                if (profile != null) {
+                   // Log.e("DisplayName","$displayName Profile not null")
+                    displayName = profile.displayName()
+
+                }
+                else {
+                    displayName = "Anon"
                 }
             }
 

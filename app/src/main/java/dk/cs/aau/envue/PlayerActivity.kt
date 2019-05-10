@@ -10,9 +10,11 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.InputType
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -326,9 +328,54 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
+        val temp = findViewById<ImageView>(R.id.report_Stream)
+        temp.setOnClickListener { reportContentDialog()  }
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }
+
+    private fun reportContentDialog(){
+        val displayNameDialog = AlertDialog.Builder(this)
+        displayNameDialog.setTitle("Report video")
+
+        val input = EditText(this)
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        displayNameDialog.setView(input)
+
+        displayNameDialog.setPositiveButton("OK") { _, _ -> sendReport(input)}
+        displayNameDialog.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+        displayNameDialog.show()
+    }
+
+    private fun sendReport(Message: EditText){
+        val test = Message.text.toString()
+        val reportMessage = BroadcastReportMutation.builder().id(broadcastId).message(test!!).build()
+
+        GatewayClient.mutate(reportMessage).enqueue(object: ApolloCall.Callback<BroadcastReportMutation.Data>(){
+            override fun onResponse(response: Response<BroadcastReportMutation.Data>) {
+                Log.e("Report","SuccessFully reported stream")
+                runOnUiThread {
+                    Toast.makeText(
+                        findViewById<View>(R.id.player_linear_layout).context,
+                        "Video has been reported",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.e("Report","Unsuccessfully reported stream")
+                runOnUiThread {
+                    Toast.makeText(
+                        findViewById<View>(R.id.player_linear_layout).context,
+                        "An error occurred, please try again",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        })
+    }
+
 
     @SuppressLint("ClickableViewAccessibility")
     private fun exoPlayerViewOnTouch() {
