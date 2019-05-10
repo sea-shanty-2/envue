@@ -30,6 +30,7 @@
                        android:background="@drawable/ic_emoticon_white_24dp"
                        android:contentDescription="@string/react"/>
             <ImageView android:layout_width="32dp"
+                       android:id="@+id/report_Stream"
                        android:layout_height="32dp"
                        android:layout_gravity="bottom|start"
                        android:alpha="0.5"
