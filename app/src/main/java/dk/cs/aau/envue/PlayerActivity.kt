@@ -79,7 +79,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         set(value) {
             this.nearbyBroadcastsAdapter?.apply {
                 val newValue = if (value < 0) this.broadcastList.size - 1 else value
-                this@PlayerActivity.broadcastId = this.broadcastList[newValue % this.broadcastList.size]
+                this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size])
             }
         }
 
@@ -199,26 +199,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             DefaultTrackSelector(adaptiveTrackSelection)
         )
 
-        // Produces DataSource instances through which media data is loaded
-        val defaultBandwidthMeter = DefaultBandwidthMeter()
-        val dataSourceFactory = DefaultDataSourceFactory(
-            this,
-            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
-        )
-
-        // Create media source
-        val hlsUrl = "https://envue.me/relay/$broadcastId"
-        val uri = Uri.parse(hlsUrl)
-        val mainHandler = Handler()
-        val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
-
-        val listener = this
-        player?.apply {
-            seekTo(currentWindow, playbackPosition)
-            prepare(mediaSource, true, false)
-            addListener(listener)
-            playWhenReady = true
-        }
+        // Begin playing the broadcast
+        changePlayerSource(broadcastId)
 
         // Update viewer counts
         joinBroadcast(broadcastId)
@@ -564,40 +546,36 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    // The param "id" is the Id of the broadcast to change to.
-    // First leave the current broadcast, then update broadcastId to id
-    // and join that.
+    private fun getHlsUri(fromBroadcastId: String) = Uri.parse("https://envue.me/relay/$broadcastId")
+
+    private fun getDataSource() = DefaultDataSourceFactory(this, Util.getUserAgent(this, "Exo2"), DefaultBandwidthMeter())
+
+    private fun changePlayerSource(toBroadcastId: String) {
+        // Create media source
+        val mediaSource = HlsMediaSource(getHlsUri(toBroadcastId), getDataSource(), Handler(), null)
+        player?.apply {
+            seekTo(currentWindow, playbackPosition)
+            prepare(mediaSource, true, false)
+            addListener(this@PlayerActivity)
+            playWhenReady = true
+        }
+    }
+
     private fun changeBroadcast(id: String) {
-        this.broadcastId = id
-        val defaultBandwidthMeter = DefaultBandwidthMeter()
-        val dataSourceFactory = DefaultDataSourceFactory(
-            this,
-            Util.getUserAgent(this, "Exo2"), defaultBandwidthMeter
-        )
+        broadcastId = id
 
         // Leave current broadcast, join the new one
         leaveBroadcast(broadcastId, continueWith = {
             broadcastId = id; joinBroadcast(id)
         })
 
-        // Create media source
-        val hlsUrl = "https://envue.me/relay/$broadcastId"
-        val uri = Uri.parse(hlsUrl)
-        val mainHandler = Handler()
-        val mediaSource = HlsMediaSource(uri, dataSourceFactory, mainHandler, null)
-
-        val listener = this
-        player?.apply {
-            seekTo(currentWindow, playbackPosition)
-            prepare(mediaSource, true, false)
-            addListener(listener)
-            playWhenReady = true
-        }
+        // Update player source
+        changePlayerSource(broadcastId)
 
         // Close current comm socket
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Changed broadcast")
 
-        // Start comm socket with new broadcastId
+        // Start communication socket with new broadcastId
         startCommunicationSocket()
     }
 
