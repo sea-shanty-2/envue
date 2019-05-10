@@ -372,11 +372,24 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         GatewayClient.mutate(reportMessage).enqueue(object: ApolloCall.Callback<BroadcastReportMutation.Data>(){
             override fun onResponse(response: Response<BroadcastReportMutation.Data>) {
                 Log.e("Report","SuccessFully reported stream")
+                runOnUiThread {
+                    Toast.makeText(
+                        findViewById<View>(R.id.player_linear_layout).context,
+                        "Video has been reported",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
 
             override fun onFailure(e: ApolloException) {
                 Log.e("Report","Unsuccessfully reported stream")
-                Log.e("Report",e.toString())
+                runOnUiThread {
+                    Toast.makeText(
+                        findViewById<View>(R.id.player_linear_layout).context,
+                        "An error occurred, please try again",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         })
     }
