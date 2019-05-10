@@ -24,13 +24,15 @@
                 android:exported="true">
         </service>
 
-        <activity android:name=".StatisticsActivity"></activity>
-        <activity android:name=".ViewershipActivity" />
+        <activity android:name=".StatisticsActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity android:name=".ViewershipFragment" />
         <activity
             android:name=".BrowseEventsActivity"
             android:label="@string/title_activity_choose_broadcast"
             android:theme="@style/NoActionBar" />
-        <activity android:name=".MapActivity" />
+        <activity android:name=".MapFragment" />
         <activity
             android:name=".InterestsActivity"
             android:label="@string/title_activity_interests"

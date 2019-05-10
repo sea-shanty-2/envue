@@ -172,7 +172,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
-        // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
+        // Get the broadcastId as sent from the MapFragment (determined by which event was pressed)
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
