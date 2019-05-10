@@ -27,35 +27,20 @@ class StreamCommunicationListener(private val communicationListener: Communicati
                     Log.e("DisplayName","$displayName + Profile not null")
                     displayName = profile.displayName()
 
-                    webSocket.send(Gson().toJson(
-                        HandshakePacket(
-                            displayName,//Profile.getCurrentProfile().name,
-                            Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
-                            channelId
-                        )
-                    ))
-
                 }
                 else {
-                    webSocket.send(Gson().toJson(
-                        HandshakePacket(
-                            "Anon",//Profile.getCurrentProfile().name,
-                            Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
-                            channelId
-                        )
-                    ))
+                    displayName = "FFS"
                 }
             }
 
             override fun onFailure(e: ApolloException){}
 
         })
-        //Log.e("DisplayName", "$displayName Profile after query")
         communicationListener.onConnected()
 
         webSocket.send(Gson().toJson(
             HandshakePacket(
-                displayName,//Profile.getCurrentProfile().name,
+                displayName,
                 Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
                 channelId
             )

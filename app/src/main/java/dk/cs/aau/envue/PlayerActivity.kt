@@ -39,6 +39,7 @@ import dk.cs.aau.envue.communication.packets.ReactionPacket
 import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
+import kotlin.math.absoluteValue
 
 
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
@@ -46,13 +47,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         set(value) {
             field = value
 
-            this.nearbyBroadcastsList?.apply {
-                runOnUiThread { scrollToCurrentBroadcast() }
-            }
-
             this.nearbyBroadcastsAdapter?.apply {
                 currentBroadcastId = value
                 runOnUiThread { notifyDataSetChanged() }
+            }
+
+            this.nearbyBroadcastsList?.apply {
+                runOnUiThread { scrollToCurrentBroadcast() }
             }
         }
 
@@ -65,7 +66,23 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
-    private var broadcastIndex = 0
+    private var communicationConnected: Boolean = false
+        set(value) {
+            field = value
+            runOnUiThread {
+                findViewById<Button>(R.id.button_chatbox_send)?.isEnabled = value
+            }
+        }
+
+    private var broadcastIndex
+        get() = this.nearbyBroadcastsAdapter?.let { it.getSelectedPosition() } ?: 0
+        set(value) {
+            this.nearbyBroadcastsAdapter?.apply {
+                val newValue = if (value < 0) this.broadcastList.size - 1 else value
+                this@PlayerActivity.broadcastId = this.broadcastList[newValue % this.broadcastList.size]
+            }
+        }
+
 
     private var fingerX1 = 0.0f
     private var fingerX2 = 0.0f
@@ -112,14 +129,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    fun setConnected(state: Boolean) {
-        runOnUiThread {
-            findViewById<Button>(R.id.button_chatbox_send)?.isEnabled = state
-        }
-    }
-
     override fun onClosed(code: Int) {
-        setConnected(false)
+        communicationConnected = false
 
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
             Thread.sleep(500)
@@ -129,7 +140,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     override fun onConnected() {
-        setConnected(true)
+        communicationConnected = true
     }
 
     override fun onMessage(message: Message) {
@@ -157,18 +168,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_player)
 
         // Get the broadcastId as sent from the MapActivity (determined by which event was pressed)
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
-        setContentView(R.layout.activity_player)
-
         // Initially disable the ability to send messages
-        setConnected(false)
+        communicationConnected = false
 
         // Create nearby broadcasts adapter
         nearbyBroadcastsAdapter = NearbyBroadcastsAdapter(eventIds, broadcastId, null, this::changeBroadcast)
+
+        // Use the initial broadcast as the recommended id
+        recommendedBroadcastId = broadcastId
 
         // Create reaction adapter
         reactionAdapter = ReactionListAdapter(::addReaction, resources.getStringArray(R.array.allowed_reactions))
@@ -253,9 +266,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Add click listener to add reaction button
         findViewById<ImageView>(R.id.reaction_add)?.setOnClickListener {
-            val inflater = getSystemService(LAYOUT_INFLATER_SERVICE)
             val view = LayoutInflater.from(this).inflate(R.layout.fragment_reaction_list, null);
-            val reactionList = view.findViewById<RecyclerView>(R.id.reaction_view).apply {
+            view.findViewById<RecyclerView>(R.id.reaction_view).apply {
                 setHasFixedSize(true)
                 layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
                 adapter = reactionAdapter
@@ -540,15 +552,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 fingerX2 = event.x  // Maybe the end of a swipe
 
                 // Measure horizontal distance between x1 and x2 - if its big enough, change broadcast
-                val deltaX = Math.abs(fingerX2 - fingerX1)
-                if (deltaX > minScrollDistance) {
-                    // This is a swipe, change broadcast
-                    broadcastIndex++
-                    Toast.makeText(this,
-                        "Changing from $broadcastId to ${eventIds[broadcastIndex % eventIds.size]}",
-                        Toast.LENGTH_LONG)
-                        .show()
-                    changeBroadcast(eventIds[broadcastIndex % eventIds.size])  // Loop around if necessary
+                val deltaX = fingerX2 - fingerX1
+                if (deltaX.absoluteValue > minScrollDistance) {
+                    broadcastIndex += if (deltaX < 0) 1 else -1
                 } else {
                     // Do nothing, maybe display helper message
                     Toast.makeText(this, "Swipe horizontally to see the rest of the event!", Toast.LENGTH_LONG).show()
@@ -587,6 +593,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             addListener(listener)
             playWhenReady = true
         }
+
+        // Close current comm socket
+        this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Changed broadcast")
+
+        // Start comm socket with new broadcastId
+        startCommunicationSocket()
     }
 
     private fun leaveBroadcast(id: String, continueWith: () -> Unit) {
