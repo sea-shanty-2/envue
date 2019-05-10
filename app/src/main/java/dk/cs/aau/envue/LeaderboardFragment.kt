@@ -2,6 +2,7 @@ package dk.cs.aau.envue
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -50,12 +51,10 @@ class LeaderboardFragment : Fragment() {
                 activity?.runOnUiThread {
                     setFields(rank, total_score, percentile, scores)
                 }
-
-
             }
 
             override fun onFailure(e: ApolloException) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                Log.d("LEADERBOARD", "Something went wrong while fetching leaderboard: $e")
             }
         })
 

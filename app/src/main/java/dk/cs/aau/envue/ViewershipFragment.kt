@@ -19,12 +19,12 @@ import dk.cs.aau.envue.utility.BarChartMarker
 import dk.cs.aau.envue.utility.ChartBase
 
 
-class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
+class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
 
     private var chart: LineChart? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.activity_viewership, container, false)
+        return inflater.inflate(R.layout.fragment_viewership, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -35,7 +35,7 @@ class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
         chart!!.apply {
             description.isEnabled = false
             setTouchEnabled(true)
-            setOnChartValueSelectedListener(this@ViewershipActivity)
+            setOnChartValueSelectedListener(this@ViewershipFragment)
             setDrawGridBackground(false)
 
             // create marker to display box when values are selected
@@ -60,7 +60,8 @@ class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
         //val joined = arrayOf(12340, 12345, 12350)
         //val left = arrayOf(12360, 12380, 12382)
 
-        val maxY = setData(joined.map { i -> i - joined.min()!! }.toTypedArray(),
+        val maxY = setData(
+            joined.map { i -> i - joined.min()!! }.toTypedArray(),
             left.map { i -> i - joined.min()!! }.toTypedArray())
 
 
@@ -97,7 +98,7 @@ class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
 
     private fun setData(u: Array<Int>, v: Array<Int>): Float? {
         val values = generateChartData(u, v)
-        val maxY = values.map { i -> i.y }.max()
+        val maxY = values.map { i -> i.y }.max() ?: 0f
 
         val dataSet: LineDataSet
 
@@ -224,7 +225,7 @@ class ViewershipActivity : ChartBase(), OnChartValueSelectedListener {
         }
 
         val merged = merge(u, v)
-        val xs = (0 until Math.max(u.max()!!, v.max()!!))
+        val xs = (0 until Math.max(u.max() ?: 0, v.max() ?: 0))
         val ys = ArrayList<Int>()
 
         var numCurrentViewers = 0
