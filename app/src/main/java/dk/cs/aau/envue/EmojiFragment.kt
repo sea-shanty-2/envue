@@ -23,6 +23,9 @@ class EmojiFragment : Fragment() {
     fun begin(emojiUniCode: String, Activity: Activity) {
         val emoji = textToBitmap(emojiUniCode,64, Activity)
         val container = Activity.findViewById<ViewGroup>(R.id.animation_holder)
-        animation.play(Activity, container, emoji)
+        //container can sometimes be null when going from horizontal or vertical view in PlayerActivity
+        if(container != null) {
+            animation.play(Activity, container, emoji)
+        }
     }
 }

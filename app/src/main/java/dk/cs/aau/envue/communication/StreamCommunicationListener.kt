@@ -17,33 +17,42 @@ class StreamCommunicationListener(private val communicationListener: Communicati
                                   private val channelId: String) : WebSocketListener() {
     override fun onOpen(webSocket: WebSocket, response: Response) {
         val profileQuery = ProfileQuery.builder().build()
-        var displayName = ""
-         GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
+        var displayName: String
+        GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
             override fun onResponse(response2: com.apollographql.apollo.api.Response<ProfileQuery.Data>) {
                 val profile = response2.data()?.accounts()?.me()
 
                 if (profile != null) {
-                   // Log.e("DisplayName","$displayName Profile not null")
                     displayName = profile.displayName()
+                    communicationListener.onConnected()
+
+                    webSocket.send(Gson().toJson(
+                        HandshakePacket(
+                            displayName,
+                            Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
+                            channelId
+                        )
+                    ))
 
                 }
                 else {
                     displayName = "Anon"
+                    communicationListener.onConnected()
+
+                    webSocket.send(Gson().toJson(
+                        HandshakePacket(
+                            Profile.getCurrentProfile().name,
+                            Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
+                            channelId
+                        )
+                    ))
                 }
             }
 
             override fun onFailure(e: ApolloException){}
 
         })
-        communicationListener.onConnected()
 
-        webSocket.send(Gson().toJson(
-            HandshakePacket(
-                Profile.getCurrentProfile().name,
-                Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
-                channelId
-            )
-        ))
     }
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {
