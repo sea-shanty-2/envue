@@ -171,6 +171,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
+
         // Get the broadcastId as sent from the MapFragment (determined by which event was pressed)
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
         // TODO: Load nearby broadcasts (with stats) from intent
@@ -250,7 +252,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Add click listener to add reaction button
         findViewById<ImageView>(R.id.reaction_add)?.setOnClickListener {
-            val view = LayoutInflater.from(this).inflate(R.layout.fragment_reaction_list, null);
+            val view = LayoutInflater.from(this).inflate(R.layout.fragment_reaction_list, null)
             view.findViewById<RecyclerView>(R.id.reaction_view).apply {
                 setHasFixedSize(true)
                 layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
@@ -330,8 +332,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         if(resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE){
             val temp = findViewById<ImageView>(R.id.report_Stream)
-
-            temp.setOnClickListener { reportContentDialog()  }}
+            temp.setOnClickListener { reportContentDialog() }
+        }
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }
@@ -351,7 +353,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun sendReport(Message: EditText){
         val test = Message.text.toString()
-        val reportMessage = BroadcastReportMutation.builder().id(broadcastId).message(test!!).build()
+        val reportMessage = BroadcastReportMutation.builder().id(broadcastId).message(test).build()
 
         GatewayClient.mutate(reportMessage).enqueue(object: ApolloCall.Callback<BroadcastReportMutation.Data>(){
             override fun onResponse(response: Response<BroadcastReportMutation.Data>) {
