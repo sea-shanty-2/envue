@@ -130,7 +130,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    override fun onClosed(code: Int) {
+    override fun onChatStateChanged(chatState: Boolean) {
+        runOnUiThread {
+            Toast.makeText(this, "Chat state: $chatState", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onCommunicationClosed(code: Int) {
         communicationConnected = false
 
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
@@ -140,7 +146,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    override fun onConnected() {
+    override fun onCommunicationIdentified(sequenceId: Int, name: String) {
         communicationConnected = true
     }
 

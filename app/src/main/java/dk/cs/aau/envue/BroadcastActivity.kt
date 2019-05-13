@@ -188,7 +188,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
     }
 
-    override fun onClosed(code: Int) {
+    override fun onChatStateChanged(chatState: Boolean) {
+        // Confirmation of changed chat state
+    }
+
+    override fun onCommunicationClosed(code: Int) {
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
             Thread.sleep(500)
 
@@ -196,7 +200,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
     }
 
-    override fun onConnected() {
+    override fun onCommunicationIdentified(sequenceId: Int, name: String) {
     }
 
     private fun startCommunicationSocket() {

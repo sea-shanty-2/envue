@@ -30,7 +30,6 @@ class StreamCommunicationListener(private val communicationListener: Communicati
         GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
             override fun onResponse(response2: com.apollographql.apollo.api.Response<ProfileQuery.Data>) {
                 val profile = response2.data()?.accounts()?.me()
-
                 identifyWithName(webSocket, profile?.displayName() ?: "Anonymous")
             }
 
@@ -52,6 +51,9 @@ class StreamCommunicationListener(private val communicationListener: Communicati
                     )
                 )
                 "Reaction" -> this.communicationListener.onReaction(jsonObj.get("Reaction").asString)
+                "Identity" -> this.communicationListener.onCommunicationIdentified(jsonObj.get("SequenceId").asInt,
+                    jsonObj.get("Name").asString)
+                "ChatState" -> this.communicationListener.onChatStateChanged(jsonObj.get("State").asBoolean)
             }
         }
     }
@@ -63,7 +65,7 @@ class StreamCommunicationListener(private val communicationListener: Communicati
     override fun onClosed(webSocket: WebSocket?, code: Int, reason: String?) {
         output("Closed")
 
-        communicationListener.onClosed(code)
+        communicationListener.onCommunicationClosed(code)
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -71,7 +73,7 @@ class StreamCommunicationListener(private val communicationListener: Communicati
 
         t.printStackTrace()
 
-        communicationListener.onClosed(-1)
+        communicationListener.onCommunicationClosed(-1)
     }
 
     companion object {
