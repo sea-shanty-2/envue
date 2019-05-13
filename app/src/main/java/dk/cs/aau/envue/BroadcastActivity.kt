@@ -188,7 +188,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
     }
 
-    override fun onChatStateChanged(chatState: Boolean) {
+    override fun onChatStateChanged(enabled: Boolean) {
         // Confirmation of changed chat state
     }
 

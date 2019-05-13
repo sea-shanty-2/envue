@@ -130,9 +130,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    override fun onChatStateChanged(chatState: Boolean) {
+    override fun onChatStateChanged(enabled: Boolean) {
         runOnUiThread {
-            Toast.makeText(this, "Chat state: $chatState", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Chat state: $enabled", Toast.LENGTH_LONG).show()
         }
     }
 

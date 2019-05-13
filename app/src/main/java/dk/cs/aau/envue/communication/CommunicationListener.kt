@@ -5,5 +5,5 @@ interface CommunicationListener {
     fun onCommunicationIdentified(sequenceId: Int, name: String)
     fun onCommunicationClosed(code: Int)
     fun onReaction(reaction: String)
-    fun onChatStateChanged(chatState: Boolean)
+    fun onChatStateChanged(enabled: Boolean)
 }

@@ -19,7 +19,6 @@ class StreamCommunicationListener(private val communicationListener: Communicati
         webSocket.send(Gson().toJson(
             HandshakePacket(
                 name,
-                Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
                 channelId
             )
         ))
@@ -47,13 +46,13 @@ class StreamCommunicationListener(private val communicationListener: Communicati
                     Message(
                         jsonObj.get("Message").asString,
                         jsonObj.get("Author").asString,
-                        jsonObj.get("Avatar").asString
+                        jsonObj.get("SequenceId").asInt
                     )
                 )
                 "Reaction" -> this.communicationListener.onReaction(jsonObj.get("Reaction").asString)
                 "Identity" -> this.communicationListener.onCommunicationIdentified(jsonObj.get("SequenceId").asInt,
                     jsonObj.get("Name").asString)
-                "ChatState" -> this.communicationListener.onChatStateChanged(jsonObj.get("State").asBoolean)
+                "ChatState" -> this.communicationListener.onChatStateChanged(jsonObj.get("Enabled").asBoolean)
             }
         }
     }
