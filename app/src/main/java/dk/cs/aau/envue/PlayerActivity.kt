@@ -330,10 +330,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
+        // Add click listener to report stream button
         if(resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE){
-            val temp = findViewById<ImageView>(R.id.report_Stream)
-            temp.setOnClickListener { reportContentDialog() }
+            findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
         }
+
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }

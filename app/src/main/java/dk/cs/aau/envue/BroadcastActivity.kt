@@ -42,6 +42,8 @@ import android.Manifest
 import android.content.Intent
 import android.support.v4.app.ActivityCompat
 import android.view.View
+import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.haversine
@@ -79,6 +81,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var running = true
     private var currentBitrate: Int = 0
     private lateinit var broadcastId: String
+    private var chatEnabled: Boolean = true
 
     private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity) :
         AsyncTask<Unit, Unit, Unit>() {
@@ -387,8 +390,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Get profile
-        val profile = Profile.getCurrentProfile()
 
         // Get supported resolutions
         val previewSize = Camera.open().parameters.previewSize
@@ -415,7 +416,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         // Initialize communication socket
         startCommunicationSocket()
-
         chatList = findViewById(R.id.chat_view)
 
         // Creates fragments for EmojiReactionsFragment
@@ -424,6 +424,24 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         emojiFragment?.let {
             fragmentTransaction.replace(R.id.fragment_container, it)
             fragmentTransaction.commit()
+        }
+
+
+        // Create popup menu when settings clicked
+        findViewById<ImageView>(R.id.settings)?.setOnClickListener {
+            val popup = PopupMenu(this@BroadcastActivity, it)
+            popup.menuInflater.inflate(R.menu.broadcast_settings, popup.menu)
+
+            popup.menu.findItem(R.id.enable_chat)?.apply {
+                isChecked = chatEnabled
+                setOnMenuItemClickListener {
+                    chatEnabled = !chatEnabled
+                    chatList?.visibility = if (chatEnabled) View.VISIBLE else View.GONE
+                    true
+                }
+
+                popup.show()
+            }
         }
 
         // Assign chat adapter and layout manager

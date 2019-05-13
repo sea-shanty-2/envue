@@ -29,6 +29,20 @@
                                                 android:layout_gravity="end"/>
     </LinearLayout>
 
+    <LinearLayout android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="bottom|start"
+                  android:orientation="horizontal"
+                  android:padding="16dp">
+        <ImageView android:id="@+id/settings"
+                   android:layout_width="32dp"
+                   android:layout_height="32dp"
+                   android:layout_gravity="bottom|start"
+                   android:alpha="0.75"
+                   android:background="@drawable/ic_settings_white_24dp"
+                   android:contentDescription="@string/settings"/>
+    </LinearLayout>
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
