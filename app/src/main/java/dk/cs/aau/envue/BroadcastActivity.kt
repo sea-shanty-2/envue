@@ -45,6 +45,8 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import com.google.gson.Gson
+import dk.cs.aau.envue.communication.packets.ChatStatePacket
 import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
@@ -81,7 +83,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var running = true
     private var currentBitrate: Int = 0
     private lateinit var broadcastId: String
+
     private var chatEnabled: Boolean = true
+        set(value) {
+            field = value
+            chatList?.visibility = if (value) View.VISIBLE else View.GONE
+            socket?.send(Gson().toJson(ChatStatePacket(value)))
+        }
 
     private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity) :
         AsyncTask<Unit, Unit, Unit>() {
@@ -436,7 +444,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 isChecked = chatEnabled
                 setOnMenuItemClickListener {
                     chatEnabled = !chatEnabled
-                    chatList?.visibility = if (chatEnabled) View.VISIBLE else View.GONE
                     true
                 }
 
@@ -454,8 +461,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
-
-        //joinBroadcast(broadcastId)
     }
 
     override fun onResume() {

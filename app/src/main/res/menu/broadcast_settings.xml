@@ -13,6 +13,5 @@
             android:title="@string/enable_chat"
             app:showAsAction="never"
             android:checkable="true"
-            android:checked="true"
     />
 </menu>

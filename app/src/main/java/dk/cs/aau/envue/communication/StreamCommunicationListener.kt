@@ -34,9 +34,8 @@ class StreamCommunicationListener(private val communicationListener: Communicati
                         )
                     ))
 
-                }
-                else {
-                    displayName = "Anon"
+                } else {
+                    displayName = "Anonymous"
                     communicationListener.onConnected()
 
                     webSocket.send(Gson().toJson(
