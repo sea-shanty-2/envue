@@ -156,8 +156,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     lastBitrate = bitrate
                     Log.d(TAG, "Update bitrate")
                 }
-                // Update if stream have moved 50 meters
-                if (haversine(lastLocation, currentLocation) > 50) {
+                // Update if stream have moved 5 meters
+                if (haversine(lastLocation, currentLocation) > 5) {
                     update = update.location(lastLocation)
                     toUpdate = true
                     currentLocation = lastLocation

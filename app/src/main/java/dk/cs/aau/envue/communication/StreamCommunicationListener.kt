@@ -15,43 +15,27 @@ import okio.ByteString
 
 class StreamCommunicationListener(private val communicationListener: CommunicationListener,
                                   private val channelId: String) : WebSocketListener() {
+    private fun identifyWithName(webSocket: WebSocket, name: String) {
+        webSocket.send(Gson().toJson(
+            HandshakePacket(
+                name,
+                Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
+                channelId
+            )
+        ))
+    }
+
     override fun onOpen(webSocket: WebSocket, response: Response) {
         val profileQuery = ProfileQuery.builder().build()
-        var displayName: String
         GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
             override fun onResponse(response2: com.apollographql.apollo.api.Response<ProfileQuery.Data>) {
                 val profile = response2.data()?.accounts()?.me()
 
-                if (profile != null) {
-                    displayName = profile.displayName()
-                    communicationListener.onConnected()
-
-                    webSocket.send(Gson().toJson(
-                        HandshakePacket(
-                            displayName,
-                            Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
-                            channelId
-                        )
-                    ))
-
-                } else {
-                    displayName = "Anonymous"
-                    communicationListener.onConnected()
-
-                    webSocket.send(Gson().toJson(
-                        HandshakePacket(
-                            Profile.getCurrentProfile().name,
-                            Profile.getCurrentProfile().getProfilePictureUri(256, 256).toString(),
-                            channelId
-                        )
-                    ))
-                }
+                identifyWithName(webSocket, profile?.displayName() ?: "Anonymous")
             }
 
-            override fun onFailure(e: ApolloException){}
-
+            override fun onFailure(e: ApolloException) {}
         })
-
     }
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {
@@ -105,6 +89,6 @@ class StreamCommunicationListener(private val communicationListener: Communicati
     }
 
     private fun output(txt: String) {
-        Log.i("CHAT", txt)
+        Log.i("COMMUNICATION", txt)
     }
 }
