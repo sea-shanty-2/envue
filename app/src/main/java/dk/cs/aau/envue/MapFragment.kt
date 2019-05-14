@@ -48,10 +48,11 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     private val HEATMAP_LAYER_SOURCE = "streams"
     private val CIRCLE_LAYER_ID = "earthquakes-circle"
     private val TAG = "MapFragment"
-    private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID)
+    private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID) //, URL("https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson")) // Used as mock data. Remember to outcomment loadBroadcastsToMap in updateStreamSource when using.
     private var limitedEmojis = ArrayList<String>()
     private var filters: DoubleArray? = null
     private var eventClicked = false
+    private var mMap: MapboxMap? = null
 
     private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
         override fun doInBackground(vararg params: Style): Void {
@@ -79,12 +80,10 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         } else {
             StreamUpdateTask().execute(style)
         }
-    }
 
-    private var mMap: MapboxMap? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+
+
     }
 
     override fun onCreateView(
@@ -99,6 +98,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         // Mapbox view options
         var options = MapboxMapOptions().apply {
             rotateGesturesEnabled(false)
+            maxZoomPreference(19.0)
         }
 
         // Create mapview with options
@@ -145,17 +145,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         return
     }
 
-    fun setHeatmapV2(events: List<Event>) {
-        val streamCoordinates = events.map { e -> Point.fromLngLat(e.center.lon, e.center.lat) }
-
-        if (streamCoordinates.isEmpty()) return
-
-        val lineString = LineString.fromLngLats(streamCoordinates)
-        val featureCollection = FeatureCollection.fromFeatures(arrayOf(Feature.fromGeometry(lineString)))
-
-        geoJsonSource.setGeoJson(featureCollection)
-    }
-
     fun setHeatmap(list : List<ActiveBroadcastLocationQuery.Item>?){
         val streamCoordinates = ArrayList<Point>()
 
@@ -168,7 +157,14 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         if (streamCoordinates.isEmpty()) return
 
         val lineString = LineString.fromLngLats(streamCoordinates)
-        val featureCollection = FeatureCollection.fromFeatures(arrayOf(Feature.fromGeometry(lineString)))
+
+        val features = lineString.coordinates().map {
+            val feature = Feature.fromGeometry(it)
+            feature.addNumberProperty("mag", 1)
+            feature
+        }
+        
+        val featureCollection = FeatureCollection.fromFeatures(features)
 
         geoJsonSource.setGeoJson(featureCollection)
     }
@@ -236,27 +232,27 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                 }
 
                 activity?.runOnUiThread {
-                    Log.d("EVENTS", "Setting HeatmapV2")
-                    setHeatmapV2(events)
                     for (event in events) {
-                        Log.d("EVENTS", "Adding marker ${event.emojiCode}")
+                        Log.d(TAG, "Adding marker ${event.emojiCode}")
                         addMarker(LatLng(event.center.lat, event.center.lon),
                             event.emojiCode,
                             35,
                             event.broadcasts?.first()?.id()!!)
                     }
                 }
+
             }
 
             override fun onFailure(e: ApolloException) {
-                Log.d("EVENTS", "Something went wrong: ${e.message}")
+                Log.d(TAG, "Something went wrong: ${e.message}")
             }
         })
     }
 
     private fun addHeatmapLayer(loadedMapStyle: Style) {
         val layer = HeatmapLayer(HEATMAP_LAYER_ID, STREAM_SOURCE_ID)
-        layer.maxZoom = 19f
+        layer.maxZoom = 20f
+        layer.minZoom = 0f
         layer.setSourceLayer(HEATMAP_LAYER_SOURCE)
         layer.setProperties(
 
@@ -266,12 +262,12 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             heatmapColor(
                 interpolate(
                     linear(), heatmapDensity(),
-                    literal(0), rgba(33, 102, 172, 0),
-                    literal(0.2), rgb(103, 169, 207),
-                    literal(0.4), rgb(209, 229, 240),
-                    literal(0.6), rgb(253, 219, 199),
-                    literal(0.8), rgb(239, 138, 98),
-                    literal(1), rgb(178, 24, 43)
+                    literal(0), rgba(0, 0, 0, 0),
+                    literal(0.1), rgb(50, 241, 231),
+                    literal(0.5), rgb(0, 255, 0),
+                    literal(0.9), rgb(255, 255, 0),
+                    literal(0.99), rgb(255, 165,0),
+                    literal(1), rgb(255, 0, 0)
                 )
             ),
 
@@ -279,7 +275,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             heatmapWeight(
                 interpolate(
                     linear(), get("mag"),
-                    stop(0, 0),
+                    stop(0, 0.7),
                     stop(6, 1)
                 )
             ),
@@ -289,8 +285,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             heatmapIntensity(
                 interpolate(
                     linear(), zoom(),
-                    stop(0, 1),
-                    stop(19, 3)
+                    stop(0, 0.01),
+                    stop(20, 1)
                 )
             ),
 
@@ -298,8 +294,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             heatmapRadius(
                 interpolate(
                     linear(), zoom(),
-                    stop(0, 2),
-                    stop(19, 20)
+                    stop(0, 40),
+                    stop(20, 40)
                 )
             ),
 
@@ -307,8 +303,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             heatmapOpacity(
                 interpolate(
                     linear(), zoom(),
-                    stop(13, 1),
-                    stop(19, 0)
+                    stop(0, 0.5),
+                    stop(20, 0.2)
                 )
             )
         )
