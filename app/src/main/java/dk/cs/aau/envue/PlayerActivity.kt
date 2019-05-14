@@ -221,11 +221,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         } else {
             UpdateEventIdsTask(this).execute()
         }
-
-        // Set stop button listener
-        findViewById<Button>(R.id.stop_broadcast_button).setOnClickListener {
-            this.onBackPressed()
-        }
     }
 
     private fun updateRecommendedBroadcast(broadcastId: String) {

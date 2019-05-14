@@ -173,5 +173,6 @@
     <string name="leaderboards">Leaderboards</string>
     <string name="loading">Loading..</string>
     <string name="n_a">N/A</string>
+    <string name="stop">STOP</string>
 
 </resources>
