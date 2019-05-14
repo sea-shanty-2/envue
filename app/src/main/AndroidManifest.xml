@@ -44,7 +44,8 @@
         </activity>
         <activity
             android:name=".PlayerActivity"
-            android:configChanges="screenSize|orientation" />
+            android:configChanges="screenSize|orientation"
+            android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".InitializeBroadcastActivity"
             android:label="@string/title_activity_initialize_broadcast"
