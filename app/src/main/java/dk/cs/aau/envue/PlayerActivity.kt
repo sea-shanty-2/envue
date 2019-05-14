@@ -1,15 +1,10 @@
 package dk.cs.aau.envue
 
-import android.accessibilityservice.AccessibilityService
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.Service
 import android.content.Context
-import android.content.DialogInterface
 import android.content.res.Configuration
-import android.graphics.Rect
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
@@ -47,9 +42,7 @@ import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
 import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.GatewayClient
-import kotlinx.android.synthetic.main.activity_broadcast.view.*
 import okhttp3.WebSocket
-import java.lang.ref.SoftReference
 import kotlin.math.absoluteValue
 
 
@@ -354,13 +347,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             imm.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
             addLocalMessage()
         }
-        
+
         findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
             var handle = false
             if(actionId == EditorInfo.IME_ACTION_SEND) {
-                findViewById<Button>(R.id.button_chatbox_send).performClick()
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
+                findViewById<Button>(R.id.button_chatbox_send)?.performClick()
+                val methodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                methodManager.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
                 handle = true
             }
             handle
