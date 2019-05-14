@@ -1,15 +1,10 @@
 package dk.cs.aau.envue
 
-import android.accessibilityservice.AccessibilityService
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.Service
 import android.content.Context
-import android.content.DialogInterface
 import android.content.res.Configuration
-import android.graphics.Rect
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
@@ -47,9 +42,7 @@ import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
 import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.GatewayClient
-import kotlinx.android.synthetic.main.activity_broadcast.view.*
 import okhttp3.WebSocket
-import java.lang.ref.SoftReference
 import kotlin.math.absoluteValue
 
 
@@ -122,6 +115,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var lastReactionAt: Long = 0
     private var recommendationExpirationThread: Thread? = null
 
+    private var ownDisplayName: String = "You"
+    private var ownSequenceId: Int = 0
+
     private var recommendedBroadcastId: String? = null
         set(value) {
             field = value
@@ -141,7 +137,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    override fun onClosed(code: Int) {
+    override fun onChatStateChanged(enabled: Boolean) {
+        runOnUiThread {
+            onMessage(SystemMessage(resources.getString(if (enabled) R.string.chat_enabled else R.string.chat_disabled)))
+        }
+    }
+
+    override fun onCommunicationClosed(code: Int) {
         communicationConnected = false
 
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
@@ -151,8 +153,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    override fun onConnected() {
+    override fun onCommunicationIdentified(sequenceId: Int, name: String) {
         communicationConnected = true
+
+        ownDisplayName = name
+        ownSequenceId = sequenceId
+
+        editMessageView?.hint = getString(R.string.write_a_message_as, name)
     }
 
     override fun onMessage(message: Message) {
@@ -247,7 +254,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-
     private fun scrollToCurrentBroadcast() {
         nearbyBroadcastsAdapter?.let {
             nearbyBroadcastsList?.apply {
@@ -315,7 +321,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Update chat adapter
         chatAdapter?.apply {
-            setLandscapeMode(this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+            isLandscape = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         }
 
         // Assign chat adapter and layout manager
@@ -342,13 +348,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             addLocalMessage()
         }
 
-
-        findViewById<EditText>(R.id.editText).setOnEditorActionListener { _, actionId, _ ->
+        findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
             var handle = false
             if(actionId == EditorInfo.IME_ACTION_SEND) {
-                findViewById<Button>(R.id.button_chatbox_send).performClick()
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
+                findViewById<Button>(R.id.button_chatbox_send)?.performClick()
+                val methodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                methodManager.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
                 handle = true
             }
             handle
@@ -368,10 +373,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
-        if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            val temp = findViewById<ImageView>(R.id.report_Stream)
-            temp.setOnClickListener { reportContentDialog() }
+        // Add click listener to report stream button
+        if(resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE){
+            findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
         }
+
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }
@@ -513,10 +519,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private fun addLocalMessage() {
         val messageView = findViewById<EditText>(R.id.editText)
         val text = messageView?.text.toString()
-        showRecommendation("test")
+
         if (!text.isEmpty()) {
             socket?.send(Gson().toJson(MessagePacket(text)))
-            onMessage(Message(text))
+            onMessage(Message(text, ownDisplayName, ownSequenceId))
             messageView.text.clear()
         }
     }
