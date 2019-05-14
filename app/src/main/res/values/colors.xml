@@ -14,4 +14,20 @@
     <color type="color" name="envue_light">#9AB87A</color>
     <color type="color" name="envue_very_light">#F8F991</color>
 
+    <color type="color" name="red">#FF4136</color>
+    <color type="color" name="green">#2ECC40</color>
+    <color type="color" name="blue">#0074D9</color>
+    <color type="color" name="orange">#C2571A</color>
+    <color type="color" name="purple">#B10DC9</color>
+    <color type="color" name="maroon">#85144b</color>
+
+    <array name="sequence_colors">
+        <item>@color/red</item>
+        <item>@color/green</item>
+        <item>@color/blue</item>
+        <item>@color/orange</item>
+        <item>@color/purple</item>
+        <item>@color/maroon</item>
+    </array>
+
 </resources>

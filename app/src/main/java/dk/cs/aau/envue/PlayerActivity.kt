@@ -111,6 +111,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var lastReactionAt: Long = 0
     private var recommendationExpirationThread: Thread? = null
 
+    private var ownDisplayName: String = "You"
+    private var ownSequenceId: Int = 0
+
     private var recommendedBroadcastId: String? = null
         set(value) {
             field = value
@@ -132,7 +135,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     override fun onChatStateChanged(enabled: Boolean) {
         runOnUiThread {
-            Toast.makeText(this, "Chat state: $enabled", Toast.LENGTH_LONG).show()
+            onMessage(SystemMessage(resources.getString(if (enabled) R.string.chat_enabled else R.string.chat_disabled)))
         }
     }
 
@@ -148,6 +151,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     override fun onCommunicationIdentified(sequenceId: Int, name: String) {
         communicationConnected = true
+
+        ownDisplayName = name
+        ownSequenceId = sequenceId
+
+        editMessageView?.hint = getString(R.string.write_a_message_as, name)
     }
 
     override fun onMessage(message: Message) {
@@ -234,7 +242,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-
     private fun scrollToCurrentBroadcast() {
         nearbyBroadcastsAdapter?.let {
             nearbyBroadcastsList?.apply {
@@ -297,7 +304,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Update chat adapter
         chatAdapter?.apply {
-            setLandscapeMode(this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+            isLandscape = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         }
 
         // Assign chat adapter and layout manager
@@ -482,10 +489,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private fun addLocalMessage() {
         val messageView = findViewById<EditText>(R.id.editText)
         val text = messageView?.text.toString()
-        showRecommendation("test")
+
         if (!text.isEmpty()) {
             socket?.send(Gson().toJson(MessagePacket(text)))
-            onMessage(Message(text))
+            onMessage(Message(text, ownDisplayName, ownSequenceId))
             messageView.text.clear()
         }
     }
