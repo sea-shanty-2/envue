@@ -466,9 +466,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
 
-        //joinBroadcast(broadcastId)
         // Set stop button listener
-        findViewById<TextView>(R.id.stop_broadcast_button).setOnClickListener {
+        findViewById<ImageView>(R.id.stop_broadcast_button)?.setOnClickListener {
             this.onBackPressed()
         }
     }

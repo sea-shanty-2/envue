@@ -19,20 +19,15 @@ class MessageHolder internal constructor(itemView: View): RecyclerView.ViewHolde
         nameText?.text = message.author
 
         sequenceText?.apply {
-            if (message is SystemMessage)
-            {
-                text = "E"
-            }
-            else
-            {
-                text = message.sequenceId.toString()
-
-                // Change background color
-                val drawable = itemView.resources.getDrawable(R.drawable.rounded_circle)
+            val drawable = itemView.resources.getDrawable(R.drawable.rounded_circle)
+            val selectedColor = if (message is SystemMessage) itemView.resources.getColor(R.color.black) else {
                 val colors = itemView.resources.getIntArray(R.array.sequence_colors)
-                drawable.colorFilter = PorterDuffColorFilter(colors[message.sequenceId % colors.size], PorterDuff.Mode.SRC_IN)
-                background = drawable
+                colors[message.sequenceId % colors.size]
             }
+
+            text = if (message is SystemMessage) "E" else message.sequenceId.toString()
+            drawable.colorFilter = PorterDuffColorFilter(selectedColor, PorterDuff.Mode.SRC_IN)
+            background = drawable
         }
     }
 }
