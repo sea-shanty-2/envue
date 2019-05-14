@@ -17,6 +17,8 @@ import android.support.v7.widget.RecyclerView
 import android.text.InputType
 import android.util.Log
 import android.view.*
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
@@ -80,8 +82,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         get() = this.nearbyBroadcastsAdapter?.getSelectedPosition() ?: 0
         set(value) {
             this.nearbyBroadcastsAdapter?.apply {
-                val newValue = if (value < 0) this.broadcastList.size - 1 else value
-                this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
+                if (this.broadcastList.isNotEmpty()) {
+                    val newValue = if (value < 0) this.broadcastList.size - 1 else value
+                    this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
+                }
             }
         }
 
@@ -111,6 +115,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var lastReactionAt: Long = 0
     private var recommendationExpirationThread: Thread? = null
 
+    private var ownDisplayName: String = "You"
+    private var ownSequenceId: Int = 0
+
     private var recommendedBroadcastId: String? = null
         set(value) {
             field = value
@@ -120,7 +127,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
-    inner class UpdateEventIdsTask(c: Context): AsyncTask<Unit, Unit, Unit>() {
+    inner class UpdateEventIdsTask(c: Context) : AsyncTask<Unit, Unit, Unit>() {
         override fun doInBackground(vararg params: Unit?) {
             while (!isCancelled) {
                 updateEventIds()
@@ -130,7 +137,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    override fun onClosed(code: Int) {
+    override fun onChatStateChanged(enabled: Boolean) {
+        runOnUiThread {
+            onMessage(SystemMessage(resources.getString(if (enabled) R.string.chat_enabled else R.string.chat_disabled)))
+        }
+    }
+
+    override fun onCommunicationClosed(code: Int) {
         communicationConnected = false
 
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
@@ -140,8 +153,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    override fun onConnected() {
+    override fun onCommunicationIdentified(sequenceId: Int, name: String) {
         communicationConnected = true
+
+        ownDisplayName = name
+        ownSequenceId = sequenceId
+
+        editMessageView?.hint = getString(R.string.write_a_message_as, name)
     }
 
     override fun onMessage(message: Message) {
@@ -154,7 +172,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     override fun onReaction(reaction: String) {
         runOnUiThread {
-            emojiFragment?.begin(reaction,this@PlayerActivity)
+            emojiFragment?.begin(reaction, this@PlayerActivity)
         }
     }
 
@@ -203,6 +221,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             DefaultTrackSelector(adaptiveTrackSelection)
         )
 
+
+        window.decorView.findViewById<View>(android.R.id.content).viewTreeObserver.addOnGlobalLayoutListener(object: ViewTreeObserver.OnGlobalLayoutListener{
+            override fun onGlobalLayout() {
+                scrollToBottom()
+            }
+
+        })
+
         // Begin playing the broadcast
         changePlayerSource(broadcastId)
 
@@ -213,7 +239,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         bindContentView()
 
         // Launch background task for updating event ids
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
         } else {
             UpdateEventIdsTask(this).execute()
@@ -227,7 +253,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             notifyDataSetChanged()
         }
     }
-
 
     private fun scrollToCurrentBroadcast() {
         nearbyBroadcastsAdapter?.let {
@@ -260,7 +285,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
 
             // Create popup window
-            PopupWindow(view, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, true).apply {
+            PopupWindow(
+                view,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                true
+            ).apply {
                 elevation = 20f
                 showAtLocation(playerView, Gravity.CENTER, 0, playerView?.height?.plus(this.height)?.times(-1) ?: 0)
             }
@@ -280,18 +310,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Assign nearby broadcasts adapter and layout manager
         nearbyBroadcastsList?.apply {
             adapter = nearbyBroadcastsAdapter
-            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { orientation = 0}
+            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { orientation = 0 }
         }
 
         // Assign reaction adapter and layout manager
         reactionList?.apply {
             adapter = reactionAdapter
-            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { orientation = 0}
+            layoutManager = LinearLayoutManager(this@PlayerActivity).apply { orientation = 0 }
         }
 
         // Update chat adapter
         chatAdapter?.apply {
-            setLandscapeMode(this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+            isLandscape = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         }
 
         // Assign chat adapter and layout manager
@@ -313,7 +343,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
             addLocalMessage()
+        }
+
+        findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
+            var handle = false
+            if(actionId == EditorInfo.IME_ACTION_SEND) {
+                findViewById<Button>(R.id.button_chatbox_send)?.performClick()
+                val methodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                methodManager.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
+                handle = true
+            }
+            handle
         }
 
         // Creates fragments for EmojiReactionsFragment
@@ -330,15 +373,16 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
+        // Add click listener to report stream button
         if(resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE){
-            val temp = findViewById<ImageView>(R.id.report_Stream)
-            temp.setOnClickListener { reportContentDialog() }
+            findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
         }
+
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }
 
-    private fun reportContentDialog(){
+    private fun reportContentDialog() {
         val displayNameDialog = AlertDialog.Builder(this)
         displayNameDialog.setTitle("Report video")
 
@@ -346,18 +390,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         input.inputType = InputType.TYPE_CLASS_TEXT
         displayNameDialog.setView(input)
 
-        displayNameDialog.setPositiveButton("OK") { _, _ -> sendReport(input)}
+        displayNameDialog.setPositiveButton("OK") { _, _ -> sendReport(input) }
         displayNameDialog.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
         displayNameDialog.show()
     }
 
-    private fun sendReport(Message: EditText){
+    private fun sendReport(Message: EditText) {
         val test = Message.text.toString()
         val reportMessage = BroadcastReportMutation.builder().id(broadcastId).message(test).build()
 
-        GatewayClient.mutate(reportMessage).enqueue(object: ApolloCall.Callback<BroadcastReportMutation.Data>(){
+        GatewayClient.mutate(reportMessage).enqueue(object : ApolloCall.Callback<BroadcastReportMutation.Data>() {
             override fun onResponse(response: Response<BroadcastReportMutation.Data>) {
-                Log.e("Report","SuccessFully reported stream")
+                Log.e("Report", "SuccessFully reported stream")
                 runOnUiThread {
                     Toast.makeText(
                         findViewById<View>(R.id.player_linear_layout).context,
@@ -368,7 +412,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
 
             override fun onFailure(e: ApolloException) {
-                Log.e("Report","Unsuccessfully reported stream")
+                Log.e("Report", "Unsuccessfully reported stream")
                 runOnUiThread {
                     Toast.makeText(
                         findViewById<View>(R.id.player_linear_layout).context,
@@ -379,7 +423,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         })
     }
-
 
     @SuppressLint("ClickableViewAccessibility")
     private fun exoPlayerViewOnTouch() {
@@ -399,7 +442,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 val endX = event.x
                 val endY = event.y
 
-                if (Math.abs(startX - endX) < 5 || Math.abs(startY- endY) < 5) {
+                if (Math.abs(startX - endX) < 5 || Math.abs(startY - endY) < 5) {
 
                     if (isPressed) {
                         exoPlayer?.controllerHideOnTouch = false
@@ -429,7 +472,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun hideRecommendation() {
-        recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) }}
+        recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) } }
     }
 
     private fun updateRecommendationThumbnail() {
@@ -444,6 +487,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
     }
+
     private fun showRecommendation(broadcastId: String) {
         recommendedBroadcastId = broadcastId
         recommendationView?.let { transitionView(it, 0f, 1f, View.VISIBLE) }
@@ -475,10 +519,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private fun addLocalMessage() {
         val messageView = findViewById<EditText>(R.id.editText)
         val text = messageView?.text.toString()
-        showRecommendation("test")
+
         if (!text.isEmpty()) {
             socket?.send(Gson().toJson(MessagePacket(text)))
-            onMessage(Message(text))
+            onMessage(Message(text, ownDisplayName, ownSequenceId))
             messageView.text.clear()
         }
     }
@@ -559,7 +603,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun updateEventIds() {
         val eventQuery = EventBroadcastsWithStatsQuery.builder().id(broadcastId).build()
-        GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventBroadcastsWithStatsQuery.Data>() {
+        GatewayClient.query(eventQuery).enqueue(object : ApolloCall.Callback<EventBroadcastsWithStatsQuery.Data>() {
             override fun onResponse(response: Response<EventBroadcastsWithStatsQuery.Data>) {
                 val broadcasts = response.data()?.events()?.containing()?.broadcasts()?.toList()
 
@@ -600,7 +644,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun getHlsUri(fromBroadcastId: String) = Uri.parse("https://envue.me/relay/$fromBroadcastId")
 
-    private fun getDataSource() = DefaultDataSourceFactory(this, Util.getUserAgent(this, "Exo2"), DefaultBandwidthMeter())
+    private fun getDataSource() =
+        DefaultDataSourceFactory(this, Util.getUserAgent(this, "Exo2"), DefaultBandwidthMeter())
 
     private fun changePlayerSource(toBroadcastId: String) {
         // Create media source
@@ -633,7 +678,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun leaveBroadcast(id: String, continueWith: () -> Unit) {
         val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
-        GatewayClient.mutate(leaveMutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
+        GatewayClient.mutate(leaveMutation).enqueue(object : ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
             override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
                 continueWith()  // Callback
             }
@@ -647,7 +692,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun joinBroadcast(id: String) {
         val joinMutation = BroadcastJoinMutation.builder().id(id).build()
-        GatewayClient.mutate(joinMutation).enqueue(object: ApolloCall.Callback<BroadcastJoinMutation.Data>() {
+        GatewayClient.mutate(joinMutation).enqueue(object : ApolloCall.Callback<BroadcastJoinMutation.Data>() {
             override fun onResponse(response: Response<BroadcastJoinMutation.Data>) {
                 // No action required
             }
@@ -656,10 +701,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 Log.d("JOIN", "Something went wrong while joining $id: $e")
                 // Do we need to show a toast here? As long as the player starts, it does not matter
                 runOnUiThread {
-                    Toast.makeText(this@PlayerActivity, "Something went wrong while joining $id \uD83D\uDE22",
-                        Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@PlayerActivity, "Something went wrong while joining $id \uD83D\uDE22",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         })
     }
+
+
 }

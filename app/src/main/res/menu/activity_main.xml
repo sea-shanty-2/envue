@@ -17,7 +17,7 @@
 
     <item
         android:id="@+id/action_player"
-        android:title="tmp"
+        android:title="@string/play"
         app:showAsAction="ifRoom" />
 
     <item
