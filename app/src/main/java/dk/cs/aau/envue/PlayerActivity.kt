@@ -47,6 +47,7 @@ import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
 import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.GatewayClient
+import kotlinx.android.synthetic.main.activity_broadcast.view.*
 import okhttp3.WebSocket
 import java.lang.ref.SoftReference
 import kotlin.math.absoluteValue
