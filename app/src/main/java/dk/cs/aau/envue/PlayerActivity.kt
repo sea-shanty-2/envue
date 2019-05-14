@@ -3,6 +3,7 @@ package dk.cs.aau.envue
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
@@ -47,6 +48,38 @@ import kotlin.math.absoluteValue
 
 
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+    private var fingerX1 = 0.0f
+    private var fingerX2 = 0.0f
+    private val minScrollDistance = 150  // Minimum distance for a swipe to be registered
+
+    // Player
+    private var playerView: SimpleExoPlayerView? = null
+    private var player: SimpleExoPlayer? = null
+    private var playWhenReady = true
+    private var currentWindow = 0
+    private var playbackPosition: Long = 0
+    private var loading: ProgressBar? = null
+
+    // Communication
+    private var editMessageView: EditText? = null
+    private var chatList: RecyclerView? = null
+    private var reactionList: RecyclerView? = null
+    private var chatAdapter: MessageListAdapter? = null
+    private var reactionAdapter: ReactionListAdapter? = null
+    private var messages: ArrayList<Message> = ArrayList()
+    private var emojiFragment: EmojiFragment? = null
+    private var lastReactionAt: Long = 0
+    private var ownDisplayName: String = "You"
+    private var ownSequenceId: Int = 0
+
+    // Broadcast selection and recommendation
+    private var nearbyBroadcastsList: RecyclerView? = null
+    private var recommendationView: View? = null
+    private var recommendationTimeout: ProgressBar? = null
+    private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
+    private var recommendationImageView: ImageView? = null
+    private var recommendationExpirationThread: Thread? = null
+
     private var broadcastId: String = "main"
         set(value) {
             field = value
@@ -70,14 +103,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
-    private var communicationConnected: Boolean = false
-        set(value) {
-            field = value
-            runOnUiThread {
-                findViewById<Button>(R.id.button_chatbox_send)?.isEnabled = value
-            }
-        }
-
     private var broadcastIndex
         get() = this.nearbyBroadcastsAdapter?.getSelectedPosition() ?: 0
         set(value) {
@@ -89,34 +114,16 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
-    private var fingerX1 = 0.0f
-    private var fingerX2 = 0.0f
-    private val minScrollDistance = 150  // Minimum distance for a swipe to be registered
-
-    private var playerView: SimpleExoPlayerView? = null
-    private var player: SimpleExoPlayer? = null
-    private var editMessageView: EditText? = null
-    private var chatList: RecyclerView? = null
-    private var reactionList: RecyclerView? = null
-    private var nearbyBroadcastsList: RecyclerView? = null
-    private var recommendationView: View? = null
-    private var recommendationTimeout: ProgressBar? = null
-    private var playWhenReady = true
-    private var currentWindow = 0
-    private var playbackPosition: Long = 0
-    private var loading: ProgressBar? = null
-    private var chatAdapter: MessageListAdapter? = null
-    private var reactionAdapter: ReactionListAdapter? = null
-    private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
-    private var recommendationImageView: ImageView? = null
+    // Network
     private var socket: WebSocket? = null
-    private var messages: ArrayList<Message> = ArrayList()
-    private var emojiFragment: EmojiFragment? = null
-    private var lastReactionAt: Long = 0
-    private var recommendationExpirationThread: Thread? = null
 
-    private var ownDisplayName: String = "You"
-    private var ownSequenceId: Int = 0
+    private var communicationConnected: Boolean = false
+        set(value) {
+            field = value
+            runOnUiThread {
+                findViewById<Button>(R.id.button_chatbox_send)?.isEnabled = value
+            }
+        }
 
     private var recommendedBroadcastId: String? = null
         set(value) {
@@ -132,7 +139,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             while (!isCancelled) {
                 updateEventIds()
                 Log.d("EVENTUPDATE", "Updated event ids.")
-                Thread.sleep(5000)  // 10 seconds}
+                Thread.sleep(5000)
             }
         }
     }
@@ -171,9 +178,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     override fun onReaction(reaction: String) {
-        runOnUiThread {
-            emojiFragment?.begin(reaction, this@PlayerActivity)
-        }
+        runOnUiThread { emojiFragment?.begin(reaction, this@PlayerActivity) }
     }
 
     private fun scrollToBottom() {
@@ -221,13 +226,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             DefaultTrackSelector(adaptiveTrackSelection)
         )
 
-
-        window.decorView.findViewById<View>(android.R.id.content).viewTreeObserver.addOnGlobalLayoutListener(object: ViewTreeObserver.OnGlobalLayoutListener{
-            override fun onGlobalLayout() {
-                scrollToBottom()
-            }
-
-        })
+        window.decorView.findViewById<View>(android.R.id.content).viewTreeObserver.addOnGlobalLayoutListener {
+            scrollToBottom()
+        }
 
         // Begin playing the broadcast
         changePlayerSource(broadcastId)
@@ -239,11 +240,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         bindContentView()
 
         // Launch background task for updating event ids
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
-        } else {
-            UpdateEventIdsTask(this).execute()
-        }
+        UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
     private fun updateRecommendedBroadcast(broadcastId: String) {
@@ -265,6 +262,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     @SuppressLint("ClickableViewAccessibility")
     private fun bindContentView() {
         setContentView(R.layout.activity_player)
+
+        // Load views
         playerView = findViewById(R.id.video_view)
         loading = findViewById(R.id.loading)
         editMessageView = findViewById(R.id.editText)
@@ -343,17 +342,15 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
             addLocalMessage()
         }
 
         findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
             var handle = false
-            if(actionId == EditorInfo.IME_ACTION_SEND) {
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
                 findViewById<Button>(R.id.button_chatbox_send)?.performClick()
-                val methodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                methodManager.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
+                // val methodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                // methodManager.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
                 handle = true
             }
             handle
@@ -374,7 +371,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
         // Add click listener to report stream button
-        if(resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE){
+        if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
             findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
         }
 
@@ -405,7 +402,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 runOnUiThread {
                     Toast.makeText(
                         findViewById<View>(R.id.player_linear_layout).context,
-                        "Video has been reported",
+                        "The broadcast has been reported.",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -416,7 +413,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 runOnUiThread {
                     Toast.makeText(
                         findViewById<View>(R.id.player_linear_layout).context,
-                        "An error occurred, please try again",
+                        "An error occurred, please try again.",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -443,7 +440,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 val endY = event.y
 
                 if (Math.abs(startX - endX) < 5 || Math.abs(startY - endY) < 5) {
-
                     if (isPressed) {
                         exoPlayer?.controllerHideOnTouch = false
                         player?.playWhenReady = false
@@ -709,6 +705,4 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         })
     }
-
-
 }
