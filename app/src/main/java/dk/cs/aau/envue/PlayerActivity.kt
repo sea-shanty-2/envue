@@ -22,6 +22,7 @@ import android.support.v7.widget.RecyclerView
 import android.text.InputType
 import android.util.Log
 import android.view.*
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import com.apollographql.apollo.ApolloCall
@@ -333,7 +334,21 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Assign send button
         findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
             addLocalMessage()
+        }
+
+
+        findViewById<EditText>(R.id.editText).setOnEditorActionListener { _, actionId, _ ->
+            var handle = false
+            if(actionId == EditorInfo.IME_ACTION_SEND) {
+                findViewById<Button>(R.id.button_chatbox_send).performClick()
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
+                handle = true
+            }
+            handle
         }
 
         // Creates fragments for EmojiReactionsFragment
