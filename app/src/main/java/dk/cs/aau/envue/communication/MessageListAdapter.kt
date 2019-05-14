@@ -10,39 +10,26 @@ import dk.cs.aau.envue.R
 
 
 class MessageListAdapter(private val context: Context, private val messageList: List<Message>,
-                         private val isStreamerView: Boolean = false,
-                         var isLandscape: Boolean = false) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+                         private val isStreamerView: Boolean = false) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    var isLandscape: Boolean = false
+        set(value) {
+            val changed = field == value
+            field = value
+
+            if (changed) {
+                notifyDataSetChanged()
+            }
+        }
+
     private var lastPosition = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         // Select layout
-        val layout = if (isLandscape || isStreamerView) R.layout.viewer_message else when (viewType) {
-            VIEW_TYPE_MESSAGE_RECEIVED -> R.layout.other_message
-            else -> R.layout.own_message
-        }
+        val layout = if (isLandscape || isStreamerView) R.layout.horizontal_chat_message else R.layout.vertical_chat_message
 
-        // Select appropriate message holder
-        return when (viewType) {
-            VIEW_TYPE_MESSAGE_RECEIVED -> ReceivedMessageHolder(
-                LayoutInflater.from(parent.context).inflate(
-                    layout,
-                    parent,
-                    false
-                )
-            )
-            else -> SentMessageHolder(LayoutInflater.from(parent.context).inflate(
-                layout,
-                parent,
-                false
-            ))
-        }
-    }
-
-    fun setLandscapeMode(newMode: Boolean) {
-        if (this.isLandscape != newMode) {
-            this.isLandscape = newMode
-            this.notifyDataSetChanged()
-        }
+        // Inflate view
+        return MessageHolder(LayoutInflater.from(parent.context).inflate(layout, parent, false))
     }
 
     override fun getItemCount(): Int {
@@ -50,21 +37,14 @@ class MessageListAdapter(private val context: Context, private val messageList: 
     }
 
     override fun getItemViewType(position: Int): Int {
-        val message = messageList[position]
-
-        return if (message.author == null) {
-            VIEW_TYPE_MESSAGE_SENT
-        } else {
-            VIEW_TYPE_MESSAGE_RECEIVED
-        }
+        return CHAT_MESSAGE
     }
     
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messageList[position]
 
         when (holder.itemViewType) {
-            VIEW_TYPE_MESSAGE_SENT -> (holder as SentMessageHolder).bind(message)
-            VIEW_TYPE_MESSAGE_RECEIVED -> (holder as ReceivedMessageHolder).bind(message)
+            CHAT_MESSAGE -> (holder as MessageHolder).bind(message)
         }
 
         setAnimation(holder.itemView, position)
@@ -79,7 +59,7 @@ class MessageListAdapter(private val context: Context, private val messageList: 
     }
 
     companion object {
-        private const val VIEW_TYPE_MESSAGE_SENT = 1
-        private const val VIEW_TYPE_MESSAGE_RECEIVED = 2
+        private const val CHAT_MESSAGE = 1
+        private const val SYSTEM_MESSAGE = 2
     }
 }
