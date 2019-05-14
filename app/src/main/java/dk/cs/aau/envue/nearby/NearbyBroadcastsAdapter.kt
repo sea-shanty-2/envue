@@ -27,6 +27,10 @@ class NearbyBroadcastsAdapter(var broadcastList: List<EventBroadcastsWithStatsQu
     }
 
     fun getSelectedPosition(): Int {
+        broadcastList.forEachIndexed { index, broadcast ->
+            if (broadcast.id() == currentBroadcastId) return index
+        }
+
         for (i in 0..broadcastList.size) {
             if (broadcastList[i].id() == currentBroadcastId) {
                 return i

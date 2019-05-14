@@ -3,6 +3,7 @@ package dk.cs.aau.envue.communication
 import android.util.Log
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.exception.ApolloException
+import com.facebook.Profile
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -18,7 +19,8 @@ class StreamCommunicationListener(private val communicationListener: Communicati
         webSocket.send(Gson().toJson(
             HandshakePacket(
                 name,
-                channelId
+                channelId,
+                Profile.getCurrentProfile().id
             )
         ))
     }
