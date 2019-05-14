@@ -96,7 +96,14 @@ dependencies {
     implementation "com.google.android.gms:play-services-location:16.0.0"
     // end location support
 
+    // push notification support
+    implementation 'com.google.firebase:firebase-core:16.0.8'
+    // end push notification support
+    implementation 'com.google.firebase:firebase-messaging:17.6.0'
+
     // chart support
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     // end chart support
 }
+
+apply plugin: 'com.google.gms.google-services'

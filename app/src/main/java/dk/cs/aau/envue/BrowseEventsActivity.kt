@@ -31,7 +31,6 @@ class BrowseEventsActivity : AppCompatActivity() {
     }
 
     private fun loadEvents() {
-
         val eventsQuery = EventsQuery.builder().build()
         GatewayClient.query(eventsQuery).enqueue(object: ApolloCall.Callback<EventsQuery.Data>() {
 
@@ -52,8 +51,6 @@ class BrowseEventsActivity : AppCompatActivity() {
             }
         })
     }
-
-
 
     /**
      * Populates the RecyclerView with the broadcasts. **/

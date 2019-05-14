@@ -4,6 +4,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import com.facebook.Profile
 import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.R
 import dk.cs.aau.envue.transformers.CircleTransform

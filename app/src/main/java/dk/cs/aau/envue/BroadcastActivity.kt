@@ -56,7 +56,6 @@ import kotlin.math.sign
  */
 class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEncodeHandler.SrsEncodeListener,
     CommunicationListener, SensorEventListener {
-
     private var publisher: SrsPublisher? = null
     private val TAG = "ENVUE-BROADCAST"
     private var chatList: RecyclerView? = null
@@ -81,10 +80,12 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var currentBitrate: Int = 0
     private lateinit var broadcastId: String
 
-    private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity): AsyncTask<Unit, Unit, Unit>() {
+    private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity) :
+        AsyncTask<Unit, Unit, Unit>() {
         val queryBuilder: BroadcastUpdateMutation.Builder = BroadcastUpdateMutation.builder().id(id)
         val typeBuilder: BroadcastUpdateInputType.Builder = BroadcastUpdateInputType.builder()
-        private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity)
+        private var fusedLocationClient: FusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(activity)
         private lateinit var currentLocation: LocationInputType
         private lateinit var lastLocation: LocationInputType
         private var lastStability = 0.0
@@ -97,7 +98,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
 
             var count = 0
-            while(running){
+            while (running) {
                 fusedLocationClient.lastLocation.apply {
                     addOnSuccessListener { location: Location? ->
                         if (location != null) {
@@ -112,7 +113,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     addOnCanceledListener { Log.d(TAG, "Cancelled") }
                 }
 
-                if(!::currentLocation.isInitialized){
+                if (!::currentLocation.isInitialized) {
                     count++
                     if (count > 50) {
                         Log.d(TAG, "Too many location tries.")
@@ -122,7 +123,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     continue
                 }
 
-                if(!::lastLocation.isInitialized) lastLocation = currentLocation
+                if (!::lastLocation.isInitialized) lastLocation = currentLocation
 
                 stability = calculateDirectionChanges()
                 lock.withLock { bitrate = currentBitrate }
@@ -207,12 +208,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val lastIndex = sampleArray.lastIndex
         var directionChange = 0
 
-        if (sampleArray[lastIndex][x] != sampleArray[lastIndex/2][y]
-            || sampleArray[lastIndex][y] != sampleArray[lastIndex/2][y]
-            || sampleArray[lastIndex][z] != sampleArray[lastIndex/2][z]) {
+        if (sampleArray[lastIndex][x] != sampleArray[lastIndex / 2][y]
+            || sampleArray[lastIndex][y] != sampleArray[lastIndex / 2][y]
+            || sampleArray[lastIndex][z] != sampleArray[lastIndex / 2][z]
+        ) {
             for (i in 0..(lastIndex - 3)) {
-                val sgn1 = calculateSign(sampleArray[i], sampleArray[i+1])
-                val sgn2 = calculateSign(sampleArray[i+1], sampleArray[i+2])
+                val sgn1 = calculateSign(sampleArray[i], sampleArray[i + 1])
+                val sgn2 = calculateSign(sampleArray[i + 1], sampleArray[i + 2])
                 if (!(sgn1 contentEquals sgn2)) {
                     directionChange++
                 }
@@ -264,18 +266,18 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     override fun onReaction(reaction: String) {
         runOnUiThread {
-            emojiFragment?.begin(reaction,this@BroadcastActivity)
+            emojiFragment?.begin(reaction, this@BroadcastActivity)
         }
     }
 
     private fun scrollToBottom() {
-        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it )}
+        this.chatAdapter?.itemCount?.let { this.chatList?.smoothScrollToPosition(it) }
     }
 
     override fun onRtmpConnecting(msg: String?) {
     }
 
-    fun startCounter() {
+    private fun startCounter() {
         val startedAt = System.currentTimeMillis()
         counterThread = Thread {
             while (true) {
@@ -380,6 +382,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val rtmp = intent.getStringExtra("RTMP")
 
         broadcastId = id
+        Log.d("BROADIDTIMES", id)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -408,7 +411,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
 
         // Create chat adapter
-        chatAdapter = MessageListAdapter(this, messages, streamerView = true)
+        chatAdapter = MessageListAdapter(this, messages, isStreamerView = true)
 
         // Initialize communication socket
         startCommunicationSocket()
@@ -430,9 +433,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             layoutManager = chatLayoutManager
         }
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        sensor =  sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+        sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
+
+        //joinBroadcast(broadcastId)
     }
 
     override fun onResume() {
@@ -464,7 +469,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ) { _, _ ->
                 finish()
                 removeFromActiveEvents()
-                startStatisticsActivity()
             }
             .setNegativeButton(android.R.string.no, null).show()
     }
@@ -479,11 +483,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     private fun removeFromActiveEvents() {
         val removalMutation = BroadcastStopMutation.builder().id(broadcastId).build()
-        GatewayClient.mutate(removalMutation).enqueue(object: ApolloCall.Callback<BroadcastStopMutation.Data>() {
+        GatewayClient.mutate(removalMutation).enqueue(object : ApolloCall.Callback<BroadcastStopMutation.Data>() {
             override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
                 val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
                 val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
-                // TODO: Use the above lists to calculate points and visualise a graph of viewership
+
+                // Start statistics activity with viewer count stats
+                startStatisticsActivity(joinedTimeStamps?.toTypedArray(), leftTimeStamps?.toTypedArray())
             }
 
             override fun onFailure(e: ApolloException) {
@@ -494,13 +500,17 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
     private fun updateViewerCount() {
         val viewerQuery = BroadcastViewerNumberQuery.builder().id(broadcastId).build()
-        GatewayClient.query(viewerQuery).enqueue(object: ApolloCall.Callback<BroadcastViewerNumberQuery.Data>() {
+        GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastViewerNumberQuery.Data>() {
             override fun onResponse(response: Response<BroadcastViewerNumberQuery.Data>) {
                 runOnUiThread {
                     val viewerCount = response.data()?.broadcasts()?.viewer_count()
                     if (viewerCount != null) {
                         // Update viewer count in activity
                         findViewById<TextView>(R.id.viewer_count).text = viewerCount.toString()
+                        Log.d(
+                            "VIEWERCOUNT",
+                            "Successfully received viewer count for $broadcastId which is ${viewerCount}"
+                        )
                     } else {
                         findViewById<TextView>(R.id.viewer_count).text = "?"
                     }
@@ -516,8 +526,26 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         })
     }
 
-    private fun startStatisticsActivity() {
-        startActivity(Intent(this, StatisticsActivity::class.java))
+    private fun startStatisticsActivity(
+        joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
+        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?
+    ) {
+
+        //leaveBroadcast(broadcastId)
+
+        val joined =
+            joinedTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
+        val left =
+            leftTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
+
+        if (joined.isEmpty() && left.isEmpty()) { return }  // No reason to show the statistics page if there were no viewers
+
+        val intent = Intent(this, StatisticsActivity::class.java).apply {
+            putExtra("joinedTimestamps", joined)
+            putExtra("leftTimestamps", left)
+        }
+
+        startActivity(intent)
     }
 }
 

@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">Envue</string>
 
     <!-- server URI -->
@@ -10,6 +10,7 @@
     <string name="profile_picture">Profile picture</string>
     <string name="profile_name">Name placeholder</string>
     <string name="log_out">Log out</string>
+    <string name="ChangeDisplayName">Change display name</string>
     <string name="invalid_access_token">Invalid access token</string>
     <string name="action_profile">Profile</string>
     <string name="action_broadcast">Broadcast</string>
@@ -51,6 +52,22 @@
     <string name="notification_channel_name">Envue</string>
     <string name="notification_channel_id">"Envue"</string>
     <string name="notification_channel_description">Envue notification channel</string>
+
+    <!-- Filter -->
+    <string name="title_activity_filter">FilterActivity</string>
+    <string name="accept_filters_button_text">OK</string>
+    <string name="filter_response_key">FILTER_RESPONSE_KEY</string>
+
+
+    <!-- Filter -->
+    <string name="category_selection_header">Select categories</string>
+    <string name="category_selection_button_text">OK</string>
+
+
+    <string name="msg_subscribed">Subscribed</string>
+    <string name="msg_subscribe_failed">Subscribe failed</string>
+    <string name="msg_unsubscribed">Unsubscribed</string>
+    <string name="msg_unsubscribe_failed">Unsubscribe failed</string>
     <string name="title_activity_choose_broadcast">ChooseBroadcastActivity</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
@@ -143,5 +160,18 @@
     </string>
     <string name="action_settings">Settings</string>
     <string name="live">LIVE</string>
+    <string name="recommendation_thumbnail">Recommendation thumbnail</string>
+    <string name="viewer">Viewer</string>
+    <string name="recommended">Recommended</string>
+    <string name="_0">0</string>
+    <string name="react">React</string>
+    <string name="report">Report</string>
+    <string name="percentage"><xliff:g id="number" example="100.123">%1d</xliff:g></string>
+    <string name="rank">Rank:</string>
+    <string name="percentile">Percentile:</string>
+    <string name="total_score">Total score:</string>
+    <string name="leaderboards">Leaderboards</string>
+    <string name="loading">Loading..</string>
+    <string name="n_a">N/A</string>
 
 </resources>

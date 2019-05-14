@@ -5,9 +5,19 @@
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".InitializeBroadcastActivity">
+    tools:context=".CategorySelectionActivity">
+
+    <ProgressBar
+            android:id="@+id/pBar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone">
+    </ProgressBar>
 
     <android.support.constraint.ConstraintLayout
+        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_anchorGravity="top|left">
@@ -35,12 +45,12 @@
                 app:layout_constraintTop_toTopOf="parent">
 
                 <TextView
-                    android:id="@+id/startBroadcastButtonText"
+                    android:id="@+id/categorySelectionButtonText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:elevation="16dp"
-                    android:text="@string/start_broadcast_button_text"
+                    android:text="@string/category_selection_button_text"
                     android:textAlignment="center"
                     android:textColor="@color/white"
                     android:textSize="36sp"
@@ -50,7 +60,7 @@
                     tools:layout_editor_absoluteY="83dp" />
 
                 <android.support.design.widget.FloatingActionButton
-                    android:id="@+id/startBroadcastButton"
+                    android:id="@+id/categorySelectionButton"
                     android:layout_width="88dp"
                     android:layout_height="103dp"
                     android:src="@android:color/transparent"
@@ -70,14 +80,14 @@
 
 
             <TextView
-                android:id="@+id/initializeBroadcastHeader"
+                android:id="@+id/categorySelectionHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
-                android:text="@string/initialize_broadcast_header"
+                android:text="@string/category_selection_header"
                 android:textColor="@color/envue_light"
                 android:textSize="36sp"
                 android:textStyle="bold|italic"
@@ -99,7 +109,7 @@
 
 
             <ListView
-                android:id="@+id/broadcastCategoryListView"
+                android:id="@+id/categorySelectionListView"
                 android:layout_width="393dp"
                 android:layout_height="279dp"
                 android:layout_marginStart="8dp"

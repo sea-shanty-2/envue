@@ -10,34 +10,39 @@ import dk.cs.aau.envue.R
 
 
 class MessageListAdapter(private val context: Context, private val messageList: List<Message>,
-                         private val streamerView: Boolean = false) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+                         private val isStreamerView: Boolean = false,
+                         var isLandscape: Boolean = false) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var lastPosition = -1
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = when (viewType) {
-        VIEW_TYPE_MESSAGE_RECEIVED -> if (streamerView) {
-            ReceivedMessageHolder(
-                LayoutInflater.from(parent.context).inflate(
-                    R.layout.viewer_message,
-                    parent,
-                    false
-                )
-            )
-        } else {
-            ReceivedMessageHolder(
-                LayoutInflater.from(parent.context).inflate(
-                    R.layout.other_message,
-                    parent,
-                    false
-                )
-            )
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        // Select layout
+        val layout = if (isLandscape || isStreamerView) R.layout.viewer_message else when (viewType) {
+            VIEW_TYPE_MESSAGE_RECEIVED -> R.layout.other_message
+            else -> R.layout.own_message
         }
-        else -> SentMessageHolder(
-            LayoutInflater.from(parent.context).inflate(
-                R.layout.own_message,
+
+        // Select appropriate message holder
+        return when (viewType) {
+            VIEW_TYPE_MESSAGE_RECEIVED -> ReceivedMessageHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    layout,
+                    parent,
+                    false
+                )
+            )
+            else -> SentMessageHolder(LayoutInflater.from(parent.context).inflate(
+                layout,
                 parent,
                 false
-            )
-        )
+            ))
+        }
+    }
+
+    fun setLandscapeMode(newMode: Boolean) {
+        if (this.isLandscape != newMode) {
+            this.isLandscape = newMode
+            this.notifyDataSetChanged()
+        }
     }
 
     override fun getItemCount(): Int {

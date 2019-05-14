@@ -1,5 +1,6 @@
 package dk.cs.aau.envue
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
@@ -24,6 +25,8 @@ import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.textToBitmap
 import android.os.AsyncTask
 import android.os.Build
+import android.support.design.widget.FloatingActionButton
+import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -32,19 +35,23 @@ import com.google.gson.GsonBuilder
 import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.utility.Event
+import kotlinx.android.synthetic.main.activity_map.*
 import java.net.URL
 import kotlin.random.Random
 
 
-class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
+class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
+
     // private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
     private val STREAM_SOURCE_ID = "stream"
     private val HEATMAP_LAYER_ID = "stream-heat"
     private val HEATMAP_LAYER_SOURCE = "streams"
     private val CIRCLE_LAYER_ID = "earthquakes-circle"
-    private val TAG = "MapActivity"
+    private val TAG = "MapFragment"
     private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID)
     private var limitedEmojis = ArrayList<String>()
+    private var filters: DoubleArray? = null
+    private var eventClicked = false
 
     private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
         override fun doInBackground(vararg params: Style): Void {
@@ -55,6 +62,11 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                 Thread.sleep(   300000)
             }
         }
+    }
+
+    override fun onResume() {
+        eventClicked = false
+        super.onResume()
     }
 
     override fun onStyleLoaded(style: Style) {
@@ -70,6 +82,10 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     private var mMap: MapboxMap? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -104,6 +120,8 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
+        if (eventClicked) { Log.d("MULTICLICK", "Already clicked an event"); return false }  // Disable spam-clicks
+
         val id = marker.title
 
         // Get the ids of all broadcasts in the same event and start a PlayerActivity with this information.
@@ -115,6 +133,8 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
             startActivity(intent)
         }
+
+        eventClicked = true
         return false
     }
 
@@ -205,9 +225,14 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
                     val mostFrequentIndex = emojiIndexCounts.indexOf(emojiIndexCounts.max())
                     val mostFrequentEmoji = limitedEmojis[mostFrequentIndex]
-                    val event = Event(qEvent.broadcasts()?.toTypedArray(), mostFrequentEmoji)
-                    events.add(event)
-                    Log.d("EVENTS", "Added event with $mostFrequentEmoji as the emoji and ${event.center} as the center.")
+
+                    if (filters != null && filters!![mostFrequentIndex] != 1.0) {
+                        continue
+                    } else {
+                        val event = Event(qEvent.broadcasts()?.toTypedArray(), mostFrequentEmoji)
+                        events.add(event)
+                        Log.d("EVENTS", "Added event with $mostFrequentEmoji as the emoji and ${event.center} as the center.")
+                    }
                 }
 
                 activity?.runOnUiThread {
@@ -370,4 +395,18 @@ class MapActivity : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         })
     }
 
+    fun updateFilters(filterArray: DoubleArray?){
+        filters = filterArray
+        var emojiString = ""
+        if (filterArray != null){
+            for (i in 0 until filterArray.size){
+                if (filterArray[i] == 1.0){
+                    emojiString = emojiString + limitedEmojis[i]
+                }
+            }
+
+            Snackbar.make(view!!, emojiString, Snackbar.LENGTH_LONG).show()
+        }
+        updateMap()
+    }
 }

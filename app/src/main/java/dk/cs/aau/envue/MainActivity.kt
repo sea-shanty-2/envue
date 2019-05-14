@@ -1,6 +1,7 @@
 package dk.cs.aau.envue
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -21,6 +22,9 @@ import java.security.NoSuchAlgorithmException
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE_BROADCAST = 42
+    companion object {
+        internal const val SET_FILTERS_REQUEST = 57
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (!AccessToken.isCurrentAccessTokenActive()) {
@@ -45,8 +49,14 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(my_toolbar)
         // Update map on button press
         findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
-            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapActivity).updateMap()
+            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
         }
+
+        // Update map. Needed to handle orientation changes.
+        (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
+
+        // Open category selection on button press
+        filter_categories_button.setOnClickListener() { this.onFilter()}
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -67,7 +77,6 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.RECORD_AUDIO,
                     Manifest.permission.ACCESS_FINE_LOCATION))) {
                 startActivity(Intent(this, InitializeBroadcastActivity::class.java))
-
             }
             true
         }
@@ -76,7 +85,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_map -> {
-            startActivity(Intent(this, MapActivity::class.java))
+            startActivity(Intent(this, MapFragment::class.java))
 
             true
         }
@@ -91,7 +100,6 @@ class MainActivity : AppCompatActivity() {
         if (!arePermissionsGranted(permissions)) {
             requestPermissions(permissions)
         }
-
         return arePermissionsGranted(permissions)
     }
 
@@ -112,4 +120,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun onFilter() {
+        val intent = Intent(this, FilterActivity::class.java)
+        startActivityForResult(intent, SET_FILTERS_REQUEST)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            SET_FILTERS_REQUEST ->
+                if (resultCode == Activity.RESULT_OK) {
+                    var categories = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
+                    //if (categories != null) Snackbar.make(findViewById<FloatingActionButton>(R.id.update_map_button),
+                    // categories!!.contentToString(),
+                    // Snackbar.LENGTH_LONG).show()
+                    if (categories != null && !categories.contains(1.0)) categories = null
+                    (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateFilters(categories)
+                }
+        }
+    }
 }
