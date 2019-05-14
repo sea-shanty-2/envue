@@ -88,8 +88,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         get() = this.nearbyBroadcastsAdapter?.getSelectedPosition() ?: 0
         set(value) {
             this.nearbyBroadcastsAdapter?.apply {
-                val newValue = if (value < 0) this.broadcastList.size - 1 else value
-                this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
+                if (this.broadcastList.isNotEmpty()) {
+                    val newValue = if (value < 0) this.broadcastList.size - 1 else value
+                    this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
+                }
             }
         }
 
