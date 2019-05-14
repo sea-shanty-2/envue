@@ -5,7 +5,7 @@
     <color type="color" name="black_overlay">#66000000</color>
     <color type="color" name="black">#000</color>
     <color type="color" name="otherMessage">#48b3ff</color>
-    <color type="color" name="white">#ffffffff</color>
+    <color type="color" name="white">#FFFFFF</color>
 
     <!-- Envue color palette, change values as needed -->
     <color type="color" name="envue_very_dark">#3D315B</color>

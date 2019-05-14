@@ -40,6 +40,7 @@ import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
 import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.GatewayClient
+import kotlinx.android.synthetic.main.activity_broadcast.view.*
 import okhttp3.WebSocket
 import kotlin.math.absoluteValue
 
@@ -219,6 +220,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
         } else {
             UpdateEventIdsTask(this).execute()
+        }
+
+        // Set stop button listener
+        findViewById<Button>(R.id.stop_broadcast_button).setOnClickListener {
+            this.onBackPressed()
         }
     }
 
