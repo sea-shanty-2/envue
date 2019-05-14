@@ -6,6 +6,7 @@ import com.apollographql.apollo.ApolloQueryCall
 import com.apollographql.apollo.api.Mutation
 import com.apollographql.apollo.api.Operation
 import com.apollographql.apollo.api.Query
+import com.apollographql.apollo.exception.ApolloHttpException
 import com.facebook.AccessToken
 import dk.cs.aau.envue.GatewayAuthenticationQuery
 import dk.cs.aau.envue.interceptors.AuthenticationInterceptor
@@ -40,8 +41,18 @@ class GatewayClient private constructor() {
                     .token(AccessToken.getCurrentAccessToken().token)
                     .build()
 
+                var result : String?
                 // Perform a blocking authentication request
-                return apolloClient.query(query).execute().data()?.authenticate()?.facebook()
+                try {
+                    result = apolloClient.query(query).execute().data()?.authenticate()?.facebook()
+                }
+                catch(e: ApolloHttpException) {
+                    result = null
+                }
+
+                return result
+
+
             }
 
             return null
