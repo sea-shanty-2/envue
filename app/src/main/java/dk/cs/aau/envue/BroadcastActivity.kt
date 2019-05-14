@@ -42,7 +42,11 @@ import android.Manifest
 import android.content.Intent
 import android.support.v4.app.ActivityCompat
 import android.view.View
+import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
+import com.google.gson.Gson
+import dk.cs.aau.envue.communication.packets.ChatStatePacket
 import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
@@ -79,6 +83,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var running = true
     private var currentBitrate: Int = 0
     private lateinit var broadcastId: String
+
+    private var chatEnabled: Boolean = true
+        set(value) {
+            field = value
+            chatList?.visibility = if (value) View.VISIBLE else View.GONE
+            socket?.send(Gson().toJson(ChatStatePacket(value)))
+        }
 
     private inner class BroadcastInformationUpdater(id: String, val activity: BroadcastActivity) :
         AsyncTask<Unit, Unit, Unit>() {
@@ -145,8 +156,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     lastBitrate = bitrate
                     Log.d(TAG, "Update bitrate")
                 }
-                // Update if stream have moved 50 meters
-                if (haversine(lastLocation, currentLocation) > 50) {
+                // Update if stream have moved 5 meters
+                if (haversine(lastLocation, currentLocation) > 5) {
                     update = update.location(lastLocation)
                     toUpdate = true
                     currentLocation = lastLocation
@@ -177,7 +188,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
     }
 
-    override fun onClosed(code: Int) {
+    override fun onChatStateChanged(enabled: Boolean) {
+        // Confirmation of changed chat state
+    }
+
+    override fun onCommunicationClosed(code: Int) {
         if (code != StreamCommunicationListener.NORMAL_CLOSURE_STATUS) {
             Thread.sleep(500)
 
@@ -185,7 +200,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
     }
 
-    override fun onConnected() {
+    override fun onCommunicationIdentified(sequenceId: Int, name: String) {
     }
 
     private fun startCommunicationSocket() {
@@ -387,8 +402,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Get profile
-        val profile = Profile.getCurrentProfile()
 
         // Get supported resolutions
         val previewSize = Camera.open().parameters.previewSize
@@ -415,7 +428,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         // Initialize communication socket
         startCommunicationSocket()
-
         chatList = findViewById(R.id.chat_view)
 
         // Creates fragments for EmojiReactionsFragment
@@ -424,6 +436,23 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         emojiFragment?.let {
             fragmentTransaction.replace(R.id.fragment_container, it)
             fragmentTransaction.commit()
+        }
+
+
+        // Create popup menu when settings clicked
+        findViewById<ImageView>(R.id.settings)?.setOnClickListener {
+            val popup = PopupMenu(this@BroadcastActivity, it)
+            popup.menuInflater.inflate(R.menu.broadcast_settings, popup.menu)
+
+            popup.menu.findItem(R.id.enable_chat)?.apply {
+                isChecked = chatEnabled
+                setOnMenuItemClickListener {
+                    chatEnabled = !chatEnabled
+                    true
+                }
+
+                popup.show()
+            }
         }
 
         // Assign chat adapter and layout manager
@@ -437,7 +466,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
 
-        //joinBroadcast(broadcastId)
+        // Set stop button listener
+        findViewById<ImageView>(R.id.stop_broadcast_button)?.setOnClickListener {
+            this.onBackPressed()
+        }
     }
 
     override fun onResume() {

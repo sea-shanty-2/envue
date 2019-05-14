@@ -1,28 +1,23 @@
 package dk.cs.aau.envue
 
 import android.Manifest
-import android.app.ProgressDialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
-import android.transition.Visibility
-import android.view.View
-import kotlinx.android.synthetic.main.activity_category_selection.*
 import android.util.Log
+import android.view.View
+import android.widget.TextView
+import android.widget.Toast
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.type.BroadcastInputType
 import dk.cs.aau.envue.type.LocationInputType
+import kotlinx.android.synthetic.main.activity_category_selection.*
 
 
 class InitializeBroadcastActivity : CategorySelectionActivity() {
@@ -36,7 +31,7 @@ class InitializeBroadcastActivity : CategorySelectionActivity() {
         categorySelectionButton.setOnClickListener { view ->
             // Inform the user of missing permissions
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Snackbar.make(view, R.string.location_permission_not_granted, Snackbar.LENGTH_LONG)
+                Toast.makeText(view.context, R.string.location_permission_not_granted, Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
             showProgressBar()
@@ -46,11 +41,11 @@ class InitializeBroadcastActivity : CategorySelectionActivity() {
                     // Inform the user of missing location data
                     when {
                         location == null -> {
-                            Snackbar.make(view, R.string.did_not_receive_location, Snackbar.LENGTH_LONG)
+                            Toast.makeText(view.context, R.string.did_not_receive_location, Toast.LENGTH_LONG).show()
                             showContainer()
                         }
                         getSelectedCategories().isEmpty() -> {
-                            Snackbar.make(view, R.string.no_categories_chosen, Snackbar.LENGTH_LONG)
+                            Toast.makeText(view.context, R.string.no_categories_chosen, Toast.LENGTH_LONG).show()
                             showContainer()
                         }
                         else -> createBroadcast(location, getCategoryVector(getSelectedCategories()))
@@ -58,6 +53,8 @@ class InitializeBroadcastActivity : CategorySelectionActivity() {
                 }
             }
         }
+
+        findViewById<TextView>(R.id.categorySelectionHeader).text = resources.getString(R.string.initialize_broadcast_header)
     }
 
     private fun showContainer() {
@@ -90,7 +87,7 @@ class InitializeBroadcastActivity : CategorySelectionActivity() {
 
                     // Check if response data is null
                     if (data == null) {
-                        Snackbar.make(this@InitializeBroadcastActivity.currentFocus, "Could not create broadcast.", Snackbar.LENGTH_LONG)
+                        Toast.makeText(this@InitializeBroadcastActivity.currentFocus?.context, "Could not create broadcast.", Toast.LENGTH_LONG).show()
                         showContainer()
                         return
                     }
@@ -109,7 +106,7 @@ class InitializeBroadcastActivity : CategorySelectionActivity() {
                 }
 
                 override fun onFailure(e: ApolloException) {
-                    Snackbar.make(this@InitializeBroadcastActivity.currentFocus, "Could not create broadcast.", Snackbar.LENGTH_LONG)
+                    Toast.makeText(this@InitializeBroadcastActivity.currentFocus?.context, "Could not create broadcast.", Toast.LENGTH_LONG).show()
                     Log.d(tag, e.message)
                     finish()
                 }
