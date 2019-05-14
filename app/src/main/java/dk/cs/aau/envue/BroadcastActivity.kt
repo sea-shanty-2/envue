@@ -465,6 +465,12 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         BroadcastInformationUpdater(id, this).execute()
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
+
+        //joinBroadcast(broadcastId)
+        // Set stop button listener
+        findViewById<TextView>(R.id.stop_broadcast_button).setOnClickListener {
+            this.onBackPressed()
+        }
     }
 
     override fun onResume() {

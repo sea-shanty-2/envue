@@ -119,7 +119,7 @@
                         android:ems="10"
                         android:hint="@string/write_a_message"
                         android:inputType="textCapSentences"
-                        android:imeOptions="actionDone"
+                        android:imeOptions="actionSend"
                         android:singleLine="true"
                         android:text=""/>
                 <Button
