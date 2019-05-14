@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
@@ -52,6 +53,8 @@ class InitializeBroadcastActivity : CategorySelectionActivity() {
                 }
             }
         }
+
+        findViewById<TextView>(R.id.categorySelectionHeader).text = resources.getString(R.string.initialize_broadcast_header)
     }
 
     private fun showContainer() {

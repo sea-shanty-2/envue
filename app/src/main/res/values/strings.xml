@@ -55,7 +55,7 @@
     <string name="notification_channel_description">Envue notification channel</string>
 
     <!-- Filter -->
-    <string name="title_activity_filter">FilterActivity</string>
+    <string name="title_activity_filter">What do you want to see?</string>
     <string name="accept_filters_button_text">OK</string>
     <string name="filter_response_key">FILTER_RESPONSE_KEY</string>
 
