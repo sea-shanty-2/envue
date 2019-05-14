@@ -354,9 +354,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             imm.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
             addLocalMessage()
         }
-
-
-        findViewById<EditText>(R.id.editText).setOnEditorActionListener { _, actionId, _ ->
+        
+        findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
             var handle = false
             if(actionId == EditorInfo.IME_ACTION_SEND) {
                 findViewById<Button>(R.id.button_chatbox_send).performClick()
