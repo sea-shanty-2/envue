@@ -538,7 +538,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val left =
             leftTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
 
-        if (joined.isEmpty() && left.isEmpty()) { return }  // No reason to show the statistics page if there were no viewers
+        //if (joined.isEmpty() && left.isEmpty()) { return }  // No reason to show the statistics page if there were no viewers
 
         val intent = Intent(this, StatisticsActivity::class.java).apply {
             putExtra("joinedTimestamps", joined)

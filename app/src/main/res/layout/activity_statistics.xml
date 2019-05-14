@@ -5,14 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".StatisticsActivity">
-
+<LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:weightSum="8">
     <TextView
         android:id="@+id/viewership_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_weight="0.5"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:background="@android:color/transparent"
-        android:text="Viewership"
+        android:text="Viewers"
+        android:layout_gravity="center"
         android:textAlignment="center"
         android:textSize="36sp"
         app:layout_constraintTop_toTopOf="parent" />
@@ -20,8 +22,10 @@
     <fragment
         android:id="@+id/viewership_fragment"
         android:name="dk.cs.aau.envue.ViewershipFragment"
-        android:layout_width="412dp"
-        android:layout_height="247dp"
+        android:layout_width="match_parent"
+        android:layout_gravity="center"
+        android:layout_height="0dp"
+        android:layout_weight="3"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
@@ -29,26 +33,46 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/viewership_text" />
 
+    <TextView
+            android:id="@+id/test"
+            android:layout_width="wrap_content"
+            android:layout_weight="0.5"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@android:color/transparent"
+            android:text="Leaderboard"
+            android:layout_gravity="center"
+            android:textAlignment="center"
+            android:textSize="36sp"
+            app:layout_constraintTop_toTopOf="parent" />
+
     <fragment
         android:id="@+id/leaderboard_fragment"
         android:name="dk.cs.aau.envue.LeaderboardFragment"
-        android:layout_width="411dp"
-        android:layout_height="242dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3.5"
         android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/viewership_fragment" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/close_statistics_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:clickable="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@android:drawable/ic_menu_close_clear_cancel"/>
+            android:id="@+id/close_statistics_button"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" android:focusable="true"/>
+</LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
