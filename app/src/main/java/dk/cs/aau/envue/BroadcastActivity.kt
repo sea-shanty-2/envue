@@ -51,6 +51,7 @@ import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.sign
 
 
@@ -438,7 +439,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             fragmentTransaction.commit()
         }
 
-
         // Create popup menu when settings clicked
         findViewById<ImageView>(R.id.settings)?.setOnClickListener {
             val popup = PopupMenu(this@BroadcastActivity, it)
@@ -461,6 +461,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
+
+        // Enable acceleration sensor
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
         BroadcastInformationUpdater(id, this).execute()
@@ -531,40 +533,39 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun updateViewerCount() {
-        val viewerQuery = BroadcastViewerNumberQuery.builder().id(broadcastId).build()
-        GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastViewerNumberQuery.Data>() {
-            override fun onResponse(response: Response<BroadcastViewerNumberQuery.Data>) {
+        val viewerQuery = BroadcastStatsQuery.builder().id(broadcastId).build()
+        GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastStatsQuery.Data>() {
+            override fun onResponse(response: Response<BroadcastStatsQuery.Data>) {
                 runOnUiThread {
-                    val viewerCount = response.data()?.broadcasts()?.viewer_count()
-                    if (viewerCount != null) {
-                        // Update viewer count in activity
-                        findViewById<TextView>(R.id.viewer_count).text = viewerCount.toString()
-                        Log.d(
-                            "VIEWERCOUNT",
-                            "Successfully received viewer count for $broadcastId which is ${viewerCount}"
-                        )
-                    } else {
-                        findViewById<TextView>(R.id.viewer_count).text = "?"
+                    val broadcast = response.data()?.broadcasts()?.single()
+
+                    broadcast?.let {
+                        // Update viewer count
+                        findViewById<TextView>(R.id.viewer_count)?.apply {
+                            text = it.current_viewer_count().toString()
+                            visibility = View.VISIBLE
+                        }
+
+                        // Update like ratio
+                        findViewById<TextView>(R.id.like_ratio)?.apply {
+                            val ratingCount = broadcast.positiveRatings() + broadcast.negativeRatings() * 1.0f
+                            if (ratingCount > 0) {
+                                visibility = View.VISIBLE
+                                text = context.getString(R.string.percentage, (broadcast.positiveRatings() / ratingCount * 100).roundToInt())
+                            }
+                        }
                     }
                 }
             }
 
             override fun onFailure(e: ApolloException) {
-                runOnUiThread {
-                    findViewById<TextView>(R.id.viewer_count).text = "?"
-                }
                 Log.d("VIEWERCOUNT", "Something went wrong while fetching viewer numbers for $broadcastId: $e")
             }
         })
     }
 
-    private fun startStatisticsActivity(
-        joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
-        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?
-    ) {
-
-        //leaveBroadcast(broadcastId)
-
+    private fun startStatisticsActivity(joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
+                                        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?) {
         val joined =
             joinedTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
         val left =

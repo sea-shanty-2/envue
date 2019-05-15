@@ -677,12 +677,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
         GatewayClient.mutate(leaveMutation).enqueue(object : ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
             override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
-                continueWith()  // Callback
+                continueWith()
             }
 
             override fun onFailure(e: ApolloException) {
                 Log.d("LEAVE", "Something went wrong while leaving $id: $e")
-                // We don't need to show a toast here
             }
         })
     }
