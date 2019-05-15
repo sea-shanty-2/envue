@@ -37,7 +37,7 @@
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:layout_marginStart="4dp"
-                  android:drawableStart="@drawable/ic_thumb_up_24dp"
+                  android:drawableStart="@drawable/ic_mood_24dp"
                   android:visibility="gone"
                   android:text="@string/n_a" />
     </LinearLayout>
