@@ -660,7 +660,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Leave current broadcast, join the new one
         leaveBroadcast(broadcastId, continueWith = {
-            broadcastId = id; joinBroadcast(id)
+            joinBroadcast(id)
         })
 
         // Update player source
