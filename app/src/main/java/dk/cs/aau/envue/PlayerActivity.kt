@@ -470,7 +470,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun showRecommendation(broadcastId: String) {
         if (recommendedBroadcastId == broadcastId) {
-            // Do not show recommendation, we just showed it
             // TODO: Do not show if the user has rejected the recommendation
             return
         }
