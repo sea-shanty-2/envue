@@ -14,7 +14,7 @@ class NearbyBroadcastsAdapter(var broadcastList: List<EventBroadcastsWithStatsQu
         val broadcast = broadcastList[position]
         holder.itemView.setOnClickListener { onClick(broadcast.id()) }
 
-        return (holder as NearbyBroadcastHolder).bind(broadcast, recommendedBroadcastId?.equals(broadcast) ?: false,
+        return (holder as NearbyBroadcastHolder).bind(broadcast, recommendedBroadcastId?.equals(broadcast.id()) ?: false,
             currentBroadcastId?.equals(broadcast.id()) ?: false)
     }
 
