@@ -3,12 +3,10 @@ package dk.cs.aau.envue
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AlertDialog
@@ -19,7 +17,6 @@ import android.text.InputType
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
@@ -392,10 +389,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         displayNameDialog.show()
     }
 
-    private fun sendReport(Message: EditText) {
-        val test = Message.text.toString()
-        val reportMessage = BroadcastReportMutation.builder().id(broadcastId).message(test).build()
-
+    private fun sendReport(message: EditText) {
+        val reportMessage = BroadcastReportMutation.builder().id(broadcastId).message(message.text.toString()).build()
         GatewayClient.mutate(reportMessage).enqueue(object : ApolloCall.Callback<BroadcastReportMutation.Data>() {
             override fun onResponse(response: Response<BroadcastReportMutation.Data>) {
                 Log.e("Report", "SuccessFully reported stream")
@@ -407,7 +402,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                     ).show()
                 }
             }
-
             override fun onFailure(e: ApolloException) {
                 Log.e("Report", "Unsuccessfully reported stream")
                 runOnUiThread {
@@ -485,6 +479,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun showRecommendation(broadcastId: String) {
+        if (recommendedBroadcastId == broadcastId) {
+            // Do not show recommendation, we just showed it
+            // TODO: Do not show if the user has rejected the recommendation
+            return
+        }
+
         recommendedBroadcastId = broadcastId
         recommendationView?.let { transitionView(it, 0f, 1f, View.VISIBLE) }
         updateRecommendationThumbnail()
@@ -602,12 +602,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         GatewayClient.query(eventQuery).enqueue(object : ApolloCall.Callback<EventBroadcastsWithStatsQuery.Data>() {
             override fun onResponse(response: Response<EventBroadcastsWithStatsQuery.Data>) {
                 val broadcasts = response.data()?.events()?.containing()?.broadcasts()?.toList()
+                val recommendedId = response.data()?.events()?.containing()?.recommended()?.id()
 
-                if (broadcasts != null) {
-                    nearbyBroadcasts = broadcasts
-                } else {
-                    Log.d("EVENTUPDATE", "No broadcasts in this event (broadcast id was $broadcastId).")
-                }
+                // Update nearby broadcasts
+                broadcasts?.let { nearbyBroadcasts = it }
+
+                // Show new recommendation
+                recommendedId?.let { showRecommendation(it) }
             }
 
             override fun onFailure(e: ApolloException) {

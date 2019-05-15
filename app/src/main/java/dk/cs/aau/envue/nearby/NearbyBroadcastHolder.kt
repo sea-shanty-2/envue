@@ -8,6 +8,7 @@ import android.widget.TextView
 import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.EventBroadcastsWithStatsQuery
 import dk.cs.aau.envue.R
+import kotlin.math.roundToInt
 
 class NearbyBroadcastHolder internal constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private var thumbnail: ImageView? = itemView.findViewById(R.id.broadcast_thumbnail)
@@ -21,11 +22,11 @@ class NearbyBroadcastHolder internal constructor(itemView: View) : RecyclerView.
         recommendedView?.visibility = if (recommended) View.VISIBLE else View.GONE
         viewerCount?.text = broadcast.viewer_count().toString()
 
-        val ratingCount = broadcast.positiveRatings() + broadcast.negativeRatings()
+        val ratingCount = broadcast.positiveRatings() + broadcast.negativeRatings() * 1.0f
         if (ratingCount > 0) {
             likeRatio?.apply {
                 visibility = View.VISIBLE
-                text = context.getString(R.string.percentage, broadcast.positiveRatings() / ratingCount * 100.0)
+                text = context.getString(R.string.percentage, (broadcast.positiveRatings() / ratingCount * 100).roundToInt())
             }
         }
 
