@@ -167,7 +167,7 @@
     <string name="_0">0</string>
     <string name="react">React</string>
     <string name="report">Report</string>
-    <string name="percentage"><xliff:g id="number" example="100.123">%1d</xliff:g></string>
+    <string name="percentage">%d%%</string>
     <string name="rank">Rank:</string>
     <string name="percentile">Percentile:</string>
     <string name="total_score">Total score:</string>
