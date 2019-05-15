@@ -281,14 +281,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
 
             // Create popup window
-            PopupWindow(
-                view,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                true
-            ).apply {
+            PopupWindow(view, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, true).apply {
                 elevation = 20f
-                showAtLocation(playerView, Gravity.CENTER, 0, playerView?.height?.plus(this.height)?.times(-1) ?: 0)
+                showAtLocation(playerView, Gravity.CENTER, 0, 0)
             }
         }
 
@@ -324,11 +319,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         chatList?.apply {
             adapter = chatAdapter
             layoutManager = LinearLayoutManager(this@PlayerActivity).apply { stackFromEnd = true }
-        }
-
-        // When in horizontal we want to be able to click through the recycler
-        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            exoPlayerViewOnTouch()
         }
 
         // Make sure we can detect swipes in portrait mode as well
@@ -608,7 +598,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 broadcasts?.let { nearbyBroadcasts = it }
 
                 // Show new recommendation
-                recommendedId?.let { showRecommendation(it) }
+                recommendedId?.let { runOnUiThread { showRecommendation(it) } }
             }
 
             override fun onFailure(e: ApolloException) {
@@ -618,6 +608,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun changeBroadcastOnSwipe(event: MotionEvent) {
+        if (nearbyBroadcasts.size < 2) {
+            return
+        }
+
         return when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 fingerX1 = event.x  // Maybe the start of a swipe
@@ -660,7 +654,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Leave current broadcast, join the new one
         leaveBroadcast(broadcastId, continueWith = {
-            broadcastId = id; joinBroadcast(id)
+            joinBroadcast(id)
         })
 
         // Update player source
@@ -677,12 +671,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
         GatewayClient.mutate(leaveMutation).enqueue(object : ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
             override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
-                continueWith()  // Callback
+                continueWith()
             }
 
             override fun onFailure(e: ApolloException) {
                 Log.d("LEAVE", "Something went wrong while leaving $id: $e")
-                // We don't need to show a toast here
             }
         })
     }

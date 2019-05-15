@@ -15,12 +15,12 @@ import okio.ByteString
 
 class StreamCommunicationListener(private val communicationListener: CommunicationListener,
                                   private val channelId: String) : WebSocketListener() {
-    private fun identifyWithName(webSocket: WebSocket, name: String) {
+    private fun identifyWithName(webSocket: WebSocket, name: String, uniqueId: String) {
         webSocket.send(Gson().toJson(
             HandshakePacket(
                 name,
                 channelId,
-                Profile.getCurrentProfile().id
+                uniqueId
             )
         ))
     }
@@ -30,7 +30,10 @@ class StreamCommunicationListener(private val communicationListener: Communicati
         GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
             override fun onResponse(response2: com.apollographql.apollo.api.Response<ProfileQuery.Data>) {
                 val profile = response2.data()?.accounts()?.me()
-                identifyWithName(webSocket, profile?.displayName() ?: "Anonymous")
+
+                profile?.let {
+                    identifyWithName(webSocket, it.displayName(), it.id())
+                }
             }
 
             override fun onFailure(e: ApolloException) {}
