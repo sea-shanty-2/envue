@@ -618,6 +618,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun changeBroadcastOnSwipe(event: MotionEvent) {
+        if (nearbyBroadcasts.size < 2) {
+            return
+        }
+
         return when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 fingerX1 = event.x  // Maybe the start of a swipe
