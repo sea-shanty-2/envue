@@ -608,7 +608,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 broadcasts?.let { nearbyBroadcasts = it }
 
                 // Show new recommendation
-                recommendedId?.let { showRecommendation(it) }
+                recommendedId?.let { runOnUiThread { showRecommendation(it) } }
             }
 
             override fun onFailure(e: ApolloException) {
