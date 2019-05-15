@@ -375,8 +375,12 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
             override fun onResponse(response: Response<EventWithIdQuery.Data>) {
                 val ids = response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }
+                var recommended : String? = response.data()?.events()?.containing()?.recommended()?.id()
+
+                if (recommended == null) recommended = id
+
                 if (ids != null) {
-                    callback(id, ids as ArrayList<String>)
+                    callback(recommended, ids as ArrayList<String>)
                 }
             }
 

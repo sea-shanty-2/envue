@@ -4,6 +4,7 @@ query EventWithIdQuery($id: ID!) {
             broadcasts {
                 id
             }
+            recommended{id}
         }
     }
 }
