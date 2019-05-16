@@ -183,6 +183,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun startCommunicationSocket() {
+        messages.clear()
+        runOnUiThread { chatAdapter?.notifyDataSetChanged() }
+
         socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
     }
 
