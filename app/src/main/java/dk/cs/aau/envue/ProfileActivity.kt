@@ -124,17 +124,19 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun openDialog() {
-        val displayNameDialog = AlertDialog.Builder(this)
-        displayNameDialog.setTitle("Change display name")
+        val input = EditText(this@ProfileActivity).apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+            setText(profileNameView?.text?.toString())
+        }
 
-        val input = EditText(this)
-        input.inputType = InputType.TYPE_CLASS_TEXT
-        input.setText(profileNameView?.text?.toString())
-        displayNameDialog.setView(input)
-
-        displayNameDialog.setPositiveButton("OK") { _, _ -> acceptDialog(input)}
-        displayNameDialog.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-        displayNameDialog.show()
+        AlertDialog.Builder(this).apply {
+            setTitle("Change display name")
+            setView(input)
+            setPositiveButton("OK") { _, _ -> acceptDialog(input)}
+            setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+            
+            show()
+        }
 
     }
     private fun acceptDialog(input : EditText) {
