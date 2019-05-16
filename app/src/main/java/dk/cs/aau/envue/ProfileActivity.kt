@@ -47,14 +47,7 @@ class ProfileActivity : AppCompatActivity() {
 
         GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
             override fun onResponse(response: Response<ProfileQuery.Data>) {
-                val profile = response.data()?.accounts()?.me()
-
-                if (profile != null) {
-                    onProfileFetch(profile!!)
-                }
-                else {
-                    TODO("Handle null response")
-                }
+                response.data()?.accounts()?.me()?.let { onProfileFetch(it) }
             }
 
             override fun onFailure(e: ApolloException) = onProfileFetchFailure(e)
@@ -64,8 +57,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun onProfileFetch(profile: ProfileQuery.Me) {
         runOnUiThread {
-            if (profile.categories() != null)
-                oneHotVectorToEmoji(profile.categories()!!)
+            profile.categories()?.let { oneHotVectorToEmoji(it) }
 
             profileNameView.text = profile.displayName()
             container.visibility = View.VISIBLE
@@ -129,16 +121,15 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         currentInterestsView.text = temp
-
     }
 
     private fun openDialog() {
-
         val displayNameDialog = AlertDialog.Builder(this)
         displayNameDialog.setTitle("Change display name")
 
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_TEXT
+        input.setText(profileNameView?.text?.toString())
         displayNameDialog.setView(input)
 
         displayNameDialog.setPositiveButton("OK") { _, _ -> acceptDialog(input)}
