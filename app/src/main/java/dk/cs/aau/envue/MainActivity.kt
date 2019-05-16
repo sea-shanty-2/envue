@@ -36,14 +36,28 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(my_toolbar)
-
         // Create fragments
         mapFragment = MapFragment()
         profileFragment = ProfileFragment()
 
-        // Use map as initial fragment
-        supportFragmentManager.beginTransaction().replace(R.id.main_fragment, mapFragment).commit()
+        val adapter = BottomBarAdapter(supportFragmentManager)
+        adapter.addFragment(mapFragment)
+        adapter.addFragment(profileFragment)
+        view_pager?.adapter = adapter
+
+        nav_view?.setOnNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.action_profile -> {
+                    view_pager?.currentItem = 1
+                    true
+                }
+                R.id.action_map -> {
+                    view_pager?.currentItem = 0
+                    true
+                }
+                else -> false
+            }
+        }
 
         // Update map on button press
         findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
@@ -65,7 +79,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_profile -> {
-            supportFragmentManager.beginTransaction().replace(R.id.main_fragment, profileFragment).commit()
+            view_pager?.currentItem = 1
+
             true
         }
         R.id.action_broadcast -> {
@@ -82,7 +97,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_map -> {
-            supportFragmentManager.beginTransaction().add(R.id.main_fragment, mapFragment).commit()
+            view_pager?.currentItem = 0
 
             true
         }
@@ -129,7 +144,7 @@ class MainActivity : AppCompatActivity() {
                 if (resultCode == Activity.RESULT_OK) {
                     var categories = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
                     if (categories != null && !categories.contains(1.0)) categories = null
-                    (supportFragmentManager.findFragmentById(R.id.main_fragment) as MapFragment).updateFilters(categories)
+                    // (supportFragmentManager.findFragmentById(R.id.main_fragment) as MapFragment).updateFilters(categories)
                 }
         }
     }
