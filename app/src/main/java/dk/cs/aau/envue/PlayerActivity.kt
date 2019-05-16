@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
+import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -21,17 +22,17 @@ import android.widget.*
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.google.android.exoplayer2.DefaultRenderersFactory
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.Player.EventListener
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.Player.STATE_BUFFERING
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
@@ -51,8 +52,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private val minScrollDistance = 150  // Minimum distance for a swipe to be registered
 
     // Player
-    private var playerView: SimpleExoPlayerView? = null
-    private var player: SimpleExoPlayer? = null
+    private var playerView: PlayerView? = null
+    private var player: ExoPlayer? = null
     private var playWhenReady = true
     private var currentWindow = 0
     private var playbackPosition: Long = 0
@@ -199,8 +200,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Get the broadcastId as sent from the MapFragment (determined by which event was pressed)
         broadcastId = intent.getStringExtra("broadcastId") ?: "main"
-        // TODO: Load nearby broadcasts (with stats) from intent
-        // eventIds = intent.getStringArrayListExtra("eventIds") ?: ArrayList<String>().apply { add("main") }
 
         // Initially disable the ability to send messages
         communicationConnected = false
@@ -326,7 +325,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         // Make sure we can detect swipes in portrait mode as well
-        (playerView as SimpleExoPlayerView).setOnTouchListener { _, event ->
+        (playerView as PlayerView).setOnTouchListener { _, event ->
             changeBroadcastOnSwipe(event)
             false
         }
@@ -408,42 +407,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 }
             }
         })
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun exoPlayerViewOnTouch() {
-        var isPressed = true
-        var startX = 0F
-        var startY = 0F
-        val exoPlayer = playerView
-        val chatView = chatList
-        exoPlayer?.setOnClickListener { }
-        chatView?.setOnTouchListener { _, event ->
-            changeBroadcastOnSwipe(event)  // Detect swipes
-            if (event?.action == MotionEvent.ACTION_DOWN) {
-                startX = event.x
-                startY = event.y
-
-            } else if (event?.action == MotionEvent.ACTION_UP) {
-                val endX = event.x
-                val endY = event.y
-
-                if (Math.abs(startX - endX) < 5 || Math.abs(startY - endY) < 5) {
-                    if (isPressed) {
-                        exoPlayer?.controllerHideOnTouch = false
-                        player?.playWhenReady = false
-                        player?.playbackState
-                        isPressed = false
-                    } else {
-                        exoPlayer?.controllerHideOnTouch = true
-                        player?.playWhenReady = true
-                        player?.playbackState
-                        isPressed = true
-                    }
-                }
-            }
-            false
-        }
     }
 
     private fun addReaction(reaction: String) {
@@ -586,10 +549,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-        when (playbackState) {
-            ExoPlayer.STATE_READY -> loading?.visibility = View.GONE
-            ExoPlayer.STATE_BUFFERING -> loading?.visibility = View.VISIBLE
-        }
+        loading?.visibility = if (playbackState == Player.STATE_BUFFERING) View.VISIBLE else View.GONE
     }
 
     private fun updateEventIds() {
@@ -640,12 +600,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun getHlsUri(fromBroadcastId: String) = Uri.parse("https://envue.me/relay/$fromBroadcastId")
 
-    private fun getDataSource() =
-        DefaultDataSourceFactory(this, Util.getUserAgent(this, "Exo2"), DefaultBandwidthMeter())
+    private fun getDataSource() = DefaultHttpDataSourceFactory(Util.getUserAgent(this, "Envue"))
 
     private fun changePlayerSource(toBroadcastId: String) {
         // Create media source
-        val mediaSource = HlsMediaSource(getHlsUri(toBroadcastId), getDataSource(), Handler(), null)
+        val mediaSource = HlsMediaSource.Factory(getDataSource()).createMediaSource(getHlsUri(toBroadcastId))
         player?.apply {
             seekTo(currentWindow, playbackPosition)
             prepare(mediaSource, true, false)
@@ -667,5 +626,4 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Start communication socket with new broadcastId
         startCommunicationSocket()
     }
-
 }
