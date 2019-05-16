@@ -48,7 +48,7 @@ class CreateEmoji {
 
         imageView.layoutParams = emoji
 
-        val ottLayer = FrameLayout(activity!!)
+        val ottLayer = FrameLayout(activity)
         ottLayer.addView(imageView)
         attachingView?.addView(ottLayer)
         createdOttLayer = ottLayer

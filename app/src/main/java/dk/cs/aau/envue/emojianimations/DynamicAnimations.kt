@@ -10,6 +10,7 @@ import android.view.animation.AnimationSet
 import android.view.animation.TranslateAnimation
 import dk.cs.aau.envue.random
 import android.os.Handler
+import kotlin.math.absoluteValue
 
 
 class DynamicAnimation {
@@ -18,8 +19,9 @@ class DynamicAnimation {
         val startingPoints = getRandomWidth(parent, emoji.width)
         val parentHeight = parent.height / 6
         val randomYStartCoordinate:Float
+
         if(parentHeight > emoji.height) {
-             randomYStartCoordinate = (random.nextInt(parentHeight - emoji.height) + emoji.height).toFloat()
+             randomYStartCoordinate = (random.nextInt(parentHeight - emoji.height).absoluteValue + emoji.height).toFloat()
         }
         else {randomYStartCoordinate = 0F}
         // Says in which direction the animation should go. fromY coordinate toY coordinate
@@ -70,10 +72,10 @@ class DynamicAnimation {
         val height = parent.height
         val x: Int
         x = if(width > emojiWidth) {
-            random.nextInt(width - emojiWidth) + emojiWidth
+            random.nextInt(width - emojiWidth).absoluteValue + emojiWidth
         }
         else{
-            0
+            10
         }
         return intArrayOf(x, height)
     }
