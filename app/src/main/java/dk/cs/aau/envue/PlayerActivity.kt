@@ -39,6 +39,7 @@ import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
 import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
+import dk.cs.aau.envue.shared.Broadcast
 import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
 import kotlin.math.absoluteValue
@@ -234,7 +235,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         changePlayerSource(broadcastId)
 
         // Update viewer counts
-        joinBroadcast(broadcastId)
+        Broadcast.join(broadcastId)
 
         // Bind content
         bindContentView()
@@ -546,7 +547,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     override fun onDestroy() {
-        leaveBroadcast(broadcastId) { /* Do nothing */ }
+        Broadcast.leave()
         updater.cancel(true)
         super.onDestroy()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
@@ -655,11 +656,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun changeBroadcast(id: String) {
         broadcastId = id
-
-        // Leave current broadcast, join the new one
-        leaveBroadcast(broadcastId, continueWith = {
-            joinBroadcast(id)
-        })
+        Broadcast.join(broadcastId)
 
         // Update player source
         changePlayerSource(broadcastId)
@@ -671,36 +668,4 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         startCommunicationSocket()
     }
 
-    private fun leaveBroadcast(id: String, continueWith: () -> Unit) {
-        val leaveMutation = BroadcastLeaveMutation.builder().id(id).build()
-        GatewayClient.mutate(leaveMutation).enqueue(object : ApolloCall.Callback<BroadcastLeaveMutation.Data>() {
-            override fun onResponse(response: Response<BroadcastLeaveMutation.Data>) {
-                continueWith()
-            }
-
-            override fun onFailure(e: ApolloException) {
-                Log.d("LEAVE", "Something went wrong while leaving $id: $e")
-            }
-        })
-    }
-
-    private fun joinBroadcast(id: String) {
-        val joinMutation = BroadcastJoinMutation.builder().id(id).build()
-        GatewayClient.mutate(joinMutation).enqueue(object : ApolloCall.Callback<BroadcastJoinMutation.Data>() {
-            override fun onResponse(response: Response<BroadcastJoinMutation.Data>) {
-                // No action required
-            }
-
-            override fun onFailure(e: ApolloException) {
-                Log.d("JOIN", "Something went wrong while joining $id: $e")
-                // Do we need to show a toast here? As long as the player starts, it does not matter
-                runOnUiThread {
-                    Toast.makeText(
-                        this@PlayerActivity, "Something went wrong while joining $id \uD83D\uDE22",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        })
-    }
 }
