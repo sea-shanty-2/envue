@@ -35,7 +35,6 @@ class Broadcast {
 
             val mutation = BroadcastLeaveMutation.builder().id(id).build()
             GatewayClient.mutate(mutation).enqueue(object: ApolloCall.Callback<BroadcastLeaveMutation.Data?>() {
-
                 override fun onResponse(response: Response<BroadcastLeaveMutation.Data?>) {
                     this@Companion.id = null
                     callback?.onResponse(response)
