@@ -116,7 +116,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     override fun onMarkerClick(marker: Marker): Boolean {
         if (System.currentTimeMillis() - eventClickedAt < 1000) {
-            return false;
+            return false
         }
 
         val id = marker.title
@@ -327,9 +327,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         val eventQuery = EventWithIdQuery.builder().id(id).build()
         GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
             override fun onResponse(response: Response<EventWithIdQuery.Data>) {
-                val ids = response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }
-                if (ids != null) {
-                    callback(id, ids as ArrayList<String>)
+                response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }?.let {
+                    callback(id, it as ArrayList<String>)
                 }
             }
 

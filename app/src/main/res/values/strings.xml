@@ -181,5 +181,6 @@
     <string name="play">Play</string>
     <string name="chat_disabled">The broadcaster has disabled chat and is not able to see messages.</string>
     <string name="chat_enabled">The broadcaster has enabled chat and is now able to see messages.</string>
+    <string name="unable_to_retrieve_location">Unable to retrieve your location, please try again.</string>
 
 </resources>

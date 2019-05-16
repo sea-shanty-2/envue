@@ -103,6 +103,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         private lateinit var lastLocation: LocationInputType
         private var lastStability = 0.0
         private var lastBitrate = 0
+        private val MAX_LOCATION_RETRIEVAL_ATTEMPTS = 50
 
         override fun doInBackground(vararg params: Unit) {
             var stability: Double
@@ -112,10 +113,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
             var count = 0
 
-            while (true) {
-
-                if (isCancelled) { break }
-
+            while (!isCancelled) {
                 fusedLocationClient.lastLocation.apply {
                     addOnSuccessListener { location: Location? ->
                         if (location != null) {
@@ -131,12 +129,17 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 }
 
                 if (!::currentLocation.isInitialized) {
-                    count++
-                    if (count > 50) {
-                        Log.d(TAG, "Too many location tries.")
-                        //TODO: Could not get location error
+                    if (count++ > MAX_LOCATION_RETRIEVAL_ATTEMPTS) {
+                        Log.e(TAG, "Too many location tries.")
+                        runOnUiThread {
+                            Toast.makeText(this@BroadcastActivity, getString(R.string.unable_to_retrieve_location), Toast.LENGTH_LONG).show()
+                            finish()
+                        }
+
+                        return
                     }
-                    Thread.sleep(10)
+
+                    Thread.sleep(1000)
                     continue
                 }
 
@@ -146,12 +149,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 lock.withLock { bitrate = currentBitrate }
 
                 var update = typeBuilder
-                var toUpdate = false
 
                 // Update if above ten percent difference
                 if (stability != lastStability && abs(stability - lastStability) / ((stability + lastStability) / 2) > 0.1) {
                     update = update.stability(stability)
-                    toUpdate = true
                     lastStability = stability
                     Log.d(TAG, "Update stability")
                 }
@@ -159,7 +160,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 // Update if above ten percent difference
                 if (bitrate != lastBitrate && abs(bitrate - lastBitrate) / ((bitrate + lastBitrate) / 2) > 0.1) {
                     update = update.bitrate(bitrate)
-                    toUpdate = true
                     lastBitrate = bitrate
                     Log.d(TAG, "Update bitrate")
                 }
@@ -167,30 +167,27 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 // Update if stream has moved 10 meters
                 if (haversine(lastLocation, currentLocation) > 10) {
                     update = update.location(currentLocation)
-                    toUpdate = true
                     lastLocation = currentLocation
                     Log.d(TAG, "Update Location")
                 }
 
-                if (toUpdate) {
-                    val query = queryBuilder.broadcast(update.build()).build()
+                val query = queryBuilder.broadcast(update.build()).build()
 
-                    GatewayClient.mutate(query).enqueue(object : ApolloCall.Callback<BroadcastUpdateMutation.Data>() {
-                        override fun onResponse(response: Response<BroadcastUpdateMutation.Data>) {
-                            Log.d(TAG, response.data()?.broadcasts()?.update()?.id())
-                        }
+                GatewayClient.mutate(query).enqueue(object : ApolloCall.Callback<BroadcastUpdateMutation.Data>() {
+                    override fun onResponse(response: Response<BroadcastUpdateMutation.Data>) {
+                        Log.d(TAG, response.data()?.broadcasts()?.update()?.id())
+                    }
 
-                        override fun onFailure(e: ApolloException) {
-                            Log.d(TAG, e.message)
-                        }
-                    })
-                }
+                    override fun onFailure(e: ApolloException) {
+                        Log.d(TAG, e.message)
+                    }
+                })
 
                 updateViewerCount()
 
                 count = 0
 
-                Thread.sleep(10000)
+                Thread.sleep(15000)
             }
         }
     }
