@@ -117,7 +117,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     override fun onMarkerClick(marker: Marker): Boolean {
         if (System.currentTimeMillis() - eventClickedAt < 1000) {
-            return false;
+            return false
         }
 
         val id = marker.title
