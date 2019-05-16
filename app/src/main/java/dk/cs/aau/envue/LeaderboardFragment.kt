@@ -34,12 +34,12 @@ class LeaderboardFragment : Fragment() {
             override fun onResponse(response: Response<LeaderboardQuery.Data>) {
                 val me = response.data()?.accounts()?.me() ?: return
 
-                val rank = me?.rank() ?: 0
-                val total = me?.score()
-                val percentile = me?.percentile() ?: 0.0
+                val rank = me.rank() ?: 0
+                val total = me.score()
+                val percentile = me.percentile() ?: 0.0
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
-                val scores: List<Pair<Date, Int>>? = me?.broadcasts()?.items()?.map {
+                val scores: List<Pair<Date, Int>>? = me.broadcasts()?.items()?.map {
 
                     val join = it.joinedTimeStamps()?.map { x -> Pair(x.id(), x.time())  }?.toMutableList()
                         ?: mutableListOf()
@@ -68,18 +68,22 @@ class LeaderboardFragment : Fragment() {
         view?.findViewById<TextView>(R.id.total_score)?.text = total_score.toString()
         view?.findViewById<TextView>(R.id.percentile)?.text = percentile.toString()
 
+        var index = 0f
         val chart = view?.findViewById<View>(R.id.leaderboard_chart) as LineChart
-        val entries = scores?.map { Entry(it.first.time.toFloat(), it.second.toFloat()) }
+        val entries = scores?.sortedBy { it.first }
+                                        ?.map {
+                                            val e = Entry(index, it.second.toFloat())
+                                            index += 1
+                                            e
+                                        }
 
-        if (percentile != 0.0) {
-            val data = LineDataSet(entries, "Score for the last 30 broadcasts")
+        val data = LineDataSet(entries, "Score for the last 30 broadcasts")
 
-            chart.axisLeft.axisMinimum = 0f
-            chart.axisRight.setDrawGridLines(false)
-            chart.axisRight.setDrawLabels(false)
-            chart.data = LineData(data)
-            chart.invalidate()
-        }
+        chart.axisLeft.axisMinimum = 0f
+        chart.axisRight.setDrawGridLines(false)
+        chart.axisRight.setDrawLabels(false)
+        chart.data = LineData(data)
+        chart.invalidate()
 
     }
 

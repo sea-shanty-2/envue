@@ -9,7 +9,7 @@ fun calculateScoreFromViewTime(joinedTimeStamp: MutableList<Pair<String, Int>>, 
         val pair = leftTimeStamp.find { x -> x.first == it.first}
         if (pair != null) {
             val difference = pair.second - it.second
-            if (difference >= 30) score += difference  // Only add viewing for minimum of 30 seconds
+            if (difference >= 5) score += difference  // Only add viewing for minimum of 30 seconds
 
             leftTimeStamp.remove(pair)
         }
