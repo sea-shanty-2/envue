@@ -1,5 +1,6 @@
 <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/container"
         android:layout_width="match_parent"
@@ -64,6 +65,17 @@
             android:id="@+id/interestsButton"
             android:layout_margin="16dp"
     />
+
+    <fragment
+            android:id="@+id/leaderboard_fragment"
+            android:name="dk.cs.aau.envue.LeaderboardFragment"
+            android:layout_width="411dp"
+            android:layout_height="242dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_below="@id/logOutButton" />
 
 
 </RelativeLayout>
