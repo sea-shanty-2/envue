@@ -282,14 +282,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
 
             // Create popup window
-            PopupWindow(
-                view,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                true
-            ).apply {
+            PopupWindow(view, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, true).apply {
                 elevation = 20f
-                showAtLocation(playerView, Gravity.CENTER, 0, playerView?.height?.plus(this.height)?.times(-1) ?: 0)
+                showAtLocation(playerView, Gravity.CENTER, 0, 0)
             }
         }
 
@@ -325,11 +320,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         chatList?.apply {
             adapter = chatAdapter
             layoutManager = LinearLayoutManager(this@PlayerActivity).apply { stackFromEnd = true }
-        }
-
-        // When in horizontal we want to be able to click through the recycler
-        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            exoPlayerViewOnTouch()
         }
 
         // Make sure we can detect swipes in portrait mode as well
@@ -481,7 +471,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun showRecommendation(broadcastId: String) {
         if (recommendedBroadcastId == broadcastId) {
-            // Do not show recommendation, we just showed it
             // TODO: Do not show if the user has rejected the recommendation
             return
         }
