@@ -207,7 +207,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                     // For all broadcasts, find the emojis used for categorization.
                     // Then, determine the most frequently used one. Use this as the emoji
                     // for the event.
-                    val emojiIndexCounts = Array(limitedEmojis.size) {i -> 0}
+                    val emojiIndexCounts = Array(limitedEmojis.size) { 0 }
                     for (broadcast in qEvent.broadcasts()!!) {
                         val emojis = broadcast.categories()
                         for (i in 0 until emojis.size) {
