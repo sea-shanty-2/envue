@@ -1,0 +1,9 @@
+query BroadcastStatsQuery($id: ID!) {
+    broadcasts {
+        single (id:$id) {
+            current_viewer_count
+            positiveRatings
+            negativeRatings
+        }
+    }
+}
