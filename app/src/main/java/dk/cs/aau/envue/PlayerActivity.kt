@@ -650,8 +650,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun changeBroadcast(id: String) {
-        Broadcast.leave()
-
         broadcastId = id
         Broadcast.join(broadcastId)
 

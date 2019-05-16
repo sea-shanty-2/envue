@@ -11,6 +11,7 @@ class Broadcast {
         private var id : String? = null
 
         fun join(id: String, callback: ApolloCall.Callback<BroadcastJoinMutation.Data?>? = null) {
+            this.leave()
 
             val mutation = BroadcastJoinMutation.builder().id(id).build()
 
