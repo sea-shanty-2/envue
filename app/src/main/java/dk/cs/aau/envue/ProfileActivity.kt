@@ -34,6 +34,13 @@ class ProfileActivity : AppCompatActivity() {
         logOutButton.setOnClickListener { this.logOut() }
         changeDisplayName.setOnClickListener { this.openDialog() }
         interestsButton.setOnClickListener { this.onChangeInterests() }
+
+        val leaderboardFragment = LeaderboardFragment()
+        leaderboardFragment.arguments = intent.extras
+        supportFragmentManager
+            .beginTransaction()
+            .add(R.id.leaderboard_fragment, leaderboardFragment)
+            .commit()
     }
 
     override fun onStart() {
