@@ -140,7 +140,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     }
 
                     Thread.sleep(1000)
-
                     continue
                 }
 
