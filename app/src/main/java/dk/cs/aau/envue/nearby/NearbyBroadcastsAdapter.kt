@@ -7,8 +7,7 @@ import dk.cs.aau.envue.EventBroadcastsWithStatsQuery
 import dk.cs.aau.envue.R
 
 class NearbyBroadcastsAdapter(var broadcastList: List<EventBroadcastsWithStatsQuery.Broadcast> = ArrayList(),
-                              var currentBroadcastId: String? = null,
-                              var recommendedBroadcastId: String? = null,
+                              var currentBroadcastId: String? = null, var recommendedBroadcastId: String? = null,
                               private val onClick: (String) -> Unit): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val broadcast = broadcastList[position]

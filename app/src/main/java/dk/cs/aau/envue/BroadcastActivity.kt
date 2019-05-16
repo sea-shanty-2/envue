@@ -84,6 +84,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var running = true
     private var currentBitrate: Int = 0
     private lateinit var broadcastId: String
+    private lateinit var updater: AsyncTask<Unit, Unit, Unit>
 
     private var chatEnabled: Boolean = true
         set(value) {
@@ -110,7 +111,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
 
             var count = 0
-            while (running) {
+
+            while (true) {
+
+                if (isCancelled) { break }
+
                 fusedLocationClient.lastLocation.apply {
                     addOnSuccessListener { location: Location? ->
                         if (location != null) {
@@ -150,6 +155,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     lastStability = stability
                     Log.d(TAG, "Update stability")
                 }
+
                 // Update if above ten percent difference
                 if (bitrate != lastBitrate && abs(bitrate - lastBitrate) / ((bitrate + lastBitrate) / 2) > 0.1) {
                     update = update.bitrate(bitrate)
@@ -157,11 +163,12 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     lastBitrate = bitrate
                     Log.d(TAG, "Update bitrate")
                 }
-                // Update if stream have moved 5 meters
-                if (haversine(lastLocation, currentLocation) > 5) {
-                    update = update.location(lastLocation)
+
+                // Update if stream has moved 10 meters
+                if (haversine(lastLocation, currentLocation) > 10) {
+                    update = update.location(currentLocation)
                     toUpdate = true
-                    currentLocation = lastLocation
+                    lastLocation = currentLocation
                     Log.d(TAG, "Update Location")
                 }
 
@@ -185,7 +192,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
                 Thread.sleep(10000)
             }
-
         }
     }
 
@@ -465,7 +471,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         // Enable acceleration sensor
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-        BroadcastInformationUpdater(id, this).execute()
+        updater = BroadcastInformationUpdater(id, this).apply {
+            execute()
+        }
+
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
 
         // Set stop button listener
@@ -503,6 +512,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ) { _, _ ->
                 finish()
                 removeFromActiveEvents()
+                updater.cancel(true)
             }
             .setNegativeButton(android.R.string.no, null).show()
     }

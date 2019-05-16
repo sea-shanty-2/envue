@@ -77,6 +77,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
     private var recommendationImageView: ImageView? = null
     private var recommendationExpirationThread: Thread? = null
+    private lateinit var updater: AsyncTask<Unit, Unit, Unit>
 
     private var broadcastId: String = "main"
         set(value) {
@@ -136,7 +137,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         override fun doInBackground(vararg params: Unit?) {
             while (!isCancelled) {
                 updateEventIds()
-                Log.d("EVENTUPDATE", "Updated event ids.")
                 Thread.sleep(5000)
             }
         }
@@ -184,6 +184,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun startCommunicationSocket() {
+        messages.clear()
+        runOnUiThread { chatAdapter?.notifyDataSetChanged() }
+
         socket = StreamCommunicationListener.buildSocket(this, this.broadcastId)
     }
 
@@ -238,7 +241,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         bindContentView()
 
         // Launch background task for updating event ids
-        UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+        updater = UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
     private fun updateRecommendedBroadcast(broadcastId: String) {
@@ -544,6 +547,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     override fun onDestroy() {
         Broadcast.leave()
+        updater.cancel(true)
         super.onDestroy()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
