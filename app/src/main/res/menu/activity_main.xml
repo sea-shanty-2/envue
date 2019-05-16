@@ -8,21 +8,4 @@
         android:icon="@drawable/ic_person_48dp"
         android:title="@string/action_profile"
         app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_broadcast"
-        android:title="@string/action_broadcast"
-        android:icon="@drawable/ic_live_tv_48dp"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_player"
-        android:title="@string/play"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_map"
-        android:title="@string/mapbox_attributionsDialogTitle"
-        app:showAsAction="ifRoom" />
-
 </menu>

@@ -29,34 +29,32 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         if (!AccessToken.isCurrentAccessTokenActive()) {
             startActivity(Intent(this@MainActivity, LoginActivity::class.java))
-        }
 
-        try {
-            val info = packageManager.getPackageInfo("dk.cs.aau.envue", PackageManager.GET_SIGNATURES)
-            for (signature in info.signatures) {
-                val md = MessageDigest.getInstance("SHA")
-                md.update(signature.toByteArray())
-                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT))
-            }
-        } catch (e: PackageManager.NameNotFoundException) {
-
-        } catch (e: NoSuchAlgorithmException) {
-
+            finish()
         }
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
+
+        // Start broadcast on button press
+        findViewById<FloatingActionButton>(R.id.start_broadcast_button)?.setOnClickListener {
+            if(ensurePermissionsGranted(kotlin.arrayOf(android.Manifest.permission.CAMERA,
+                    android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.ACCESS_FINE_LOCATION))) {
+                startActivity(android.content.Intent(this, dk.cs.aau.envue.InitializeBroadcastActivity::class.java))
+            }
+        }
+
         // Update map on button press
-        findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
-            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
+        findViewById<FloatingActionButton>(R.id.update_map_button)?.setOnClickListener {
+            (supportFragmentManager.findFragmentById(R.id.map_fragment) as? MapFragment)?.updateMap()
         }
 
         // Update map. Needed to handle orientation changes.
-        (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
+        (supportFragmentManager.findFragmentById(R.id.map_fragment) as? MapFragment)?.updateMap()
 
         // Open category selection on button press
-        filter_categories_button.setOnClickListener() { this.onFilter()}
+        filter_categories_button.setOnClickListener { this.onFilter()}
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -69,24 +67,6 @@ class MainActivity : AppCompatActivity() {
         R.id.action_profile -> {
             // User chose the "Settings" item, show the app settings UI...
             startActivity(Intent(this, ProfileActivity::class.java))
-            true
-        }
-        R.id.action_broadcast -> {
-            if(ensurePermissionsGranted(arrayOf(
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.RECORD_AUDIO,
-                    Manifest.permission.ACCESS_FINE_LOCATION))) {
-                startActivity(Intent(this, InitializeBroadcastActivity::class.java))
-            }
-            true
-        }
-        R.id.action_player -> {
-            startActivity(Intent(this, BrowseEventsActivity::class.java))
-            true
-        }
-        R.id.action_map -> {
-            startActivity(Intent(this, MapFragment::class.java))
-
             true
         }
         else -> {
