@@ -525,8 +525,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun removeFromActiveEvents() {
-        val removalMutation = BroadcastStopMutation.builder().id(broadcastId).build()
-        GatewayClient.mutate(removalMutation).enqueue(object : ApolloCall.Callback<BroadcastStopMutation.Data>() {
+        val mutation = BroadcastStopMutation.builder().id(broadcastId).build()
+
+        GatewayClient.mutate(mutation).enqueue(object : ApolloCall.Callback<BroadcastStopMutation.Data>() {
             override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
                 val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
                 val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
@@ -542,33 +543,48 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun updateViewerCount() {
+
         val viewerQuery = BroadcastStatsQuery.builder().id(broadcastId).build()
         GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastStatsQuery.Data>() {
             override fun onResponse(response: Response<BroadcastStatsQuery.Data>) {
+
+                // Fetch and validate the query result data
+                val data = response.data()?.broadcasts()?.single()
+                if (data == null) {
+
+                    Log.d(
+                        "VIEWERCOUNT",
+                        "The viewer count query result was null"
+                    )
+                    return
+                }
+                else {
+
+                    Log.d(
+                        "VIEWERCOUNT",
+                        "Fetched viewer count for broadcast ($broadcastId):\n" +
+                            "current viewer count: ${data.current_viewer_count()}\n" +
+                            "total viewer count: ${data.total_viewer_count()}"
+                    )
+                }
+
                 runOnUiThread {
-                    val broadcast = response.data()?.broadcasts()?.single()
-
-                    broadcast?.let {
-                        // Update viewer count
-                        findViewById<TextView>(R.id.viewer_count)?.apply {
-                            text = it.current_viewer_count().toString()
+                    findViewById<TextView>(R.id.viewer_count)?.apply {
+                        text = data.current_viewer_count().toString()
+                        visibility = View.VISIBLE
+                    }
+                    // Update like ratio
+                    findViewById<TextView>(R.id.like_ratio)?.apply {
+                        val ratingCount = data.positiveRatings() + data.negativeRatings()
+                        if (ratingCount > 0) {
                             visibility = View.VISIBLE
-                        }
-
-                        // Update like ratio
-                        findViewById<TextView>(R.id.like_ratio)?.apply {
-                            val ratingCount = broadcast.positiveRatings() + broadcast.negativeRatings()
-                            if (ratingCount > 0) {
-                                visibility = View.VISIBLE
-                                text = context.getString(R.string.likes, (1f * broadcast.positiveRatings() / ratingCount * 100).roundToInt(), ratingCount)
-                            }
+                            text = context.getString(R.string.likes, (1f * data.positiveRatings() / ratingCount * 100).roundToInt(), ratingCount)
                         }
                     }
-                }
-            }
+                }}
 
             override fun onFailure(e: ApolloException) {
-                Log.d("VIEWERCOUNT", "Something went wrong while fetching viewer numbers for $broadcastId: $e")
+
             }
         })
     }
