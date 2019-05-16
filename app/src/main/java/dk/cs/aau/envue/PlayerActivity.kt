@@ -489,6 +489,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         player?.playWhenReady = false
     }
 
+    override fun onResume() {
+        super.onResume()
+        player?.playWhenReady = true
+    }
+
     override fun onStop() {
         super.onStop()
         releasePlayer()
