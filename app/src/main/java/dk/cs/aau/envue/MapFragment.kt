@@ -8,7 +8,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
@@ -349,8 +348,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
                     emojiString += limitedEmojis[i]
                 }
             }
-
-            Toast.makeText(view!!.context, emojiString, Toast.LENGTH_LONG).show()
         }
         updateMap()
     }
