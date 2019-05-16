@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="dk.cs.aau.envue">
+          package="dk.cs.aau.envue">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -14,7 +13,6 @@
         android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
@@ -25,19 +23,19 @@
         </service>
 
         <activity android:name=".StatisticsActivity"
-            android:screenOrientation="portrait">
+                  android:screenOrientation="portrait">
         </activity>
-        <activity android:name=".ViewershipFragment" />
         <activity
             android:name=".BrowseEventsActivity"
             android:label="@string/title_activity_choose_broadcast"
-            android:theme="@style/NoActionBar" />
-        <activity android:name=".MapFragment" />
+            android:theme="@style/NoActionBar"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".InterestsActivity"
             android:label="@string/title_activity_interests"
             android:parentActivityName=".ProfileActivity"
-            android:theme="@style/NoActionBar">
+            android:theme="@style/NoActionBar"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="dk.cs.aau.envue.ProfileActivity" />
@@ -50,7 +48,8 @@
             android:name=".InitializeBroadcastActivity"
             android:label="@string/title_activity_initialize_broadcast"
             android:noHistory="true"
-            android:theme="@style/NoActionBar" />
+            android:theme="@style/NoActionBar"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".BroadcastActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
@@ -69,12 +68,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".ProfileActivity" />
+        <activity android:name=".LoginActivity"
+                  android:screenOrientation="portrait"/>
+        <activity android:name=".ProfileActivity"
+                  android:screenOrientation="portrait"/>
         <activity android:name=".FilterActivity"
                   android:label="@string/title_activity_filter"
                   android:noHistory="true"
-                  android:theme="@style/NoActionBar" />
+                  android:theme="@style/NoActionBar"
+                  android:screenOrientation="portrait" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"

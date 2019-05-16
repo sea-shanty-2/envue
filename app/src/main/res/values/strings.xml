@@ -31,7 +31,7 @@
     <!-- Interests -->
     <string name="current_interests">Current Interests</string>
     <string name="interests_button">Change Interests</string>
-    <string name="interests_dialog_title">Select Interests</string>
+    <string name="interests_dialog_title">What are your interests?</string>
     <string name="interests_dialog_possitive">OK</string>
     <string name="interests_dialog_negative">Cancel</string>
     <string name="interests_response_key">INTERESTS_RESPONSE_KEY</string>
@@ -96,11 +96,11 @@
     <string-array name="allowed_reactions">
         <item>👍</item> <!-- thumbs up -->
         <item>👎</item> <!-- thumbs down -->
+        <item>❤</item> <!-- heart -->
+        <item>	🔥</item> <!-- fire -->
         <item>	😂</item> <!-- face with tears of joy -->
         <item>😠</item> <!-- angry face -->
         <item>😕</item> <!-- confused -->
-        <item>❤</item> <!-- heart -->
-        <item>	🔥</item> <!-- fire -->
         <item>🎉</item> <!-- tada -->
         <item>🍆</item> <!-- aubergine -->
     </string-array>

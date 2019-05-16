@@ -87,13 +87,10 @@ class InterestsActivity : CategorySelectionActivity() {
 
         GatewayClient.mutate(updateCategories).enqueue(object: ApolloCall.Callback<ProfileUpdateMutation.Data>(){
             override fun onFailure(e: ApolloException) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
 
             override fun onResponse(response: Response<ProfileUpdateMutation.Data>) {
-
             }
-
         })
     }
 
@@ -101,6 +98,4 @@ class InterestsActivity : CategorySelectionActivity() {
     private fun selectCurrentInterests(selected: CharSequence){
         // TODO: Implement this
     }
-
-
 }

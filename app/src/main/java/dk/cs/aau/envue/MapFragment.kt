@@ -41,7 +41,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     private var limitedEmojis = ArrayList<String>()
     private var filters: DoubleArray? = null
     private var eventClickedAt: Long = 0
-    private var mMap: MapboxMap? = null
+    private var map: MapboxMap? = null
     private lateinit var updater: AsyncTask<Style, Unit, Unit>
     private lateinit var mapStyle: Style
 
@@ -56,7 +56,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     override fun onStyleLoaded(style: Style) {
         mapStyle = style
-        mMap?.style?.addSource(geoJsonSource)
+        map?.style?.addSource(geoJsonSource)
         addHeatmapLayer(mapStyle)
 
         // Launch background task for updating the event markers
@@ -107,11 +107,11 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
-        mMap = mapboxMap
+        map = mapboxMap
 
         // Set style of map. Use style loader in this context.
-        mMap?.setStyle(Style.MAPBOX_STREETS, this)
-        mMap?.setOnMarkerClickListener(this)
+        map?.setStyle(Style.MAPBOX_STREETS, this)
+        map?.setOnMarkerClickListener(this)
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
@@ -139,7 +139,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     fun addMarker(position: LatLng, text: String, size: Int, broadcastId: String) {
         val bitmap = textToBitmap(text, size, context!!)
         val descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
-        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))  // Title = broadcastId
+        map?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))  // Title = broadcastId
         return
     }
 
@@ -318,7 +318,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     fun updateMap() {
         activity?.runOnUiThread {
-            mMap?.markers?.forEach { mMap?.removeMarker(it) }
+            map?.markers?.forEach { map?.removeMarker(it) }
             updateStreamSource(null)
         }
     }
