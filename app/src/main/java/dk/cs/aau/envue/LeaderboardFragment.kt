@@ -17,6 +17,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.calculateScoreFromViewTime
+import kotlinx.android.synthetic.main.fragment_leaderboard.*
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -27,29 +28,30 @@ class LeaderboardFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v = inflater.inflate(R.layout.fragment_leaderboard, container, false)
 
-        val leaderboardQuery: LeaderboardQuery = LeaderboardQuery.builder().build()
-        val a = GatewayClient.query(leaderboardQuery).enqueue(object: ApolloCall.Callback<LeaderboardQuery.Data>() {
+        val query: LeaderboardQuery = LeaderboardQuery.builder().build()
+
+        GatewayClient.query(query).enqueue(object: ApolloCall.Callback<LeaderboardQuery.Data>() {
             override fun onResponse(response: Response<LeaderboardQuery.Data>) {
-                val me = response.data()?.accounts()?.me()
-                val rank = me?.rank()
-                val total_score = me?.score()
-                val percentile = me?.percentile()
+                val me = response.data()?.accounts()?.me() ?: return
+
+                val rank = me?.rank() ?: 0
+                val total = me?.score()
+                val percentile = me?.percentile() ?: 0.0
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
                 val scores: List<Pair<Date, Int>>? = me?.broadcasts()?.items()?.map {
+
                     val join = it.joinedTimeStamps()?.map { x -> Pair(x.id(), x.time())  }?.toMutableList()
+                        ?: mutableListOf()
                     val left = it.leftTimeStamps()?.map { x -> Pair(x.id(), x.time())  }?.toMutableList()
+                        ?: mutableListOf()
+
                     val date = dateFormat.parse(it.activity() as String)
-                    if (join != null && left != null){
-                        Pair(date, calculateScoreFromViewTime(join, left))
-                    }
-                    else{
-                        return
-                    }
+                    Pair(date, calculateScoreFromViewTime(join, left))
                 }
 
                 activity?.runOnUiThread {
-                    setFields(rank, total_score, percentile, scores)
+                    setFields(rank, total, percentile, scores)
                 }
             }
 
