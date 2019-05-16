@@ -134,11 +134,11 @@ class ProfileActivity : AppCompatActivity() {
             setView(input)
             setPositiveButton("OK") { _, _ -> acceptDialog(input)}
             setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-            
+
             show()
         }
-
     }
+
     private fun acceptDialog(input : EditText) {
        // var displayNameChanged = input.text.toString()
         val temp = AccountUpdateInputType.builder().displayName(input.text.toString()).build()
@@ -146,7 +146,6 @@ class ProfileActivity : AppCompatActivity() {
 
         GatewayClient.mutate(changeDisplayName).enqueue(object: ApolloCall.Callback<ProfileUpdateMutation.Data>(){
             override fun onFailure(e: ApolloException) {
-
             }
 
             override fun onResponse(response: Response<ProfileUpdateMutation.Data>) {
@@ -154,9 +153,7 @@ class ProfileActivity : AppCompatActivity() {
                     profileNameView.text = input.text.toString()
                 }
             }
-
         })
-
     }
 
 }

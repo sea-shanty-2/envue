@@ -409,7 +409,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-
         // Get supported resolutions
         val previewSize = Camera.open().parameters.previewSize
         val outputSize = previewSize  // TODO: This is not optimal, but works fine.
@@ -558,10 +557,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
                         // Update like ratio
                         findViewById<TextView>(R.id.like_ratio)?.apply {
-                            val ratingCount = broadcast.positiveRatings() + broadcast.negativeRatings() * 1.0f
+                            val ratingCount = broadcast.positiveRatings() + broadcast.negativeRatings()
                             if (ratingCount > 0) {
                                 visibility = View.VISIBLE
-                                text = context.getString(R.string.percentage, (broadcast.positiveRatings() / ratingCount * 100).roundToInt())
+                                text = context.getString(R.string.likes, (1f * broadcast.positiveRatings() / ratingCount * 100).roundToInt(), ratingCount)
                             }
                         }
                     }
