@@ -16,12 +16,10 @@
             android:background="?attr/colorPrimary"
             app:layout_constraintTop_toTopOf="parent"/>
 
-    <fragment
-        android:id="@+id/map_fragment"
-        android:name="dk.cs.aau.envue.MapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
+    <FrameLayout android:id="@+id/main_fragment"
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent" />
+    e
     <android.support.design.widget.FloatingActionButton
             android:id="@+id/update_map_button"
             android:layout_width="wrap_content"

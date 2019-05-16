@@ -36,11 +36,11 @@
         <activity
             android:name=".InterestsActivity"
             android:label="@string/title_activity_interests"
-            android:parentActivityName=".ProfileActivity"
+            android:parentActivityName=".ProfileFragment"
             android:theme="@style/NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="dk.cs.aau.envue.ProfileActivity" />
+                android:value="dk.cs.aau.envue.ProfileFragment" />
         </activity>
         <activity
             android:name=".PlayerActivity"
@@ -70,7 +70,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".LoginActivity" />
-        <activity android:name=".ProfileActivity" />
+        <activity android:name=".ProfileFragment" />
         <activity android:name=".FilterActivity"
                   android:label="@string/title_activity_filter"
                   android:noHistory="true"

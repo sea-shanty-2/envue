@@ -10,53 +10,51 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
 import android.support.v7.app.AppCompatActivity
-import android.util.Base64
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import com.facebook.AccessToken
 import kotlinx.android.synthetic.main.activity_main.*
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 
 
 class MainActivity : AppCompatActivity() {
     private val PERMISSION_REQUEST_CODE_BROADCAST = 42
+
+    private lateinit var mapFragment: MapFragment
+    private lateinit var profileFragment: ProfileFragment
+
     companion object {
         internal const val SET_FILTERS_REQUEST = 57
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         if (!AccessToken.isCurrentAccessTokenActive()) {
             startActivity(Intent(this@MainActivity, LoginActivity::class.java))
-        }
 
-        try {
-            val info = packageManager.getPackageInfo("dk.cs.aau.envue", PackageManager.GET_SIGNATURES)
-            for (signature in info.signatures) {
-                val md = MessageDigest.getInstance("SHA")
-                md.update(signature.toByteArray())
-                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT))
-            }
-        } catch (e: PackageManager.NameNotFoundException) {
-
-        } catch (e: NoSuchAlgorithmException) {
-
+            return
         }
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(my_toolbar)
+
+        // Create fragments
+        mapFragment = MapFragment()
+        profileFragment = ProfileFragment()
+
+        // Use map as initial fragment
+        supportFragmentManager.beginTransaction().replace(R.id.main_fragment, mapFragment).commit()
+
         // Update map on button press
         findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
-            (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
+            mapFragment.updateMap()
         }
 
         // Update map. Needed to handle orientation changes.
-        (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateMap()
+        mapFragment.updateMap()
 
         // Open category selection on button press
-        filter_categories_button.setOnClickListener() { this.onFilter()}
+        filter_categories_button.setOnClickListener { this.onFilter()}
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -67,8 +65,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_profile -> {
-            // User chose the "Settings" item, show the app settings UI...
-            startActivity(Intent(this, ProfileActivity::class.java))
+            supportFragmentManager.beginTransaction().replace(R.id.main_fragment, profileFragment).commit()
             true
         }
         R.id.action_broadcast -> {
@@ -85,7 +82,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
         R.id.action_map -> {
-            startActivity(Intent(this, MapFragment::class.java))
+            supportFragmentManager.beginTransaction().add(R.id.main_fragment, mapFragment).commit()
 
             true
         }
@@ -131,11 +128,8 @@ class MainActivity : AppCompatActivity() {
             SET_FILTERS_REQUEST ->
                 if (resultCode == Activity.RESULT_OK) {
                     var categories = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
-                    //if (categories != null) Snackbar.make(findViewById<FloatingActionButton>(R.id.update_map_button),
-                    // categories!!.contentToString(),
-                    // Snackbar.LENGTH_LONG).show()
                     if (categories != null && !categories.contains(1.0)) categories = null
-                    (supportFragmentManager.findFragmentById(R.id.map_fragment) as MapFragment).updateFilters(categories)
+                    (supportFragmentManager.findFragmentById(R.id.main_fragment) as MapFragment).updateFilters(categories)
                 }
         }
     }

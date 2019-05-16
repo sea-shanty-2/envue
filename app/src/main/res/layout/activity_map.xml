@@ -16,7 +16,7 @@
             mapbox:mapbox_cameraZoom="11" />
 
     <Button
-            android:text="Filter"
+            android:text="@string/filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/filterButton"
