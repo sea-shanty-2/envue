@@ -168,6 +168,7 @@
     <string name="react">React</string>
     <string name="report">Report</string>
     <string name="percentage">%d%%</string>
+    <string name="likes">%d%% (%d)</string>
     <string name="rank">Rank:</string>
     <string name="percentile">Percentile:</string>
     <string name="total_score">Total score:</string>
