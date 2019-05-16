@@ -2,7 +2,6 @@ package dk.cs.aau.envue
 
 import android.content.Intent
 import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.Log
@@ -25,7 +24,6 @@ import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.*
 import com.mapbox.mapboxsdk.style.expressions.Expression.*
-import com.mapbox.mapboxsdk.style.layers.CircleLayer
 import com.mapbox.mapboxsdk.style.layers.HeatmapLayer
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
@@ -36,49 +34,53 @@ import dk.cs.aau.envue.utility.textToBitmap
 
 
 class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
-
-    // private val EARTHQUAKE_SOURCE_URL = "https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson"
     private val STREAM_SOURCE_ID = "stream"
     private val HEATMAP_LAYER_ID = "stream-heat"
     private val HEATMAP_LAYER_SOURCE = "streams"
-    private val CIRCLE_LAYER_ID = "earthquakes-circle"
     private val TAG = "MapFragment"
     private var geoJsonSource: GeoJsonSource = GeoJsonSource(STREAM_SOURCE_ID) //, URL("https://www.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson")) // Used as mock data. Remember to outcomment loadBroadcastsToMap in updateStreamSource when using.
     private var limitedEmojis = ArrayList<String>()
     private var filters: DoubleArray? = null
-    private var eventClicked = false
+    private var eventClickedAt: Long = 0
     private var mMap: MapboxMap? = null
+    private lateinit var updater: AsyncTask<Style, Unit, Unit>
+    private lateinit var mapStyle: Style
 
-    private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
-        override fun doInBackground(vararg params: Style): Void {
-            while (true) {
-                activity?.runOnUiThread {
-                        updateStreamSource(params[0])
-                }
-                Thread.sleep(   300000)
+    private inner class StreamUpdateTask : AsyncTask<Style, Unit, Unit>() {
+        override fun doInBackground(vararg params: Style) {
+            while (!isCancelled) {
+                activity?.runOnUiThread { updateStreamSource(params[0]) }
+                Thread.sleep(   10000)
             }
         }
     }
 
+    override fun onStyleLoaded(style: Style) {
+        mapStyle = style
+        mMap?.style?.addSource(geoJsonSource)
+        addHeatmapLayer(mapStyle)
+
+        // Launch background task for updating the event markers
+        updater = StreamUpdateTask().apply {
+            executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapStyle)
+        }
+    }
+
     override fun onResume() {
-        eventClicked = false
+        if (::updater.isInitialized) {
+            if (updater.isCancelled) {
+                updater = StreamUpdateTask().apply {
+                    executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapStyle)
+                }
+            }
+        }
+
         super.onResume()
     }
 
-    override fun onStyleLoaded(style: Style) {
-        mMap?.style?.addSource(geoJsonSource)
-        addHeatmapLayer(style)
-
-        // Launch background task for updating the event markers
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
-            StreamUpdateTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, style)
-        } else {
-            StreamUpdateTask().execute(style)
-        }
-
-
-
-
+    override fun onPause() {
+        updater.cancel(true)
+        super.onPause()
     }
 
     override fun onCreateView(
@@ -91,13 +93,13 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         Mapbox.getInstance(context!!, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
 
         // Mapbox view options
-        var options = MapboxMapOptions().apply {
+        val options = MapboxMapOptions().apply {
             rotateGesturesEnabled(false)
             maxZoomPreference(19.0)
         }
 
         // Create mapview with options
-        var mapView = MapView(context!!, options)
+        val mapView = MapView(context!!, options)
         mapView.id = R.id.mapView
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this) // Fragment mapper
@@ -110,12 +112,13 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
         // Set style of map. Use style loader in this context.
         mMap?.setStyle(Style.MAPBOX_STREETS, this)
-
         mMap?.setOnMarkerClickListener(this)
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-        if (eventClicked) { Log.d("MULTICLICK", "Already clicked an event"); return false }  // Disable spam-clicks
+        if (System.currentTimeMillis() - eventClickedAt < 1000) {
+            return false;
+        }
 
         val id = marker.title
 
@@ -129,13 +132,14 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             startActivity(intent)
         }
 
-        eventClicked = true
+        eventClickedAt = System.currentTimeMillis()
+
         return false
     }
 
     fun addMarker(position: LatLng, text: String, size: Int, broadcastId: String) {
-        var bitmap = textToBitmap(text, size, context!!)
-        var descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
+        val bitmap = textToBitmap(text, size, context!!)
+        val descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
         mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))  // Title = broadcastId
         return
     }
@@ -163,8 +167,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
         geoJsonSource.setGeoJson(featureCollection)
     }
-    private fun updateStreamSource(loadedMapStyle: Style?) {
 
+    private fun updateStreamSource(loadedMapStyle: Style?) {
         // Create queries for
         // - Events (so we can show their emojis)
         // - Broadcasts (so we can show the heat map)
@@ -193,7 +197,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     // Loads all active events to the map in the form of most frequent emoji in each event
     private fun loadEventsToMap(activeEventsQuery: EventsQuery) {
-
         GatewayClient.query(activeEventsQuery).enqueue(object: ApolloCall.Callback<EventsQuery.Data>() {
             override fun onResponse(response: Response<EventsQuery.Data>) {
                 Log.d("EVENTS", "Received event data.")
@@ -248,7 +251,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         val layer = HeatmapLayer(HEATMAP_LAYER_ID, STREAM_SOURCE_ID)
         layer.maxZoom = 20f
         layer.minZoom = 0f
-        layer.setSourceLayer(HEATMAP_LAYER_SOURCE)
+        layer.sourceLayer = HEATMAP_LAYER_SOURCE
         layer.setProperties(
 
             // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
@@ -307,55 +310,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         loadedMapStyle.addLayerAbove(layer, "waterway-label")
     }
 
-    private fun addCircleLayer(loadedMapStyle: Style) {
-        val circleLayer = CircleLayer(CIRCLE_LAYER_ID, STREAM_SOURCE_ID)
-        circleLayer.setProperties(
-
-            // Size circle radius by earthquake magnitude and zoom level
-            circleRadius(
-                interpolate(
-                    linear(), zoom(),
-                    literal(7), interpolate(
-                        linear(), get("mag"),
-                        stop(1, 1),
-                        stop(6, 4)
-                    ),
-                    literal(16), interpolate(
-                        linear(), get("mag"),
-                        stop(1, 5),
-                        stop(6, 50)
-                    )
-                )
-            ),
-
-            // Color circle by earthquake magnitude
-            circleColor(
-                interpolate(
-                    linear(), get("mag"),
-                    literal(1), rgba(33, 102, 172, 0),
-                    literal(2), rgb(103, 169, 207),
-                    literal(3), rgb(209, 229, 240),
-                    literal(4), rgb(253, 219, 199),
-                    literal(5), rgb(239, 138, 98),
-                    literal(6), rgb(178, 24, 43)
-                )
-            ),
-
-            // Transition from heatmap to circle layer by zoom level
-            circleOpacity(
-                interpolate(
-                    linear(), zoom(),
-                    stop(7, 0),
-                    stop(8, 1)
-                )
-            ),
-            circleStrokeColor("white"),
-            circleStrokeWidth(1.0f)
-        )
-
-        loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID)
-    }
-
     private fun loadEmojis() {
         // Load all emojis into local storage
         limitedEmojis.addAll(GsonBuilder().create().fromJson(
@@ -370,7 +324,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         }
     }
 
-    fun getEventIds(id: String, callback: (id:String, ids:ArrayList<String>) -> Unit) {
+    private fun getEventIds(id: String, callback: (id:String, ids:ArrayList<String>) -> Unit) {
         val eventQuery = EventWithIdQuery.builder().id(id).build()
         GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
             override fun onResponse(response: Response<EventWithIdQuery.Data>) {
@@ -392,7 +346,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         if (filterArray != null){
             for (i in 0 until filterArray.size){
                 if (filterArray[i] == 1.0){
-                    emojiString = emojiString + limitedEmojis[i]
+                    emojiString += limitedEmojis[i]
                 }
             }
 

@@ -51,6 +51,7 @@ import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.sign
 
 
@@ -83,6 +84,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     private var running = true
     private var currentBitrate: Int = 0
     private lateinit var broadcastId: String
+    private lateinit var updater: AsyncTask<Unit, Unit, Unit>
 
     private var chatEnabled: Boolean = true
         set(value) {
@@ -109,7 +111,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
 
             var count = 0
-            while (running) {
+
+            while (true) {
+
+                if (isCancelled) { break }
+
                 fusedLocationClient.lastLocation.apply {
                     addOnSuccessListener { location: Location? ->
                         if (location != null) {
@@ -149,6 +155,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     lastStability = stability
                     Log.d(TAG, "Update stability")
                 }
+
                 // Update if above ten percent difference
                 if (bitrate != lastBitrate && abs(bitrate - lastBitrate) / ((bitrate + lastBitrate) / 2) > 0.1) {
                     update = update.bitrate(bitrate)
@@ -156,11 +163,12 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     lastBitrate = bitrate
                     Log.d(TAG, "Update bitrate")
                 }
-                // Update if stream have moved 5 meters
-                if (haversine(lastLocation, currentLocation) > 5) {
-                    update = update.location(lastLocation)
+
+                // Update if stream has moved 10 meters
+                if (haversine(lastLocation, currentLocation) > 10) {
+                    update = update.location(currentLocation)
                     toUpdate = true
-                    currentLocation = lastLocation
+                    lastLocation = currentLocation
                     Log.d(TAG, "Update Location")
                 }
 
@@ -184,7 +192,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
                 Thread.sleep(10000)
             }
-
         }
     }
 
@@ -438,7 +445,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             fragmentTransaction.commit()
         }
 
-
         // Create popup menu when settings clicked
         findViewById<ImageView>(R.id.settings)?.setOnClickListener {
             val popup = PopupMenu(this@BroadcastActivity, it)
@@ -461,9 +467,14 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             adapter = chatAdapter
             layoutManager = chatLayoutManager
         }
+
+        // Enable acceleration sensor
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-        BroadcastInformationUpdater(id, this).execute()
+        updater = BroadcastInformationUpdater(id, this).apply {
+            execute()
+        }
+
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
 
         // Set stop button listener
@@ -501,6 +512,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             ) { _, _ ->
                 finish()
                 removeFromActiveEvents()
+                updater.cancel(true)
             }
             .setNegativeButton(android.R.string.no, null).show()
     }
@@ -531,40 +543,39 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun updateViewerCount() {
-        val viewerQuery = BroadcastViewerNumberQuery.builder().id(broadcastId).build()
-        GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastViewerNumberQuery.Data>() {
-            override fun onResponse(response: Response<BroadcastViewerNumberQuery.Data>) {
+        val viewerQuery = BroadcastStatsQuery.builder().id(broadcastId).build()
+        GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastStatsQuery.Data>() {
+            override fun onResponse(response: Response<BroadcastStatsQuery.Data>) {
                 runOnUiThread {
-                    val viewerCount = response.data()?.broadcasts()?.viewer_count()
-                    if (viewerCount != null) {
-                        // Update viewer count in activity
-                        findViewById<TextView>(R.id.viewer_count).text = viewerCount.toString()
-                        Log.d(
-                            "VIEWERCOUNT",
-                            "Successfully received viewer count for $broadcastId which is ${viewerCount}"
-                        )
-                    } else {
-                        findViewById<TextView>(R.id.viewer_count).text = "?"
+                    val broadcast = response.data()?.broadcasts()?.single()
+
+                    broadcast?.let {
+                        // Update viewer count
+                        findViewById<TextView>(R.id.viewer_count)?.apply {
+                            text = it.current_viewer_count().toString()
+                            visibility = View.VISIBLE
+                        }
+
+                        // Update like ratio
+                        findViewById<TextView>(R.id.like_ratio)?.apply {
+                            val ratingCount = broadcast.positiveRatings() + broadcast.negativeRatings() * 1.0f
+                            if (ratingCount > 0) {
+                                visibility = View.VISIBLE
+                                text = context.getString(R.string.percentage, (broadcast.positiveRatings() / ratingCount * 100).roundToInt())
+                            }
+                        }
                     }
                 }
             }
 
             override fun onFailure(e: ApolloException) {
-                runOnUiThread {
-                    findViewById<TextView>(R.id.viewer_count).text = "?"
-                }
                 Log.d("VIEWERCOUNT", "Something went wrong while fetching viewer numbers for $broadcastId: $e")
             }
         })
     }
 
-    private fun startStatisticsActivity(
-        joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
-        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?
-    ) {
-
-        //leaveBroadcast(broadcastId)
-
+    private fun startStatisticsActivity(joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
+                                        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?) {
         val joined =
             joinedTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
         val left =
