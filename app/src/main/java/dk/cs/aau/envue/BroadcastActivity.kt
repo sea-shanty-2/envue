@@ -561,7 +561,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 }
 
                 runOnUiThread {
-                    findViewById<TextView>(R.id.viewer_count).text = data.current_viewer_count().toString()
+                    findViewById<TextView>(R.id.viewer_count)?.apply {
+                        text = data.current_viewer_count().toString()
+                        visibility = View.VISIBLE
+                    }
                     // Update like ratio
                     findViewById<TextView>(R.id.like_ratio)?.apply {
                         val ratingCount = data.positiveRatings() + data.negativeRatings() * 1.0f
