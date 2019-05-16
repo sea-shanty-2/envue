@@ -64,7 +64,6 @@ class LeaderboardFragment : Fragment() {
     }
 
     fun setFields(rank: Int?, total_score: Int?, percentile: Double?, scores: List<Pair<Date, Int>>?) {
-        leaderboard_fraq.visibility = View.VISIBLE
         view?.findViewById<TextView>(R.id.rank)?.text = rank.toString()
         view?.findViewById<TextView>(R.id.total_score)?.text = total_score.toString()
         view?.findViewById<TextView>(R.id.percentile)?.text = percentile.toString()
@@ -72,7 +71,7 @@ class LeaderboardFragment : Fragment() {
         val chart = view?.findViewById<View>(R.id.leaderboard_chart) as LineChart
         val entries = scores?.map { Entry(it.first.time.toFloat(), it.second.toFloat()) }
 
-        if (percentile != null) {
+        if (percentile != 0.0) {
             val data = LineDataSet(entries, "Score for the last 30 broadcasts")
 
             chart.axisLeft.axisMinimum = 0f

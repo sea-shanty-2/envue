@@ -34,6 +34,13 @@ class ProfileActivity : AppCompatActivity() {
         logOutButton.setOnClickListener { this.logOut() }
         changeDisplayName.setOnClickListener { this.openDialog() }
         interestsButton.setOnClickListener { this.onChangeInterests() }
+
+        val leaderboardFragment = LeaderboardFragment()
+        leaderboardFragment.arguments = intent.extras
+        supportFragmentManager
+            .beginTransaction()
+            .add(R.id.leaderboard_fragment, leaderboardFragment)
+            .commit()
     }
 
     override fun onStart() {
@@ -47,14 +54,7 @@ class ProfileActivity : AppCompatActivity() {
 
         GatewayClient.query(profileQuery).enqueue(object : ApolloCall.Callback<ProfileQuery.Data>() {
             override fun onResponse(response: Response<ProfileQuery.Data>) {
-                val profile = response.data()?.accounts()?.me()
-
-                if (profile != null) {
-                    onProfileFetch(profile!!)
-                }
-                else {
-                    TODO("Handle null response")
-                }
+                response.data()?.accounts()?.me()?.let { onProfileFetch(it) }
             }
 
             override fun onFailure(e: ApolloException) = onProfileFetchFailure(e)
@@ -64,8 +64,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun onProfileFetch(profile: ProfileQuery.Me) {
         runOnUiThread {
-            if (profile.categories() != null)
-                oneHotVectorToEmoji(profile.categories()!!)
+            profile.categories()?.let { oneHotVectorToEmoji(it) }
 
             profileNameView.text = profile.displayName()
             container.visibility = View.VISIBLE
@@ -129,23 +128,24 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         currentInterestsView.text = temp
-
     }
 
     private fun openDialog() {
+        val input = EditText(this@ProfileActivity).apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+            setText(profileNameView?.text?.toString())
+        }
 
-        val displayNameDialog = AlertDialog.Builder(this)
-        displayNameDialog.setTitle("Change display name")
+        AlertDialog.Builder(this).apply {
+            setTitle("Change display name")
+            setView(input)
+            setPositiveButton("OK") { _, _ -> acceptDialog(input)}
+            setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
 
-        val input = EditText(this)
-        input.inputType = InputType.TYPE_CLASS_TEXT
-        displayNameDialog.setView(input)
-
-        displayNameDialog.setPositiveButton("OK") { _, _ -> acceptDialog(input)}
-        displayNameDialog.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-        displayNameDialog.show()
-
+            show()
+        }
     }
+
     private fun acceptDialog(input : EditText) {
        // var displayNameChanged = input.text.toString()
         val temp = AccountUpdateInputType.builder().displayName(input.text.toString()).build()
@@ -153,7 +153,6 @@ class ProfileActivity : AppCompatActivity() {
 
         GatewayClient.mutate(changeDisplayName).enqueue(object: ApolloCall.Callback<ProfileUpdateMutation.Data>(){
             override fun onFailure(e: ApolloException) {
-
             }
 
             override fun onResponse(response: Response<ProfileUpdateMutation.Data>) {
@@ -161,9 +160,7 @@ class ProfileActivity : AppCompatActivity() {
                     profileNameView.text = input.text.toString()
                 }
             }
-
         })
-
     }
 
 }

@@ -409,7 +409,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-
         // Get supported resolutions
         val previewSize = Camera.open().parameters.previewSize
         val outputSize = previewSize  // TODO: This is not optimal, but works fine.
@@ -526,9 +525,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun removeFromActiveEvents() {
-        val removalMutation = BroadcastStopMutation.builder().id(broadcastId).build()
+        val mutation = BroadcastStopMutation.builder().id(broadcastId).build()
 
-        GatewayClient.mutate(removalMutation).enqueue(object : ApolloCall.Callback<BroadcastStopMutation.Data>() {
+        GatewayClient.mutate(mutation).enqueue(object : ApolloCall.Callback<BroadcastStopMutation.Data>() {
             override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
                 val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
                 val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
@@ -557,7 +556,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                         "VIEWERCOUNT",
                         "The viewer count query result was null"
                     )
-
                     return
                 }
                 else {
@@ -577,10 +575,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     }
                     // Update like ratio
                     findViewById<TextView>(R.id.like_ratio)?.apply {
-                        val ratingCount = data.positiveRatings() + data.negativeRatings() * 1.0f
+                        val ratingCount = data.positiveRatings() + data.negativeRatings()
                         if (ratingCount > 0) {
                             visibility = View.VISIBLE
-                            text = context.getString(R.string.percentage, (data.positiveRatings() / ratingCount * 100).roundToInt())
+                            text = context.getString(R.string.likes, (1f * data.positiveRatings() / ratingCount * 100).roundToInt(), ratingCount)
                         }
                     }
                 }}

@@ -332,8 +332,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         // Assign send button
-        findViewById<Button>(R.id.button_chatbox_send)?.setOnClickListener {
-            addLocalMessage()
+        findViewById<Button>(R.id.button_chatbox_send)?.apply {
+            setOnClickListener { addLocalMessage() }
+            isEnabled = communicationConnected
         }
 
         findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
