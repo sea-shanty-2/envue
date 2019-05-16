@@ -43,22 +43,44 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     private var filters: DoubleArray? = null
     private var eventClickedAt: Long = 0
     private var mMap: MapboxMap? = null
+    private lateinit var updater: AsyncTask<Style, Unit, Unit>
+    private lateinit var mapStyle: Style
 
-    private inner class StreamUpdateTask : AsyncTask<Style, Void, Void>() {
-        override fun doInBackground(vararg params: Style): Void {
-            while (true) {
+    private inner class StreamUpdateTask : AsyncTask<Style, Unit, Unit>() {
+        override fun doInBackground(vararg params: Style) {
+            while (!isCancelled) {
                 activity?.runOnUiThread { updateStreamSource(params[0]) }
-                Thread.sleep(   300000)
+                Thread.sleep(   10000)
             }
         }
     }
 
     override fun onStyleLoaded(style: Style) {
+        mapStyle = style
         mMap?.style?.addSource(geoJsonSource)
-        addHeatmapLayer(style)
+        addHeatmapLayer(mapStyle)
 
         // Launch background task for updating the event markers
-        StreamUpdateTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, style)
+        updater = StreamUpdateTask().apply {
+            executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapStyle)
+        }
+    }
+
+    override fun onResume() {
+        if (::updater.isInitialized) {
+            if (updater.isCancelled) {
+                updater = StreamUpdateTask().apply {
+                    executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapStyle)
+                }
+            }
+        }
+
+        super.onResume()
+    }
+
+    override fun onPause() {
+        updater.cancel(true)
+        super.onPause()
     }
 
     override fun onCreateView(
