@@ -1,8 +1,10 @@
 package dk.cs.aau.envue
 
+import android.app.Activity
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
+import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
 import android.util.Log
 import android.view.LayoutInflater
@@ -30,9 +32,15 @@ import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.utility.Event
 import dk.cs.aau.envue.utility.textToBitmap
+import kotlinx.android.synthetic.main.activity_broadcast.view.*
+import kotlinx.android.synthetic.main.activity_map.*
 
 
 class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
+    companion object {
+        internal const val SET_FILTERS_REQUEST = 57
+    }
+
     private val STREAM_SOURCE_ID = "stream"
     private val HEATMAP_LAYER_ID = "stream-heat"
     private val HEATMAP_LAYER_SOURCE = "streams"
@@ -41,7 +49,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     private var limitedEmojis = ArrayList<String>()
     private var filters: DoubleArray? = null
     private var eventClickedAt: Long = 0
-    private var mMap: MapboxMap? = null
+    private var map: MapboxMap? = null
     private lateinit var updater: AsyncTask<Style, Unit, Unit>
     private lateinit var mapStyle: Style
 
@@ -56,7 +64,11 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     override fun onStyleLoaded(style: Style) {
         mapStyle = style
-        mMap?.style?.addSource(geoJsonSource)
+
+        map?.style?.apply {
+            addSource(geoJsonSource)
+        }
+
         addHeatmapLayer(mapStyle)
 
         // Launch background task for updating the event markers
@@ -79,7 +91,13 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     override fun onPause() {
         updater.cancel(true)
+
         super.onPause()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        map_view?.onDestroy()
     }
 
     override fun onCreateView(
@@ -91,27 +109,49 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         // Set mapbox instance, with access token
         Mapbox.getInstance(context!!, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
 
-        // Mapbox view options
-        val options = MapboxMapOptions().apply {
-            rotateGesturesEnabled(false)
-            maxZoomPreference(19.0)
-        }
+        // Create fragment view
+        val fragment = inflater.inflate(R.layout.activity_map, container, false)
 
         // Create mapview with options
-        val mapView = MapView(context!!, options)
-        mapView.id = R.id.mapView
+        val mapView = fragment.findViewById<MapView>(R.id.map_view)
         mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this) // Fragment mapper
+        mapView.getMapAsync(this)
 
-        return mapView
+        // Bind update button
+        fragment.findViewById<FloatingActionButton>(R.id.update_map_button)?.setOnClickListener {
+            this.updateMap()
+        }
+
+        // Bind filter button
+        fragment.findViewById<FloatingActionButton>(R.id.filter_categories_button)?.setOnClickListener {
+            val intent = Intent(this.activity, FilterActivity::class.java)
+            startActivityForResult(intent, MapFragment.SET_FILTERS_REQUEST)
+        }
+
+        return fragment
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            MapFragment.SET_FILTERS_REQUEST ->
+                if (resultCode == Activity.RESULT_OK) {
+                    var categories = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
+                    if (categories != null && !categories.contains(1.0)) categories = null
+                    this.updateFilters(categories)
+                }
+        }
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
-        mMap = mapboxMap
+        map = mapboxMap
+
+        // Disable rotation
+        map?.uiSettings?.isRotateGesturesEnabled = false
 
         // Set style of map. Use style loader in this context.
-        mMap?.setStyle(Style.MAPBOX_STREETS, this)
-        mMap?.setOnMarkerClickListener(this)
+        map?.setStyle(Style.MAPBOX_STREETS, this)
+        map?.setOnMarkerClickListener(this)
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
@@ -139,7 +179,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     fun addMarker(position: LatLng, text: String, size: Int, broadcastId: String) {
         val bitmap = textToBitmap(text, size, context!!)
         val descriptor = IconFactory.getInstance(context!!).fromBitmap(bitmap)
-        mMap?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))  // Title = broadcastId
+        map?.addMarker(MarkerOptions().position(position).icon(descriptor).setTitle(broadcastId))  // Title = broadcastId
         return
     }
 
@@ -318,7 +358,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
 
     fun updateMap() {
         activity?.runOnUiThread {
-            mMap?.markers?.forEach { mMap?.removeMarker(it) }
+            map?.markers?.forEach { map?.removeMarker(it) }
             updateStreamSource(null)
         }
     }

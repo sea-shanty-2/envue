@@ -1,10 +1,6 @@
 package dk.cs.aau.envue
 
-import android.app.Service
 import android.content.Context
-import android.content.Intent
-import android.os.IBinder
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import com.google.firebase.messaging.FirebaseMessaging
@@ -53,7 +49,7 @@ class EnvueMessagingService : FirebaseMessagingService() {
                 if (!task.isSuccessful) {
                     msg = getString(R.string.msg_subscribe_failed)
                 }
-                Log.d(ProfileActivity.TAG, msg)
+                Log.d(ProfileFragment.TAG, msg)
                 Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
             }
     }
@@ -65,7 +61,7 @@ class EnvueMessagingService : FirebaseMessagingService() {
                 if (!task.isSuccessful) {
                     msg = getString(R.string.msg_unsubscribe_failed)
                 }
-                Log.d(ProfileActivity.TAG, msg)
+                Log.d(ProfileFragment.TAG, msg)
                 Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
             }
     }

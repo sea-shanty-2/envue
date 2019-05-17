@@ -63,10 +63,9 @@
                     android:id="@+id/categorySelectionButton"
                     android:layout_width="88dp"
                     android:layout_height="103dp"
-                    android:src="@android:color/transparent"
                     android:elevation="0dp"
-                    app:elevation="0dp"
-                    app:backgroundTint="@color/envue_light" />
+                    android:backgroundTint="@color/colorAccent"
+                    app:elevation="0dp" />
 
             </FrameLayout>
         </android.support.constraint.ConstraintLayout>
@@ -88,9 +87,9 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
                 android:text="@string/category_selection_header"
-                android:textColor="@color/envue_light"
-                android:textSize="36sp"
-                android:textStyle="bold|italic"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorPrimary"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -107,14 +106,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-
             <ListView
                 android:id="@+id/categorySelectionListView"
                 android:layout_width="393dp"
                 android:layout_height="279dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="20dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="20dp"
                 android:layout_marginBottom="8dp"
                 android:divider="@null"
                 android:dividerHeight="0dp"
