@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/coordinatorLayout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".CategorySelectionActivity">
+                                                 xmlns:app="http://schemas.android.com/apk/res-auto"
+                                                 xmlns:tools="http://schemas.android.com/tools"
+                                                 android:id="@+id/coordinatorLayout"
+                                                 android:layout_width="match_parent"
+                                                 android:layout_height="match_parent"
+                                                 tools:context=".CategorySelectionActivity">
 
     <ProgressBar
             android:id="@+id/pBar"
@@ -16,119 +16,119 @@
             android:visibility="gone">
     </ProgressBar>
 
-    <android.support.constraint.ConstraintLayout
-        android:id="@+id/container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_anchorGravity="top|left">
+    <LinearLayout
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_anchorGravity="top|left"
+            android:weightSum="6"
+            android:orientation="vertical">
 
         <android.support.constraint.ConstraintLayout
-            android:layout_width="413dp"
-            android:layout_height="216dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/emojiRowsConstraintLayout">
+                android:id="@+id/windowTitleConstraintLayout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_weight="1"
+                app:layout_constraintTop_toTopOf="parent">
 
-            <FrameLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="@dimen/start_broadcast_button_margin"
-                android:layout_marginStart="262dp"
-                android:layout_marginTop="582dp"
-                android:layout_marginEnd="264dp"
-                android:layout_marginBottom="67dp"
+
+            <TextView
+                    android:id="@+id/categorySelectionHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/category_selection_header"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorPrimary"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+        </android.support.constraint.ConstraintLayout>
+
+        <RelativeLayout
+                android:id="@+id/emojiRowsConstraintLayout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="4"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
+            <ListView
+                    android:id="@+id/categorySelectionListView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginBottom="8dp"
+                    android:divider="@null"
+                    android:dividerHeight="0dp"
+                    android:fadingEdge="horizontal"
+                    android:fadingEdgeLength="30dp"
+                    android:fillViewport="false"
+                    android:footerDividersEnabled="false"
+                    android:headerDividersEnabled="false"
+                    android:requiresFadingEdge="vertical"
+                    android:scrollbars="none"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+        </RelativeLayout>
+
+        <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:id="@+id/okButton"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_weight="1"
+                app:layout_constraintTop_toBottomOf="@+id/emojiRowsConstraintLayout">
+
+            <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center">
+
                 <TextView
-                    android:id="@+id/categorySelectionButtonText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:elevation="16dp"
-                    android:text="@string/category_selection_button_text"
-                    android:textAlignment="center"
-                    android:textColor="@color/white"
-                    android:textSize="36sp"
-                    android:textStyle="bold"
-                    android:typeface="monospace"
-                    tools:layout_editor_absoluteX="183dp"
-                    tools:layout_editor_absoluteY="83dp" />
+                        android:id="@+id/categorySelectionButtonText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:elevation="16dp"
+                        android:text="@string/category_selection_button_text"
+                        android:textAlignment="center"
+                        android:textColor="@color/white"
+                        android:textSize="36sp"
+                        android:textStyle="bold"
+                        android:typeface="monospace"
+                        tools:layout_editor_absoluteX="183dp"
+                        tools:layout_editor_absoluteY="83dp"/>
 
                 <android.support.design.widget.FloatingActionButton
-                    android:id="@+id/categorySelectionButton"
-                    android:layout_width="88dp"
-                    android:layout_height="103dp"
-                    android:elevation="0dp"
-                    android:backgroundTint="@color/colorAccent"
-                    app:elevation="0dp" />
+                        android:id="@+id/categorySelectionButton"
+                        android:layout_gravity="center"
+                        android:layout_width="88dp"
+                        android:layout_height="103dp"
+                        android:elevation="0dp"
+                        android:backgroundTint="@color/colorAccent"
+                        app:elevation="0dp"/>
 
             </FrameLayout>
         </android.support.constraint.ConstraintLayout>
 
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/windowTitleConstraintLayout"
-            android:layout_width="414dp"
-            android:layout_height="132dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
 
 
-            <TextView
-                android:id="@+id/categorySelectionHeader"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/category_selection_header"
-                android:textSize="26sp"
-                android:textStyle="bold"
-                android:textColor="@color/colorPrimary"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </android.support.constraint.ConstraintLayout>
-
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/emojiRowsConstraintLayout"
-            android:layout_width="415dp"
-            android:layout_height="298dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ListView
-                android:id="@+id/categorySelectionListView"
-                android:layout_width="393dp"
-                android:layout_height="279dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginBottom="8dp"
-                android:divider="@null"
-                android:dividerHeight="0dp"
-                android:fadingEdge="horizontal"
-                android:fadingEdgeLength="30dp"
-                android:fillViewport="false"
-                android:footerDividersEnabled="false"
-                android:headerDividersEnabled="false"
-                android:requiresFadingEdge="vertical"
-                android:scrollbars="none"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </android.support.constraint.ConstraintLayout>
-
-    </android.support.constraint.ConstraintLayout>
+    </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>
