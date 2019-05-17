@@ -35,7 +35,7 @@ class LeaderboardFragment : Fragment() {
                 val me = response.data()?.accounts()?.me() ?: return
 
                 val rank = me?.rank() ?: 0
-                val total = me?.score()
+                val total = me?.score() ?: 0
                 val percentile = me?.percentile() ?: 0.0
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
