@@ -35,7 +35,7 @@ class LeaderboardFragment : Fragment() {
                 val me = response.data()?.accounts()?.me() ?: return
 
                 val rank = me?.rank() ?: 0
-                val total = me?.score()
+                val total = me?.score() ?: 0
                 val percentile = me?.percentile() ?: 0.0
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
@@ -71,7 +71,7 @@ class LeaderboardFragment : Fragment() {
         val chart = view?.findViewById<View>(R.id.leaderboard_chart) as LineChart
         val entries = scores?.map { Entry(it.first.time.toFloat(), it.second.toFloat()) }
 
-        if (percentile != 0.0) {
+        if (percentile != null) {
             val data = LineDataSet(entries, "Score for the last 30 broadcasts")
 
             chart.axisLeft.axisMinimum = 0f
