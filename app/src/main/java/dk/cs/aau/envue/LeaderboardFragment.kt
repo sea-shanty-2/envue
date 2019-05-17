@@ -71,7 +71,7 @@ class LeaderboardFragment : Fragment() {
         val chart = view?.findViewById<View>(R.id.leaderboard_chart) as LineChart
         val entries = scores?.map { Entry(it.first.time.toFloat(), it.second.toFloat()) }
 
-        if (percentile != null) {
+        if (percentile != 0.0) {
             val data = LineDataSet(entries, "Score for the last 30 broadcasts")
 
             chart.axisLeft.axisMinimum = 0f
