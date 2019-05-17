@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="dk.cs.aau.envue">
+          package="dk.cs.aau.envue">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -26,20 +25,15 @@
         <activity android:name=".StatisticsActivity"
             android:screenOrientation="portrait">
         </activity>
-        <activity android:name=".ViewershipFragment" />
         <activity
             android:name=".BrowseEventsActivity"
             android:label="@string/title_activity_choose_broadcast"
             android:theme="@style/NoActionBar" />
-        <activity android:name=".MapFragment" />
         <activity
             android:name=".InterestsActivity"
             android:label="@string/title_activity_interests"
-            android:parentActivityName=".ProfileFragment"
+            android:screenOrientation="portrait"
             android:theme="@style/NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="dk.cs.aau.envue.ProfileFragment" />
         </activity>
         <activity
             android:name=".PlayerActivity"
@@ -49,6 +43,7 @@
         <activity
             android:name=".InitializeBroadcastActivity"
             android:label="@string/title_activity_initialize_broadcast"
+            android:screenOrientation="portrait"
             android:noHistory="true"
             android:theme="@style/NoActionBar" />
         <activity
@@ -69,12 +64,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".ProfileFragment" />
+        <activity android:name=".LoginActivity"
+                  android:screenOrientation="portrait"/>
         <activity android:name=".FilterActivity"
                   android:label="@string/title_activity_filter"
                   android:noHistory="true"
-                  android:theme="@style/NoActionBar" />
+                  android:theme="@style/NoActionBar"
+                  android:screenOrientation="portrait" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"

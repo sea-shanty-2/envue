@@ -71,16 +71,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Update map on button press
-        findViewById<FloatingActionButton>(R.id.update_map_button).setOnClickListener {
-            mapFragment.updateMap()
-        }
-
         // Update map. Needed to handle orientation changes.
         mapFragment.updateMap()
-
-        // Open category selection on button press
-        filter_categories_button.setOnClickListener { this.onFilter()}
     }
 
     private fun ensurePermissionsGranted(permissions: Array<String>): Boolean {
@@ -104,23 +96,6 @@ class MainActivity : AppCompatActivity() {
                 //startActivity(Intent(this, MainActivity::class.java))
             }
             else { startActivity(Intent(this, InitializeBroadcastActivity::class.java)) }
-        }
-    }
-
-    private fun onFilter() {
-        val intent = Intent(this, FilterActivity::class.java)
-        startActivityForResult(intent, SET_FILTERS_REQUEST)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            SET_FILTERS_REQUEST ->
-                if (resultCode == Activity.RESULT_OK) {
-                    var categories = data?.getDoubleArrayExtra(resources.getString(R.string.filter_response_key))
-                    if (categories != null && !categories.contains(1.0)) categories = null
-                    // (supportFragmentManager.findFragmentById(R.id.main_fragment) as MapFragment).updateFilters(categories)
-                }
         }
     }
 }

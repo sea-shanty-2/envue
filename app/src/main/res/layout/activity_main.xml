@@ -27,30 +27,6 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"/>
 
-        <android.support.design.widget.FloatingActionButton
-                android:id="@+id/update_map_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:clickable="true"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:srcCompat="@android:drawable/ic_popup_sync"
-                android:focusable="true"/>
-
-        <android.support.design.widget.FloatingActionButton
-                android:id="@+id/filter_categories_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="24dp"
-                android:clickable="true"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:srcCompat="@drawable/ic_filter_48dp"
-                app:layout_constraintEnd_toStartOf="@+id/update_map_button"
-                android:focusable="true"/>
-
     </android.support.constraint.ConstraintLayout>
 
 </RelativeLayout>
