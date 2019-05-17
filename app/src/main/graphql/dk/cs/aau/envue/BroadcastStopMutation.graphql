@@ -3,6 +3,7 @@ mutation BroadcastStopMutation($id: ID!) {
         stop(
             id:$id
         ) {
+            activity
             leftTimeStamps {
                 id
                 time
