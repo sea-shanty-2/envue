@@ -78,7 +78,9 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onPause() {
-        updater.cancel(true)
+        if (::updater.isInitialized) {
+            updater.cancel(true)
+        }
         super.onPause()
     }
 
