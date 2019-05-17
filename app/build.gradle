@@ -36,7 +36,7 @@ repositories {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:7.2.0'
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:7.5.0-alpha.2'
     //noinspection GradleCompatible
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
@@ -72,14 +72,14 @@ dependencies {
     // end yasea
 
     // graphql
-    implementation 'com.apollographql.apollo:apollo-runtime:0.3.1'
-    implementation "com.apollographql.apollo:apollo-android-support:0.3.1"
+    implementation 'com.apollographql.apollo:apollo-runtime:0.4.1'
+    implementation "com.apollographql.apollo:apollo-android-support:0.4.1"
     // end graphql
 
     // exoplayer
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.9.6'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.9.6'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.9.6'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.10.0'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.10.0'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.10.0'
     implementation 'com.android.support:cardview-v7:28.0.0'
     // end exoplayer
 
@@ -97,9 +97,9 @@ dependencies {
     // end location support
 
     // push notification support
-    implementation 'com.google.firebase:firebase-core:16.0.8'
+    implementation 'com.google.firebase:firebase-core:16.0.9'
     // end push notification support
-    implementation 'com.google.firebase:firebase-messaging:17.6.0'
+    implementation 'com.google.firebase:firebase-messaging:18.0.0'
 
     // chart support
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
