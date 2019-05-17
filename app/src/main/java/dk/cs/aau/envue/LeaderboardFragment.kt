@@ -23,6 +23,7 @@ import dk.cs.aau.envue.shared.FormatDate
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.BarChartMarker
 import dk.cs.aau.envue.utility.calculateScoreFromViewTime
+import java.lang.Math
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -80,7 +81,7 @@ class LeaderboardFragment : Fragment() {
         var index = 0f
         val chart = view?.findViewById<View>(R.id.leaderboard_chart) as LineChart
 
-        val entries = scores.sortedBy { it.first }
+        val entries = scores.sortedByDescending { it.first }
                                         .map {
                                             val e = Entry(index, it.second.toFloat())
                                             index += 1
@@ -131,6 +132,9 @@ class LeaderboardFragment : Fragment() {
             dataSet.fillColor = Color.BLACK
         }
 
+        // Get max
+        val ymax = scores.maxBy { it.second }?.second ?: 0
+
         chart.apply {
             description.isEnabled = false
             setTouchEnabled(true)
@@ -150,9 +154,22 @@ class LeaderboardFragment : Fragment() {
             // force pinch zoom along both axis
             setPinchZoom(true)
 
-            axisLeft.axisMinimum = 0f
-            axisRight.setDrawGridLines(false)
-            axisRight.setDrawLabels(false)
+            // Axis settings
+            xAxis.isEnabled = false
+
+            axisLeft.apply {
+                axisMinimum = 0f
+                axisMaximum = ymax + 1f
+                labelCount = Math.min(ymax, 5)
+                setDrawLabels(false)
+            }
+
+            axisRight.apply {
+                setDrawGridLines(false)
+                setDrawLabels(false)
+                isEnabled = false
+            }
+
         }
 
         chart.data = LineData(dataSet)

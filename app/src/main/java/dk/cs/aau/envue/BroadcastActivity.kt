@@ -47,6 +47,7 @@ import android.widget.TextView
 import com.google.gson.Gson
 import dk.cs.aau.envue.communication.packets.ChatStatePacket
 import dk.cs.aau.envue.shared.FormatDate
+import dk.cs.aau.envue.type.AccountUpdateInputType
 import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.calculateScoreFromViewTime
 import dk.cs.aau.envue.utility.haversine
@@ -554,13 +555,26 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         })
     }
 
-    private fun updateScore(joinedTimeStamps: List<BroadcastStopMutation.JoinedTimeStamp>?, leftTimeStamps: List<BroadcastStopMutation.LeftTimeStamp>?, date: Date){
+    private fun updateScore(joinedTimeStamps: List<BroadcastStopMutation.JoinedTimeStamp>?,
+                            leftTimeStamps: List<BroadcastStopMutation.LeftTimeStamp>?, date: Date){
         val score = calculateScoreFromViewTime(
             joinedTimeStamps?.map { x -> Pair(x.id(), x.time())  }?.toMutableList() ?: mutableListOf(),
             leftTimeStamps?.map { x -> Pair(x.id(), x.time())  }?.toMutableList() ?: mutableListOf(),
             date
         )
 
+        val account = AccountUpdateInputType.builder().score(score).build()
+        val mutation = ProfileUpdateMutation.builder().account(account).build()
+
+        GatewayClient.mutate(mutation).enqueue(object : ApolloCall.Callback<ProfileUpdateMutation.Data>() {
+            override fun onResponse(response: Response<ProfileUpdateMutation.Data>) {
+                Log.d(TAG, "Updated score")
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d(TAG, "Failed to update score")
+            }
+        })
 
 
     }
