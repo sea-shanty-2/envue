@@ -47,7 +47,9 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import com.google.gson.Gson
 import dk.cs.aau.envue.communication.packets.ChatStatePacket
+import dk.cs.aau.envue.shared.FormatDate
 import dk.cs.aau.envue.type.LocationInputType
+import dk.cs.aau.envue.utility.calculateScoreFromViewTime
 import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
 import kotlin.math.abs
@@ -529,8 +531,13 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         GatewayClient.mutate(mutation).enqueue(object : ApolloCall.Callback<BroadcastStopMutation.Data>() {
             override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
-                val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
-                val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
+                val broadcast = response.data()?.broadcasts()?.stop()
+
+                val joinedTimeStamps = broadcast?.joinedTimeStamps()
+                val leftTimeStamps = broadcast?.leftTimeStamps()
+                val date = FormatDate(broadcast?.activity() as String)
+
+                updateScore(joinedTimeStamps, leftTimeStamps, date)
 
                 // Start statistics activity with viewer count stats
                 startStatisticsActivity(joinedTimeStamps?.toTypedArray(), leftTimeStamps?.toTypedArray())
@@ -540,6 +547,17 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 Log.d("STOPBROADCAST", "Stop broadcast mutation failed, broadcast has not been removed from events!")
             }
         })
+    }
+
+    private fun updateScore(joinedTimeStamps: List<BroadcastStopMutation.JoinedTimeStamp>?, leftTimeStamps: List<BroadcastStopMutation.LeftTimeStamp>?, date: Date){
+        val score = calculateScoreFromViewTime(
+            joinedTimeStamps?.map { x -> Pair(x.id(), x.time())  }?.toMutableList() ?: mutableListOf(),
+            leftTimeStamps?.map { x -> Pair(x.id(), x.time())  }?.toMutableList() ?: mutableListOf(),
+            date
+        )
+
+
+
     }
 
     private fun updateViewerCount() {
