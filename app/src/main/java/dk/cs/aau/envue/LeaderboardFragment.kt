@@ -49,7 +49,7 @@ class LeaderboardFragment : Fragment() {
                         ?: mutableListOf()
 
                     val date = dateFormat.parse(it.activity() as String)
-                    Pair(date, calculateScoreFromViewTime(join, left))
+                    Pair(date, calculateScoreFromViewTime(join, left, date))
                 }
 
                 activity?.runOnUiThread {
