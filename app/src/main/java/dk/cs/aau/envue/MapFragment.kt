@@ -90,8 +90,9 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
     }
 
     override fun onPause() {
-        updater.cancel(true)
-
+        if (::updater.isInitialized) {
+            updater.cancel(true)
+        }
         super.onPause()
     }
 
@@ -367,8 +368,13 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         val eventQuery = EventWithIdQuery.builder().id(id).build()
         GatewayClient.query(eventQuery).enqueue(object: ApolloCall.Callback<EventWithIdQuery.Data>() {
             override fun onResponse(response: Response<EventWithIdQuery.Data>) {
-                response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }?.let {
-                    callback(id, it as ArrayList<String>)
+                val ids = response.data()?.events()?.containing()?.broadcasts()?.map { it.id() }
+                var recommended : String? = response.data()?.events()?.containing()?.recommended()?.id()
+
+                if (recommended == null) recommended = id
+
+                if (ids != null) {
+                    callback(recommended, ids as ArrayList<String>)
                 }
             }
 
