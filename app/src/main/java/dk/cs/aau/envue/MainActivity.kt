@@ -9,10 +9,10 @@ import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker
+import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
 import com.facebook.AccessToken
+import dk.cs.aau.envue.pager.BottomBarAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         // Create fragments
         mapFragment = MapFragment()
         profileFragment = ProfileFragment()
@@ -43,9 +44,11 @@ class MainActivity : AppCompatActivity() {
         val adapter = BottomBarAdapter(supportFragmentManager)
         adapter.addFragment(mapFragment)
         adapter.addFragment(profileFragment)
-        view_pager?.adapter = adapter
+        findViewById<ViewPager>(R.id.view_pager)?.apply {
+            this.adapter = adapter
+        }
 
-        nav_view?.setOnNavigationItemSelectedListener {
+        bottom_navigation?.setOnNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.action_profile -> {
                     view_pager?.currentItem = 1
@@ -54,6 +57,15 @@ class MainActivity : AppCompatActivity() {
                 R.id.action_map -> {
                     view_pager?.currentItem = 0
                     true
+                }
+                R.id.action_broadcast -> {
+                    if(ensurePermissionsGranted(arrayOf(
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.RECORD_AUDIO,
+                            Manifest.permission.ACCESS_FINE_LOCATION))) {
+                        startActivity(Intent(this, InitializeBroadcastActivity::class.java))
+                    }
+                    false
                 }
                 else -> false
             }
@@ -69,43 +81,6 @@ class MainActivity : AppCompatActivity() {
 
         // Open category selection on button press
         filter_categories_button.setOnClickListener { this.onFilter()}
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.activity_main, menu)
-
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.action_profile -> {
-            view_pager?.currentItem = 1
-
-            true
-        }
-        R.id.action_broadcast -> {
-            if(ensurePermissionsGranted(arrayOf(
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.RECORD_AUDIO,
-                    Manifest.permission.ACCESS_FINE_LOCATION))) {
-                startActivity(Intent(this, InitializeBroadcastActivity::class.java))
-            }
-            true
-        }
-        R.id.action_player -> {
-            startActivity(Intent(this, BrowseEventsActivity::class.java))
-            true
-        }
-        R.id.action_map -> {
-            view_pager?.currentItem = 0
-
-            true
-        }
-        else -> {
-            // If we got here, the user's action was not recognized.
-            // Invoke the superclass to handle it.
-            super.onOptionsItemSelected(item)
-        }
     }
 
     private fun ensurePermissionsGranted(permissions: Array<String>): Boolean {
