@@ -186,5 +186,6 @@
     <string name="explore">Explore</string>
     <string name="hint_viewers">This is the number of viewers on your broadcast.</string>
     <string name="hint_like">This is the approval rating and number of ratings on your broadcast.</string>
+    <string name="pause">Pause</string>
 
 </resources>
