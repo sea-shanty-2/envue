@@ -51,5 +51,12 @@
                    android:alpha="0.5"
                    android:background="@drawable/ic_report_white_24dp"
                    android:contentDescription="@string/report"/>
+        <ImageView android:layout_width="32dp"
+                   android:id="@+id/stream_settings"
+                   android:layout_height="32dp"
+                   android:layout_gravity="bottom|start"
+                   android:alpha="0.5"
+                   android:background="@drawable/ic_settings_white_24dp"
+                   android:contentDescription="@string/settings"/>
     </LinearLayout>
 </FrameLayout>

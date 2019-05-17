@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Menu
+        A menu resource defines an application menu (Options Menu, Context Menu, or submenu) that
+        can be inflated with MenuInflater.
+-->
+<menu
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+>
+    <item
+            android:id="@+id/enable_chat"
+            android:title="@string/enable_chat"
+            app:showAsAction="never"
+            android:checkable="true"
+    />
+
+    <item
+            android:id="@+id/enable_recommendations"
+            android:title="@string/enable_recommendations"
+            app:showAsAction="never"
+            android:checkable="true"
+    />
+</menu>

@@ -143,6 +143,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
+    fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     override fun onChatStateChanged(enabled: Boolean) {
         runOnUiThread {
             onMessage(SystemMessage(resources.getString(if (enabled) R.string.chat_enabled else R.string.chat_disabled)))
@@ -315,7 +317,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Update chat adapter
         chatAdapter?.apply {
-            isLandscape = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            isLandscape = this@PlayerActivity.isLandscape()
         }
 
         // Assign chat adapter and layout manager
@@ -339,9 +341,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
             var handle = false
             if (actionId == EditorInfo.IME_ACTION_SEND) {
-                findViewById<Button>(R.id.button_chatbox_send)?.performClick()
-                // val methodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                // methodManager.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
+                addLocalMessage()
                 handle = true
             }
             handle
@@ -361,26 +361,46 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
-        // Add click listener to report stream button
-        if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
+        // Add stream options in isLandscape mode
+        findViewById<ImageView>(R.id.stream_settings)?.apply {
+            visibility = if (this@PlayerActivity.isLandscape()) View.VISIBLE else View.GONE
+
+            if (this@PlayerActivity.isLandscape()) {
+                setOnClickListener {
+                    val popup = PopupMenu(this@PlayerActivity, it)
+                    popup.menuInflater.inflate(R.menu.stream_settings, popup.menu)
+
+                    popup.menu.findItem(R.id.enable_chat)?.apply {
+                        val chatContainer = findViewById<LinearLayout>(R.id.chat_container)
+                        isChecked = chatContainer?.visibility == View.VISIBLE
+                        setOnMenuItemClickListener {
+                            chatContainer?.visibility = if (chatContainer.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+                            true
+                        }
+                    }
+
+                    popup.show()
+                }
+            }
         }
+
+        // Add click listener to report stream button
+        findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
 
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }
 
     private fun reportContentDialog() {
-        val displayNameDialog = AlertDialog.Builder(this)
-        displayNameDialog.setTitle("Report video")
-
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_TEXT
-        displayNameDialog.setView(input)
 
-        displayNameDialog.setPositiveButton("OK") { _, _ -> sendReport(input) }
-        displayNameDialog.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-        displayNameDialog.show()
+        AlertDialog.Builder(this).apply {
+            setTitle(getString(R.string.report_video))
+            setPositiveButton("OK") { _, _ -> sendReport(input) }
+            setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+            show()
+        }
     }
 
     private fun sendReport(message: EditText) {

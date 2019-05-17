@@ -187,5 +187,7 @@
     <string name="hint_viewers">This is the number of viewers on your broadcast.</string>
     <string name="hint_like">This is the approval rating and number of ratings on your broadcast.</string>
     <string name="pause">Pause</string>
+    <string name="report_video">Report video</string>
+    <string name="enable_recommendations">Enable recommendations</string>
 
 </resources>
