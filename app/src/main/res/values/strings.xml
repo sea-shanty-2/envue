@@ -31,7 +31,7 @@
     <!-- Interests -->
     <string name="current_interests">Current Interests</string>
     <string name="interests_button">Change Interests</string>
-    <string name="interests_dialog_title">Select Interests</string>
+    <string name="interests_dialog_title">What are your interests?</string>
     <string name="interests_dialog_possitive">OK</string>
     <string name="interests_dialog_negative">Cancel</string>
     <string name="interests_response_key">INTERESTS_RESPONSE_KEY</string>
@@ -181,5 +181,10 @@
     <string name="play">Play</string>
     <string name="chat_disabled">The broadcaster has disabled chat and is not able to see messages.</string>
     <string name="chat_enabled">The broadcaster has enabled chat and is now able to see messages.</string>
+    <string name="unable_to_retrieve_location">Unable to retrieve your location, please try again.</string>
+    <string name="filter">Filter</string>
+    <string name="explore">Explore</string>
+    <string name="hint_viewers">This is the number of viewers on your broadcast.</string>
+    <string name="hint_like">This is the approval rating and number of ratings on your broadcast.</string>
 
 </resources>

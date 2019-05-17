@@ -1,28 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:id="@+id/map_fragment"
         tools:context=".MapFragment">
 
     <com.mapbox.mapboxsdk.maps.MapView
-            android:id="@+id/mapView"
+            android:id="@+id/map_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            mapbox:mapbox_cameraTargetLat="40.73581"
-            mapbox:mapbox_cameraTargetLng="-73.99155"
-            mapbox:mapbox_cameraZoom="11" />
+            app:mapbox_cameraTargetLat="57.04"
+            app:mapbox_cameraTargetLng="9.93"
+            app:mapbox_cameraZoom="10" />
 
-    <Button
-            android:text="Filter"
+    <android.support.design.widget.FloatingActionButton
+            android:id="@+id/update_map_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/filterButton"
-            android:layout_margin="16dp"
-            android:layout_marginTop="8dp"
-            mapbox:layout_constraintTop_toTopOf="@+id/mapView" android:layout_marginStart="8dp"
-            mapbox:layout_constraintStart_toStartOf="@+id/mapView"/>
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@android:drawable/ic_popup_sync"
+            android:focusable="true"/>
+
+    <android.support.design.widget.FloatingActionButton
+            android:id="@+id/filter_categories_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="24dp"
+            android:clickable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:srcCompat="@drawable/ic_filter_48dp"
+            app:layout_constraintEnd_toStartOf="@+id/update_map_button"
+            android:focusable="true"/>
 
 </android.support.constraint.ConstraintLayout>
