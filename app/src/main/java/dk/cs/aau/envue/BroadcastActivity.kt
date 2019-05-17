@@ -18,7 +18,6 @@ import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
-import com.facebook.Profile
 import com.github.faucamp.simplertmp.RtmpHandler
 import dk.cs.aau.envue.communication.*
 import net.ossrs.yasea.SrsEncodeHandler
@@ -455,6 +454,15 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
                 popup.show()
             }
+        }
+
+        // Add hints
+        findViewById<TextView>(R.id.viewer_count)?.setOnClickListener {
+            Toast.makeText(this, getString(R.string.hint_viewers), Toast.LENGTH_LONG).show()
+        }
+
+        findViewById<TextView>(R.id.like_ratio)?.setOnClickListener {
+            Toast.makeText(this, getString(R.string.hint_like), Toast.LENGTH_LONG).show()
         }
 
         // Assign chat adapter and layout manager
