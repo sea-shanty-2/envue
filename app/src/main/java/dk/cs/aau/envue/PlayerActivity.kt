@@ -152,23 +152,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     override fun onRecommendationAccepted(broadcastId: String) {
-        currentRecommendationFragment?.let { fragment ->
-            val animation = AnimationUtils.loadAnimation(this, R.anim.exit).apply {
-                setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(animation: Animation?) {}
-
-                    override fun onAnimationRepeat(animation: Animation?) {}
-
-                    override fun onAnimationEnd(animation: Animation?) {
-                        supportFragmentManager.beginTransaction()
-                            .remove(fragment)
-                            .commit()
-                    }
-                })
-            }
-
-            findViewById<FrameLayout>(R.id.recommendation_view)?.startAnimation(animation)
-        }
+        recommendationExpirationThread?.interrupt()
     }
 
     override fun onChatStateChanged(enabled: Boolean) {
@@ -510,7 +494,29 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 }
             }
 
+            // Reset progress
             recommendationProgress = 0
+
+            // Hide recommendation
+            runOnUiThread {
+                currentRecommendationFragment?.let { fragment ->
+                    val animation = AnimationUtils.loadAnimation(this, R.anim.exit).apply {
+                        setAnimationListener(object : Animation.AnimationListener {
+                            override fun onAnimationStart(animation: Animation?) {}
+
+                            override fun onAnimationRepeat(animation: Animation?) {}
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                                supportFragmentManager.beginTransaction()
+                                    .remove(fragment)
+                                    .commit()
+                            }
+                        })
+                    }
+
+                    findViewById<FrameLayout>(R.id.recommendation_view)?.startAnimation(animation)
+                }
+            }
         }
         recommendationExpirationThread?.start()
     }
