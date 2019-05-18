@@ -113,6 +113,8 @@
         <item>🎉</item> <!-- tada -->
         <item>🍆</item> <!-- aubergine -->
         <item>❓</item> <!-- question mark -->
+        <item>👀</item> <!-- eyes -->
+        <item>❌</item> <!-- x -->
     </string-array>
 
 </resources>
