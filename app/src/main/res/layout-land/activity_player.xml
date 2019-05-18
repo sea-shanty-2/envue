@@ -20,26 +20,13 @@
         </FrameLayout>
     </com.google.android.exoplayer2.ui.PlayerView>
 
-    <LinearLayout
+    <FrameLayout
             android:orientation="vertical"
             android:layout_gravity="start"
-            android:layout_width="160dp"
-            android:layout_height="90dp"
-            android:layout_margin="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:id="@+id/recommendation_view">
-        <ProgressBar
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/recommendation_timer" android:max="5000" android:progress="100"/>
-        <ImageView
-                android:layout_gravity="center"
-                android:id="@+id/recommendation_image"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY"
-                android:contentDescription="@string/recommendation_thumbnail"/>
-    </LinearLayout>
+    </FrameLayout>
 
     <LinearLayout android:id="@+id/chat_container"
                   android:layout_width="match_parent"

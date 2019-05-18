@@ -47,7 +47,9 @@
     <string name="no_categories_chosen">You must select at least 1 category!</string>
     <string name="title_activity_interests">InterestsActivity</string>
     <string name="did_not_receive_location">We could not get your last position. Is your location turned on?</string>
-    <string name="location_permission_not_granted">We need your permission to get your location before you can start a broadcast.</string>
+    <string name="location_permission_not_granted">We need your permission to get your location before you can start a
+        broadcast.
+    </string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">Envue</string>
@@ -106,8 +108,8 @@
         <item>👍</item> <!-- thumbs up -->
         <item>👎</item> <!-- thumbs down -->
         <item>❤</item> <!-- heart -->
-        <item>	🔥</item> <!-- fire -->
-        <item>	😂</item> <!-- face with tears of joy -->
+        <item>🔥</item> <!-- fire -->
+        <item>😂</item> <!-- face with tears of joy -->
         <item>😠</item> <!-- angry face -->
         <item>😕</item> <!-- confused -->
         <item>🎉</item> <!-- tada -->
@@ -116,5 +118,8 @@
         <item>👀</item> <!-- eyes -->
         <item>❌</item> <!-- x -->
     </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

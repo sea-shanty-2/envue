@@ -8,10 +8,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
-import android.os.Handler
-import android.support.animation.DynamicAnimation
-import android.support.animation.FlingAnimation
-import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -26,14 +23,11 @@ import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.Player.EventListener
-import com.google.android.exoplayer2.Player.STATE_BUFFERING
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
@@ -48,7 +42,7 @@ import okhttp3.WebSocket
 import kotlin.math.absoluteValue
 
 
-class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener, RecommendationFragment.OnRecommendationFragmentListener {
     private var fingerX1 = 0.0f
     private var fingerX2 = 0.0f
     private val minScrollDistance = 150  // Minimum distance for a swipe to be registered
@@ -82,6 +76,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
     private var recommendationImageView: ImageView? = null
     private var recommendationExpirationThread: Thread? = null
+    private var recommendationProgress: Int = 0
+    private var currentRecommendationFragment: Fragment? = null
     private lateinit var updater: AsyncTask<Unit, Unit, Unit>
 
     private var broadcastId: String = "main"
@@ -148,6 +144,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    override fun onRecommendationDismissed(broadcastId: String) {
+
+    }
+
+    override fun onRecommendationAccepted(broadcastId: String) {
+        currentRecommendationFragment?.let {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.recommendation_view, Fragment())
+                .commit()
+        }
+    }
 
     override fun onChatStateChanged(enabled: Boolean) {
         runOnUiThread {
@@ -278,7 +286,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         nearbyBroadcastsList = findViewById(R.id.nearby_broadcasts_list)
         recommendationView = findViewById(R.id.recommendation_view)
         recommendationTimeout = findViewById(R.id.recommendation_timer)
-        recommendationImageView = findViewById(R.id.recommendation_image)
 
         // Add click listener to add reaction button
         findViewById<ImageView>(R.id.reaction_add)?.setOnClickListener {
@@ -391,6 +398,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                         isChecked = showRecommendationsInLandscape
                         setOnMenuItemClickListener {
                             showRecommendationsInLandscape = !isChecked
+                            if (!showRecommendationsInLandscape) {
+                                recommendationExpirationThread?.interrupt()
+                            }
                             true
                         }
                     }
@@ -456,6 +466,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun hideRecommendation() {
+        recommendationProgress = 0
         recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) } }
     }
 
@@ -473,6 +484,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun showRecommendation(broadcastId: String) {
+        if (!isLandscape()) {
+            return
+        }
+
+        // TOOD: Remove current
+
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.setCustomAnimations(R.animator.enter, R.animator.exit)
+
+        currentRecommendationFragment = RecommendationFragment.newInstance(broadcastId).also {
+            transaction.replace(R.id.recommendation_view, it)
+            transaction.commit()
+        }
+
         if (recommendedBroadcastId == broadcastId) {
             // TODO: Do not show if the user has rejected the recommendation
             return
@@ -483,10 +508,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         updateRecommendationThumbnail()
 
         recommendationExpirationThread = Thread {
-            recommendationTimeout?.let { it.progress = it.max }
+            recommendationTimeout?.let { recommendationProgress = it.max }
 
-            while (recommendationTimeout?.let { it.progress > 0 } == true) {
-                runOnUiThread { recommendationTimeout?.let { it.progress -= 1 } }
+            while (recommendationProgress > 0) {
+                runOnUiThread { recommendationTimeout?.let { it.progress = recommendationProgress-- } }
                 try {
                     Thread.sleep(5)
                 } catch (interruptedException: InterruptedException) {
@@ -572,17 +597,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        // Since we are using custom layouts for different configurations, we need to manually code state persistence
-        val recommendationVisibility = recommendationView?.visibility
-        val recommendationExpirationProgress = recommendationTimeout?.progress
-
         // Bind new content view
         bindContentView()
-
-        // Restore state
-        recommendationVisibility?.let { recommendationView?.visibility = it }
-        recommendationExpirationProgress?.let { recommendationTimeout?.progress = it }
-        updateRecommendationThumbnail()
     }
 
     private fun acceptRecommendation() {
