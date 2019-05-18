@@ -356,10 +356,17 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         // Assign player view
-        player?.let { playerView?.player = it }
-
-        // Update player state
-        player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
+        player?.apply {
+            playerView?.let {
+                it.player = this
+                it.setControllerVisibilityListener { visibility ->
+                    if (this@PlayerActivity.isLandscape()) {
+                        this@PlayerActivity.findViewById<TextView>(R.id.editText).visibility = visibility
+                    }
+                }
+            }
+            onPlayerStateChanged(playWhenReady, playbackState)
+        }
 
         // Hide chat container if chat is disabled
         val chatContainer = findViewById<LinearLayout>(R.id.chat_container)
@@ -529,17 +536,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     override fun onPause() {
         super.onPause()
-        player?.playWhenReady = false
+        player?.apply {
+            this@PlayerActivity.playbackPosition = this.currentPosition
+            playWhenReady = false
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        player?.playWhenReady = true
-    }
-
-    override fun onStop() {
-        super.onStop()
-        releasePlayer()
+        player?.apply {
+            seekTo(playbackPosition)
+            playWhenReady = true
+        }
     }
 
     override fun onDestroy() {
@@ -623,14 +631,15 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     private fun getHlsUri(fromBroadcastId: String) = Uri.parse("https://envue.me/relay/$fromBroadcastId")
 
+    private fun getMediaSource(fromBroadcastId: String) = HlsMediaSource.Factory(getDataSource()).createMediaSource(getHlsUri(fromBroadcastId))
+
     private fun getDataSource() = DefaultHttpDataSourceFactory(Util.getUserAgent(this, "Envue"))
 
     private fun changePlayerSource(toBroadcastId: String) {
         // Create media source
-        val mediaSource = HlsMediaSource.Factory(getDataSource()).createMediaSource(getHlsUri(toBroadcastId))
         player?.apply {
             seekTo(currentWindow, playbackPosition)
-            prepare(mediaSource, true, false)
+            prepare(getMediaSource(toBroadcastId), true, false)
             addListener(this@PlayerActivity)
             playWhenReady = true
         }
