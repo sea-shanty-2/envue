@@ -69,6 +69,7 @@
                     android:imeOptions="actionSend"
                     android:singleLine="true"
                     android:cursorVisible="false"
+                    android:visibility="gone"
                     android:text=""/>
         </RelativeLayout>
     </LinearLayout>
