@@ -538,6 +538,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         Broadcast.leave()
         updater.cancel(true)
         super.onDestroy()
+        player?.release()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
