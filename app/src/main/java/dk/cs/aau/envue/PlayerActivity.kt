@@ -1,7 +1,5 @@
 package dk.cs.aau.envue
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
@@ -23,7 +21,10 @@ import android.widget.*
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.DefaultRenderersFactory
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Player.EventListener
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
@@ -33,7 +34,6 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
@@ -69,14 +69,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var ownDisplayName: String = "You"
     private var ownSequenceId: Int = 0
     private var showChatInLandscape: Boolean = true
-    private var showRecommendationsInLandscape: Boolean = true
+    private var showRecommendations: Boolean = true
 
     // Broadcast selection and recommendation
     private var nearbyBroadcastsList: RecyclerView? = null
-    private var recommendationView: View? = null
-    private var recommendationTimeout: ProgressBar? = null
     private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
-    private var recommendationImageView: ImageView? = null
     private var recommendationExpirationThread: Thread? = null
     private var recommendationProgress: Int = 0
     private var currentRecommendationFragment: Fragment? = null
@@ -148,10 +145,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     override fun onRecommendationDismissed(broadcastId: String) {
-
     }
 
     override fun onRecommendationAccepted(broadcastId: String) {
+        changeBroadcast(broadcastId)
         recommendationExpirationThread?.interrupt()
     }
 
@@ -282,8 +279,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         chatList = findViewById(R.id.chat_view)
         reactionList = findViewById(R.id.reaction_view)
         nearbyBroadcastsList = findViewById(R.id.nearby_broadcasts_list)
-        recommendationView = findViewById(R.id.recommendation_view)
-        recommendationTimeout = findViewById(R.id.recommendation_timer)
 
         // Add click listener to add reaction button
         findViewById<ImageView>(R.id.reaction_add)?.setOnClickListener {
@@ -306,11 +301,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-        // Listen for clicks on recommendations
-        recommendationImageView?.setOnClickListener {
-            acceptRecommendation()
-        }
 
         // Assign nearby broadcasts adapter and layout manager
         nearbyBroadcastsList?.apply {
@@ -393,10 +383,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                     }
 
                     popup.menu.findItem(R.id.enable_recommendations)?.apply {
-                        isChecked = showRecommendationsInLandscape
+                        isChecked = showRecommendations
                         setOnMenuItemClickListener {
-                            showRecommendationsInLandscape = !isChecked
-                            if (!showRecommendationsInLandscape) {
+                            showRecommendations = !isChecked
+                            if (!showRecommendations) {
                                 recommendationExpirationThread?.interrupt()
                             }
                             true
@@ -416,8 +406,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun reportContentDialog() {
-        val input = EditText(this)
-        input.inputType = InputType.TYPE_CLASS_TEXT
+        val input = EditText(this).apply { 
+            inputType = InputType.TYPE_CLASS_TEXT
+            hint = context.getString(R.string.report_reason)
+        }
 
         AlertDialog.Builder(this).apply {
             setTitle(getString(R.string.report_video))
@@ -432,21 +424,19 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         val reportMessage = BroadcastReportMutation.builder().id(broadcastId).message(message.text.toString()).build()
         GatewayClient.mutate(reportMessage).enqueue(object : ApolloCall.Callback<BroadcastReportMutation.Data>() {
             override fun onResponse(response: Response<BroadcastReportMutation.Data>) {
-                Log.e("Report", "SuccessFully reported stream")
                 runOnUiThread {
                     Toast.makeText(
                         this@PlayerActivity,
-                        "The broadcast has been reported.",
+                        getString(R.string.broadcast_reported),
                         Toast.LENGTH_LONG
                     ).show()
                 }
             }
             override fun onFailure(e: ApolloException) {
-                Log.e("Report", "Unsuccessfully reported stream")
                 runOnUiThread {
                     Toast.makeText(
                         this@PlayerActivity,
-                        "An error occurred, please try again.",
+                        getString(R.string.error_occurred),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -464,29 +454,29 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    private fun replaceRecommendationFragment(withFragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .setCustomAnimations(R.anim.enter, R.anim.exit)
-            .replace(R.id.recommendation_view, withFragment)
-            .commit()
-    }
-
     private fun showRecommendation(broadcastId: String) {
-        if (!isLandscape()) {
+        if (!isLandscape() || broadcastId == this.broadcastId || recommendationProgress > 0 || !showRecommendations) {
             return
         }
 
         // Slide in new recommendation
         currentRecommendationFragment = RecommendationFragment.newInstance(broadcastId).also {
-            replaceRecommendationFragment(it)
+            supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.enter, R.anim.exit)
+                .replace(R.id.recommendation_view, it)
+                .commit()
         }
 
+        // Start expiration thread
         recommendedBroadcastId = broadcastId
         recommendationExpirationThread = Thread {
-            recommendationTimeout?.let { recommendationProgress = it.max }
+            recommendationProgress = 1000
 
-            while (recommendationProgress > 0) {
-                runOnUiThread { recommendationTimeout?.let { it.progress = recommendationProgress-- } }
+            while (recommendationProgress-- > 0) {
+                currentRecommendationFragment?.view?.findViewById<ProgressBar>(R.id.recommendation_timer)?.apply {
+                    progress = recommendationProgress
+                }
+
                 try {
                     Thread.sleep(5)
                 } catch (interruptedException: InterruptedException) {
@@ -519,11 +509,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
         recommendationExpirationThread?.start()
-    }
-
-    private fun cancelRecommendation() {
-        recommendedBroadcastId = null
-        recommendationExpirationThread?.interrupt()
     }
 
     private fun addLocalMessage() {
@@ -578,13 +563,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
+        // Destroy recommendation thread
+        recommendationExpirationThread?.interrupt()
+
         // Bind new content view
         bindContentView()
-    }
-
-    private fun acceptRecommendation() {
-        cancelRecommendation()
-        recommendedBroadcastId?.let { changeBroadcast(it) }
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {

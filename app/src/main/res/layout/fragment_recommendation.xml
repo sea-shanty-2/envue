@@ -52,9 +52,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="4dp"
                         android:layout_gravity="center"
-                        android:max="5000"
+                        android:max="1000"
                         android:id="@+id/recommendation_timer"
-                        android:progress="100"/>
+                        android:progress="0"/>
 
             </FrameLayout>
         </LinearLayout>
