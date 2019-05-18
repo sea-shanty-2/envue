@@ -18,7 +18,7 @@ class EmojiFragment : Fragment() {
     private var animation = DynamicAnimation()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_emoji_reaction,container,false)
+        return inflater.inflate(R.layout.fragment_emoji_reaction, container, false)
     }
 
     fun begin(emojiUniCode: String, Activity: Activity) {

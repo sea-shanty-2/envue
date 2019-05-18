@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
+import android.support.animation.DynamicAnimation
+import android.support.animation.FlingAnimation
 import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -70,6 +72,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var lastReactionAt: Long = 0
     private var ownDisplayName: String = "You"
     private var ownSequenceId: Int = 0
+    private var showChatInLandscape: Boolean = true
+    private var showRecommendationsInLandscape: Boolean = true
 
     // Broadcast selection and recommendation
     private var nearbyBroadcastsList: RecyclerView? = null
@@ -142,6 +146,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
     }
+
+    fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     override fun onChatStateChanged(enabled: Boolean) {
         runOnUiThread {
@@ -315,7 +321,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Update chat adapter
         chatAdapter?.apply {
-            isLandscape = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            isLandscape = this@PlayerActivity.isLandscape()
         }
 
         // Assign chat adapter and layout manager
@@ -339,9 +345,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
             var handle = false
             if (actionId == EditorInfo.IME_ACTION_SEND) {
-                findViewById<Button>(R.id.button_chatbox_send)?.performClick()
-                // val methodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                // methodManager.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
+                addLocalMessage()
                 handle = true
             }
             handle
@@ -361,26 +365,58 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
-        // Add click listener to report stream button
-        if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
+        // Hide chat container if chat is disabled
+        val chatContainer = findViewById<LinearLayout>(R.id.chat_container)
+        chatContainer?.visibility = if (showChatInLandscape) View.VISIBLE else View.GONE
+
+        // Add stream options in isLandscape mode
+        findViewById<ImageView>(R.id.stream_settings)?.apply {
+            visibility = if (this@PlayerActivity.isLandscape()) View.VISIBLE else View.GONE
+
+            if (this@PlayerActivity.isLandscape()) {
+                setOnClickListener {
+                    val popup = PopupMenu(this@PlayerActivity, it)
+                    popup.menuInflater.inflate(R.menu.stream_settings, popup.menu)
+
+                    popup.menu.findItem(R.id.enable_chat)?.apply {
+                        isChecked = showChatInLandscape
+                        setOnMenuItemClickListener {
+                            showChatInLandscape = !isChecked
+                            chatContainer?.visibility = if (showChatInLandscape) View.VISIBLE else View.GONE
+                            true
+                        }
+                    }
+
+                    popup.menu.findItem(R.id.enable_recommendations)?.apply {
+                        isChecked = showRecommendationsInLandscape
+                        setOnMenuItemClickListener {
+                            showRecommendationsInLandscape = !isChecked
+                            true
+                        }
+                    }
+
+                    popup.show()
+                }
+            }
         }
+
+        // Add click listener to report stream button
+        findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
 
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }
 
     private fun reportContentDialog() {
-        val displayNameDialog = AlertDialog.Builder(this)
-        displayNameDialog.setTitle("Report video")
-
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_TEXT
-        displayNameDialog.setView(input)
 
-        displayNameDialog.setPositiveButton("OK") { _, _ -> sendReport(input) }
-        displayNameDialog.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-        displayNameDialog.show()
+        AlertDialog.Builder(this).apply {
+            setTitle(getString(R.string.report_video))
+            setPositiveButton("OK") { _, _ -> sendReport(input) }
+            setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+            show()
+        }
     }
 
     private fun sendReport(message: EditText) {
@@ -390,7 +426,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 Log.e("Report", "SuccessFully reported stream")
                 runOnUiThread {
                     Toast.makeText(
-                        findViewById<View>(R.id.player_linear_layout).context,
+                        this@PlayerActivity,
                         "The broadcast has been reported.",
                         Toast.LENGTH_LONG
                     ).show()
@@ -400,7 +436,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 Log.e("Report", "Unsuccessfully reported stream")
                 runOnUiThread {
                     Toast.makeText(
-                        findViewById<View>(R.id.player_linear_layout).context,
+                        this@PlayerActivity,
                         "An error occurred, please try again.",
                         Toast.LENGTH_LONG
                     ).show()
@@ -518,6 +554,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         Broadcast.leave()
         updater.cancel(true)
         super.onDestroy()
+        player?.release()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 

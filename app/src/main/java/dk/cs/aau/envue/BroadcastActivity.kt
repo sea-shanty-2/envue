@@ -260,7 +260,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        return //TODO do something? Maybe no care
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -454,9 +453,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     chatEnabled = !chatEnabled
                     true
                 }
-
-                popup.show()
             }
+
+            popup.show()
         }
 
         // Add hints
@@ -580,11 +579,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun updateViewerCount() {
-
         val viewerQuery = BroadcastStatsQuery.builder().id(broadcastId).build()
         GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastStatsQuery.Data>() {
             override fun onResponse(response: Response<BroadcastStatsQuery.Data>) {
-
                 // Fetch and validate the query result data
                 val data = response.data()?.broadcasts()?.single()
                 if (data == null) {
