@@ -175,7 +175,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         ownDisplayName = name
         ownSequenceId = sequenceId
 
-        editMessageView?.hint = getString(R.string.write_a_message_as, name)
+        runOnUiThread {
+            editMessageView?.hint = getString(R.string.write_a_message_as, name)
+        }
     }
 
     override fun onMessage(message: Message) {
