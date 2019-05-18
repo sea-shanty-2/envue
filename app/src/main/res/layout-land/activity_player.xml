@@ -49,16 +49,39 @@
                   android:visibility="visible"
                   android:baselineAligned="false"
                   android:gravity="end">
-        <android.support.v7.widget.RecyclerView android:id="@+id/chat_view"
-                                                android:divider="#fff"
-                                                android:layout_weight=".4"
-                                                android:layout_width="0dip"
-                                                android:layout_height="match_parent"
-                                                android:padding="10dp"
-                                                android:requiresFadingEdge="vertical"
-                                                android:fadingEdgeLength="10dp"
-                                                android:fillViewport="false"
-                                                android:fadingEdge="horizontal"
-                                                android:layout_gravity="end"/>
+
+        <RelativeLayout android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight=".3"
+                        android:layout_gravity="end"
+                        android:gravity="end|bottom"
+                        android:orientation="vertical">
+            <android.support.v7.widget.RecyclerView android:id="@+id/chat_view"
+                                                    android:divider="#fff"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:padding="10dp"
+                                                    android:layout_gravity="bottom"
+                                                    android:requiresFadingEdge="vertical"
+                                                    android:fadingEdgeLength="10dp"
+                                                    android:fillViewport="false"
+                                                    android:fadingEdge="horizontal"/>
+            <EditText
+                    android:id="@+id/editText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="@string/write_a_message"
+                    android:layout_below="@id/chat_view"
+                    android:inputType="textCapSentences"
+                    android:layout_gravity="bottom"
+                    android:alpha="0.25"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/rounded_edittext"
+                    android:imeOptions="actionSend"
+                    android:singleLine="true"
+                    android:cursorVisible="false"
+                    android:text=""/>
+        </RelativeLayout>
     </LinearLayout>
 </FrameLayout>

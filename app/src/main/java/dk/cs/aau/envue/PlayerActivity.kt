@@ -70,6 +70,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var lastReactionAt: Long = 0
     private var ownDisplayName: String = "You"
     private var ownSequenceId: Int = 0
+    private var showChatInLandscape: Boolean = true
+    private var showRecommendationsInLandscape: Boolean = true
 
     // Broadcast selection and recommendation
     private var nearbyBroadcastsList: RecyclerView? = null
@@ -361,6 +363,10 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
+        // Hide chat container if chat is disabled
+        val chatContainer = findViewById<LinearLayout>(R.id.chat_container)
+        chatContainer?.visibility = if (showChatInLandscape) View.VISIBLE else View.GONE
+
         // Add stream options in isLandscape mode
         findViewById<ImageView>(R.id.stream_settings)?.apply {
             visibility = if (this@PlayerActivity.isLandscape()) View.VISIBLE else View.GONE
@@ -371,10 +377,18 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                     popup.menuInflater.inflate(R.menu.stream_settings, popup.menu)
 
                     popup.menu.findItem(R.id.enable_chat)?.apply {
-                        val chatContainer = findViewById<LinearLayout>(R.id.chat_container)
-                        isChecked = chatContainer?.visibility == View.VISIBLE
+                        isChecked = showChatInLandscape
                         setOnMenuItemClickListener {
-                            chatContainer?.visibility = if (chatContainer.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+                            showChatInLandscape = !isChecked
+                            chatContainer?.visibility = if (showChatInLandscape) View.VISIBLE else View.GONE
+                            true
+                        }
+                    }
+
+                    popup.menu.findItem(R.id.enable_recommendations)?.apply {
+                        isChecked = showRecommendationsInLandscape
+                        setOnMenuItemClickListener {
+                            showRecommendationsInLandscape = !isChecked
                             true
                         }
                     }

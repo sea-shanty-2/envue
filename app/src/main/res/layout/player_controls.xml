@@ -41,21 +41,21 @@
                    android:layout_width="32dp"
                    android:layout_height="32dp"
                    android:layout_gravity="bottom|start"
-                   android:alpha="0.5"
+                   android:alpha="0.85"
                    android:background="@drawable/ic_emoticon_white_24dp"
                    android:contentDescription="@string/react"/>
         <ImageView android:layout_width="32dp"
                    android:id="@+id/report_stream"
                    android:layout_height="32dp"
                    android:layout_gravity="bottom|start"
-                   android:alpha="0.5"
+                   android:alpha="0.85"
                    android:background="@drawable/ic_report_white_24dp"
                    android:contentDescription="@string/report"/>
         <ImageView android:layout_width="32dp"
                    android:id="@+id/stream_settings"
                    android:layout_height="32dp"
                    android:layout_gravity="bottom|start"
-                   android:alpha="0.5"
+                   android:alpha="0.85"
                    android:background="@drawable/ic_settings_white_24dp"
                    android:contentDescription="@string/settings"/>
     </LinearLayout>
