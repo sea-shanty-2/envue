@@ -192,8 +192,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
             if (location != null) streamCoordinates.add(Point.fromLngLat(location.longitude(), location.latitude()))
         }
 
-        // Do not update, probably fetch error.
-        if (streamCoordinates.isEmpty()) return
 
         val lineString = LineString.fromLngLats(streamCoordinates)
 
