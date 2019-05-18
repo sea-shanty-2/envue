@@ -33,7 +33,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/viewership_text" />
 
-    <TextView
+    <!--TextView
             android:id="@+id/Leaderboard_title"
             android:layout_width="wrap_content"
             android:layout_weight="0.5"
@@ -44,7 +44,7 @@
             android:layout_gravity="center"
             android:textAlignment="center"
             android:textSize="36sp"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" /-->
 
     <fragment
         android:id="@+id/leaderboard_fragment"

@@ -1,19 +1,18 @@
 package dk.cs.aau.envue.utility
+import java.util.*
 
-import dk.cs.aau.envue.BroadcastStopMutation
-import dk.cs.aau.envue.LeaderboardQuery
-
-fun calculateScoreFromViewTime(joinedTimeStamp: MutableList<Pair<String, Int>>, leftTimeStamp: MutableList<Pair<String, Int>>): Int {
+fun calculateScoreFromViewTime(joinedTimeStamp: MutableList<Pair<String, Int>>, leftTimeStamp: MutableList<Pair<String, Int>>, date: Date): Int {
     var score = 0
+    val lastActivity = date.time / 1000
+
     joinedTimeStamp.forEach {
         val pair = leftTimeStamp.find { x -> x.first == it.first}
-        if (pair != null) {
-            val difference = pair.second - it.second
-            if (difference >= 30) score += difference  // Only add viewing for minimum of 30 seconds
+        val time = pair?.second?.toLong() ?: lastActivity
+        val difference = (time - it.second.toLong())
 
-            leftTimeStamp.remove(pair)
-        }
+        if (difference >= 30) score += difference.toInt()  // Only add viewing for minimum of 30 seconds
 
+        leftTimeStamp.remove(pair)
     }
 
     return score
