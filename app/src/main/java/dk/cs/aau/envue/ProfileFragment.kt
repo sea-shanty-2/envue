@@ -3,8 +3,8 @@ package dk.cs.aau.envue
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
@@ -15,32 +15,30 @@ import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.EmojiIcon
 import kotlinx.android.synthetic.main.activity_profile.*
 import android.text.InputType
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import dk.cs.aau.envue.type.AccountUpdateInputType
 
 
-class ProfileActivity : AppCompatActivity() {
+class ProfileFragment : Fragment() {
     companion object {
         internal val SET_INTERESTS_REQUEST = 0
-        internal val TAG = ProfileActivity::class.java.simpleName ?: "ProfileActivity"
-        internal val SENDER_ID = 296179613557
+        internal val TAG = ProfileFragment::class.java.simpleName ?: "ProfileFragment"
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_profile)
 
-        // register button listeners
-        logOutButton.setOnClickListener { this.logOut() }
-        changeDisplayName.setOnClickListener { this.openDialog() }
-        interestsButton.setOnClickListener { this.onChangeInterests() }
+        val view = inflater.inflate(R.layout.activity_profile, container, false)
 
-        val leaderboardFragment = LeaderboardFragment()
-        leaderboardFragment.arguments = intent.extras
-        supportFragmentManager
-            .beginTransaction()
-            .add(R.id.leaderboard_fragment, leaderboardFragment)
-            .commit()
+        // Register button listeners
+        view.findViewById<Button>(R.id.logOutButton)?.setOnClickListener { this.logOut() }
+        view.findViewById<Button>(R.id.changeDisplayName)?.setOnClickListener { this.openDialog() }
+        view.findViewById<Button>(R.id.interestsButton)?.setOnClickListener { this.onChangeInterests() }
+
+        return view
     }
 
     override fun onStart() {
@@ -63,7 +61,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun onProfileFetch(profile: ProfileQuery.Me) {
-        runOnUiThread {
+        activity?.runOnUiThread {
             profile.categories()?.let { oneHotVectorToEmoji(it) }
 
             profileNameView.text = profile.displayName()
@@ -72,30 +70,30 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun onProfileFetchFailure(e: ApolloException) {
-        if (this.isDestroyed) finish()
-
-        runOnUiThread {
-            AlertDialog
-                .Builder(this)
-                .setTitle(e.message)
-                .setMessage(
-                    "There was an issue fetching your profile data." +
-                    "Check your internet connection or you can try relogging.")
-                .setNegativeButton("log out") { _, _ ->  logOut() }
-                .setPositiveButton("return") { _, _ -> finish() }
-                .create()
-                .show()
+        activity?.run {
+            runOnUiThread {
+                AlertDialog
+                    .Builder(this)
+                    .setTitle(e.message)
+                    .setMessage(
+                        "There was an issue fetching your profile data." +
+                                "Check your internet connection or you can try relogging.")
+                    .setNegativeButton("log out") { _, _ ->  logOut() }
+                    .setPositiveButton("return") { _, _ -> activity?.finish() }
+                    .create()
+                    .show()
+            }
         }
     }
 
     private fun logOut() {
         LoginManager.getInstance().logOut()
-        startActivity(Intent(this, LoginActivity::class.java))
+        startActivity(Intent(this.activity, LoginActivity::class.java))
     }
 
     private fun onChangeInterests() {
         val curInt: CharSequence = currentInterestsView.text
-        val intent = Intent(this, InterestsActivity::class.java)
+        val intent = Intent(this.activity, InterestsActivity::class.java)
         intent.putExtra(resources.getString(R.string.current_interests_key), curInt)
         startActivityForResult(intent, SET_INTERESTS_REQUEST)
     }
@@ -131,23 +129,24 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun openDialog() {
-        val input = EditText(this@ProfileActivity).apply {
+        val input = EditText(this.activity).apply {
             inputType = InputType.TYPE_CLASS_TEXT
             setText(profileNameView?.text?.toString())
         }
 
-        AlertDialog.Builder(this).apply {
-            setTitle("Change display name")
-            setView(input)
-            setPositiveButton("OK") { _, _ -> acceptDialog(input)}
-            setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+        context?.let {
+            AlertDialog.Builder(it).apply {
+                setTitle("Change display name")
+                setView(input)
+                setPositiveButton("OK") { _, _ -> acceptDialog(input)}
+                setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
 
-            show()
+                show()
+            }
         }
     }
 
     private fun acceptDialog(input : EditText) {
-       // var displayNameChanged = input.text.toString()
         val temp = AccountUpdateInputType.builder().displayName(input.text.toString()).build()
         val changeDisplayName = ProfileUpdateMutation.builder().account(temp).build()
 
@@ -156,7 +155,7 @@ class ProfileActivity : AppCompatActivity() {
             }
 
             override fun onResponse(response: Response<ProfileUpdateMutation.Data>) {
-                runOnUiThread{
+                activity?.runOnUiThread{
                     profileNameView.text = input.text.toString()
                 }
             }

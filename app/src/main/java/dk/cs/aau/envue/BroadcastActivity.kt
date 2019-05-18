@@ -18,7 +18,6 @@ import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
-import com.facebook.Profile
 import com.github.faucamp.simplertmp.RtmpHandler
 import dk.cs.aau.envue.communication.*
 import net.ossrs.yasea.SrsEncodeHandler
@@ -258,7 +257,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        return //TODO do something? Maybe no care
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -421,6 +419,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             setPreviewResolution(previewSize.width, previewSize.height)
             setOutputResolution(outputSize.width, outputSize.height)
             setVideoHDMode()
+            setVideoSmoothMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)
             startPublish(rtmp)
             startCamera()
@@ -452,9 +451,18 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                     chatEnabled = !chatEnabled
                     true
                 }
-
-                popup.show()
             }
+
+            popup.show()
+        }
+
+        // Add hints
+        findViewById<TextView>(R.id.viewer_count)?.setOnClickListener {
+            Toast.makeText(this, getString(R.string.hint_viewers), Toast.LENGTH_LONG).show()
+        }
+
+        findViewById<TextView>(R.id.like_ratio)?.setOnClickListener {
+            Toast.makeText(this, getString(R.string.hint_like), Toast.LENGTH_LONG).show()
         }
 
         // Assign chat adapter and layout manager
@@ -472,6 +480,16 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         }
 
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
+
+        // Set switch camera listener
+        findViewById<ImageView>(R.id.switch_camera_button)?.apply {
+            setOnClickListener {
+                publisher?.run {
+                    switchCameraFace((cameraId + 1) % Camera.getNumberOfCameras())
+                }
+            }
+            visibility = if (Camera.getNumberOfCameras() > 1) View.VISIBLE else View.GONE
+        }
 
         // Set stop button listener
         findViewById<ImageView>(R.id.stop_broadcast_button)?.setOnClickListener {
@@ -503,9 +521,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             .setTitle("Confirmation")
             .setMessage("Are you sure you want to stop the stream?")
             .setIcon(android.R.drawable.ic_dialog_alert)
-            .setPositiveButton(
-                android.R.string.yes
-            ) { _, _ ->
+            .setPositiveButton(android.R.string.yes) { _, _ ->
                 finish()
                 removeFromActiveEvents()
                 updater.cancel(true)
@@ -518,6 +534,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         super.onDestroy()
         lock.withLock { running = false }
         this.publisher?.stopPublish()
+        this.counterThread?.interrupt()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
@@ -526,8 +543,9 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         GatewayClient.mutate(mutation).enqueue(object : ApolloCall.Callback<BroadcastStopMutation.Data>() {
             override fun onResponse(response: Response<BroadcastStopMutation.Data>) {
-                val joinedTimeStamps = response.data()?.broadcasts()?.stop()?.joinedTimeStamps()
-                val leftTimeStamps = response.data()?.broadcasts()?.stop()?.leftTimeStamps()
+                val broadcast = response.data()?.broadcasts()?.stop()
+                val joinedTimeStamps = broadcast?.joinedTimeStamps()
+                val leftTimeStamps = broadcast?.leftTimeStamps()
 
                 // Start statistics activity with viewer count stats
                 startStatisticsActivity(joinedTimeStamps?.toTypedArray(), leftTimeStamps?.toTypedArray())
@@ -540,30 +558,11 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun updateViewerCount() {
-
         val viewerQuery = BroadcastStatsQuery.builder().id(broadcastId).build()
         GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastStatsQuery.Data>() {
             override fun onResponse(response: Response<BroadcastStatsQuery.Data>) {
-
                 // Fetch and validate the query result data
-                val data = response.data()?.broadcasts()?.single()
-                if (data == null) {
-
-                    Log.d(
-                        "VIEWERCOUNT",
-                        "The viewer count query result was null"
-                    )
-                    return
-                }
-                else {
-
-                    Log.d(
-                        "VIEWERCOUNT",
-                        "Fetched viewer count for broadcast ($broadcastId):\n" +
-                            "current viewer count: ${data.current_viewer_count()}\n" +
-                            "total viewer count: ${data.total_viewer_count()}"
-                    )
-                }
+                val data = response.data()?.broadcasts()?.single() ?: return
 
                 runOnUiThread {
                     findViewById<TextView>(R.id.viewer_count)?.apply {
@@ -581,7 +580,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 }}
 
             override fun onFailure(e: ApolloException) {
-
             }
         })
     }

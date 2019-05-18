@@ -7,14 +7,7 @@ query LeaderboardQuery{
             broadcasts(first: 30){
                 items{
                     activity
-                    joinedTimeStamps{
-                        id
-                        time
-                    }
-                    leftTimeStamps{
-                        id
-                        time
-                    }
+                    score
                 }
             }
         }

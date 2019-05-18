@@ -50,7 +50,7 @@ class CircularTextView(context: Context,
 
         val circlePaint = Paint()
         val strokePaint = Paint()
-        val color = if (isSelected) ContextCompat.getColor(context, R.color.envue_light)
+        val color = if (isSelected) ContextCompat.getColor(context, R.color.colorAccent)
                     else Color.TRANSPARENT
 
         circlePaint.apply {

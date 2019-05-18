@@ -1,15 +1,11 @@
 package dk.cs.aau.envue
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
-import android.os.Handler
-import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -17,25 +13,26 @@ import android.support.v7.widget.RecyclerView
 import android.text.InputType
 import android.util.Log
 import android.view.*
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.DefaultRenderersFactory
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Player.EventListener
-import com.google.android.exoplayer2.Player.STATE_BUFFERING
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.ui.SimpleExoPlayerView
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.gson.Gson
-import com.squareup.picasso.Picasso
 import dk.cs.aau.envue.communication.*
 import dk.cs.aau.envue.communication.packets.MessagePacket
 import dk.cs.aau.envue.communication.packets.ReactionPacket
@@ -43,10 +40,11 @@ import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.Broadcast
 import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
+import java.util.*
 import kotlin.math.absoluteValue
 
 
-class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener {
+class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener, RecommendationFragment.OnRecommendationFragmentListener {
     private var fingerX1 = 0.0f
     private var fingerX2 = 0.0f
     private val minScrollDistance = 150  // Minimum distance for a swipe to be registered
@@ -70,14 +68,15 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var lastReactionAt: Long = 0
     private var ownDisplayName: String = "You"
     private var ownSequenceId: Int = 0
+    private var showChatInLandscape: Boolean = true
+    private var showRecommendations: Boolean = true
 
     // Broadcast selection and recommendation
     private var nearbyBroadcastsList: RecyclerView? = null
-    private var recommendationView: View? = null
-    private var recommendationTimeout: ProgressBar? = null
     private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
-    private var recommendationImageView: ImageView? = null
     private var recommendationExpirationThread: Thread? = null
+    private var recommendationProgress: Int = 0
+    private var currentRecommendationFragment: RecommendationFragment? = null
     private lateinit var updater: AsyncTask<Unit, Unit, Unit>
 
     private var broadcastId: String = "main"
@@ -143,6 +142,15 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
+    private fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    override fun onRecommendationDismissed(broadcastId: String) {
+    }
+
+    override fun onRecommendationAccepted(broadcastId: String) {
+        changeBroadcast(broadcastId)
+    }
+
     override fun onChatStateChanged(enabled: Boolean) {
         runOnUiThread {
             onMessage(SystemMessage(resources.getString(if (enabled) R.string.chat_enabled else R.string.chat_disabled)))
@@ -165,7 +173,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         ownDisplayName = name
         ownSequenceId = sequenceId
 
-        editMessageView?.hint = getString(R.string.write_a_message_as, name)
+        runOnUiThread {
+            editMessageView?.hint = getString(R.string.write_a_message_as, name)
+        }
     }
 
     override fun onMessage(message: Message) {
@@ -270,9 +280,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         chatList = findViewById(R.id.chat_view)
         reactionList = findViewById(R.id.reaction_view)
         nearbyBroadcastsList = findViewById(R.id.nearby_broadcasts_list)
-        recommendationView = findViewById(R.id.recommendation_view)
-        recommendationTimeout = findViewById(R.id.recommendation_timer)
-        recommendationImageView = findViewById(R.id.recommendation_image)
 
         // Add click listener to add reaction button
         findViewById<ImageView>(R.id.reaction_add)?.setOnClickListener {
@@ -296,11 +303,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Prevent dimming
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Listen for clicks on recommendations
-        recommendationImageView?.setOnClickListener {
-            acceptRecommendation()
-        }
-
         // Assign nearby broadcasts adapter and layout manager
         nearbyBroadcastsList?.apply {
             adapter = nearbyBroadcastsAdapter
@@ -315,7 +317,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Update chat adapter
         chatAdapter?.apply {
-            isLandscape = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            isLandscape = this@PlayerActivity.isLandscape()
         }
 
         // Assign chat adapter and layout manager
@@ -339,9 +341,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         findViewById<EditText>(R.id.editText)?.setOnEditorActionListener { _, actionId, _ ->
             var handle = false
             if (actionId == EditorInfo.IME_ACTION_SEND) {
-                findViewById<Button>(R.id.button_chatbox_send)?.performClick()
-                // val methodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                // methodManager.hideSoftInputFromWindow(findViewById<EditText>(R.id.editText).windowToken, 0)
+                addLocalMessage()
                 handle = true
             }
             handle
@@ -361,47 +361,83 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Update player state
         player?.let { onPlayerStateChanged(it.playWhenReady, it.playbackState) }
 
-        // Add click listener to report stream button
-        if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
+        // Hide chat container if chat is disabled
+        val chatContainer = findViewById<LinearLayout>(R.id.chat_container)
+        chatContainer?.visibility = if (showChatInLandscape) View.VISIBLE else View.GONE
+
+        // Add stream options in isLandscape mode
+        findViewById<ImageView>(R.id.stream_settings)?.apply {
+            visibility = if (this@PlayerActivity.isLandscape()) View.VISIBLE else View.GONE
+
+            if (this@PlayerActivity.isLandscape()) {
+                setOnClickListener {
+                    val popup = PopupMenu(this@PlayerActivity, it)
+                    popup.menuInflater.inflate(R.menu.stream_settings, popup.menu)
+
+                    popup.menu.findItem(R.id.enable_chat)?.apply {
+                        isChecked = showChatInLandscape
+                        setOnMenuItemClickListener {
+                            showChatInLandscape = !isChecked
+                            chatContainer?.visibility = if (showChatInLandscape) View.VISIBLE else View.GONE
+                            true
+                        }
+                    }
+
+                    popup.menu.findItem(R.id.enable_recommendations)?.apply {
+                        isChecked = showRecommendations
+                        setOnMenuItemClickListener {
+                            showRecommendations = !isChecked
+                            if (!showRecommendations) {
+                                recommendationExpirationThread?.interrupt()
+                            }
+                            true
+                        }
+                    }
+
+                    popup.show()
+                }
+            }
         }
+
+        // Add click listener to report stream button
+        findViewById<ImageView>(R.id.report_stream)?.setOnClickListener { reportContentDialog() }
 
         // Ensure chat is scrolled to bottom
         this.scrollToBottom()
     }
 
     private fun reportContentDialog() {
-        val displayNameDialog = AlertDialog.Builder(this)
-        displayNameDialog.setTitle("Report video")
+        val input = EditText(this).apply { 
+            inputType = InputType.TYPE_CLASS_TEXT
+            hint = context.getString(R.string.report_reason)
+        }
 
-        val input = EditText(this)
-        input.inputType = InputType.TYPE_CLASS_TEXT
-        displayNameDialog.setView(input)
-
-        displayNameDialog.setPositiveButton("OK") { _, _ -> sendReport(input) }
-        displayNameDialog.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-        displayNameDialog.show()
+        AlertDialog.Builder(this).apply {
+            setTitle(getString(R.string.report_video))
+            setView(input)
+            setPositiveButton("OK") { _, _ -> sendReport(input) }
+            setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+            show()
+        }
     }
 
     private fun sendReport(message: EditText) {
         val reportMessage = BroadcastReportMutation.builder().id(broadcastId).message(message.text.toString()).build()
         GatewayClient.mutate(reportMessage).enqueue(object : ApolloCall.Callback<BroadcastReportMutation.Data>() {
             override fun onResponse(response: Response<BroadcastReportMutation.Data>) {
-                Log.e("Report", "SuccessFully reported stream")
                 runOnUiThread {
                     Toast.makeText(
-                        findViewById<View>(R.id.player_linear_layout).context,
-                        "The broadcast has been reported.",
+                        this@PlayerActivity,
+                        getString(R.string.broadcast_reported),
                         Toast.LENGTH_LONG
                     ).show()
                 }
             }
             override fun onFailure(e: ApolloException) {
-                Log.e("Report", "Unsuccessfully reported stream")
                 runOnUiThread {
                     Toast.makeText(
-                        findViewById<View>(R.id.player_linear_layout).context,
-                        "An error occurred, please try again.",
+                        this@PlayerActivity,
+                        getString(R.string.error_occurred),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -419,54 +455,61 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    private fun hideRecommendation() {
-        recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) } }
-    }
-
-    private fun updateRecommendationThumbnail() {
-        recommendedBroadcastId?.let { broadcast ->
-            recommendationImageView?.let {
-                Picasso
-                    .get()
-                    .load("https://envue.me/relay/$broadcast/thumbnail")
-                    .placeholder(R.drawable.ic_live_tv_48dp)
-                    .error(R.drawable.ic_live_tv_48dp)
-                    .into(recommendationImageView)
-            }
-        }
-    }
-
     private fun showRecommendation(broadcastId: String) {
-        if (recommendedBroadcastId == broadcastId) {
-            // TODO: Do not show if the user has rejected the recommendation
+        if (!isLandscape() || broadcastId == this.broadcastId || recommendationProgress > 0 || !showRecommendations) {
             return
         }
 
+        // Slide in new recommendation
+        currentRecommendationFragment = RecommendationFragment.newInstance(broadcastId).also {
+            supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.enter, R.anim.exit)
+                .replace(R.id.recommendation_view, it)
+                .commit()
+        }
+
+        // Start expiration thread
         recommendedBroadcastId = broadcastId
-        recommendationView?.let { transitionView(it, 0f, 1f, View.VISIBLE) }
-        updateRecommendationThumbnail()
-
         recommendationExpirationThread = Thread {
-            recommendationTimeout?.let { it.progress = it.max }
+            recommendationProgress = 500
 
-            while (recommendationTimeout?.let { it.progress > 0 } == true) {
-                runOnUiThread { recommendationTimeout?.let { it.progress -= 1 } }
+            while (recommendationProgress-- > 0) {
+                currentRecommendationFragment?.view?.findViewById<ProgressBar>(R.id.recommendation_timer)?.apply {
+                    progress = recommendationProgress
+                }
+
                 try {
-                    Thread.sleep(5)
+                    Thread.sleep(50)
                 } catch (interruptedException: InterruptedException) {
-                    return@Thread
+                    break
                 }
             }
 
-            hideRecommendation()
+            // Reset progress
+            recommendationProgress = 0
+
+            // Hide recommendation
+            runOnUiThread {
+                currentRecommendationFragment?.let { fragment ->
+                    val animation = AnimationUtils.loadAnimation(this, R.anim.exit).apply {
+                        setAnimationListener(object : Animation.AnimationListener {
+                            override fun onAnimationStart(animation: Animation?) {}
+
+                            override fun onAnimationRepeat(animation: Animation?) {}
+
+                            override fun onAnimationEnd(animation: Animation?) {
+                                supportFragmentManager.beginTransaction()
+                                    .remove(fragment)
+                                    .commit()
+                            }
+                        })
+                    }
+
+                    findViewById<FrameLayout>(R.id.recommendation_view)?.startAnimation(animation)
+                }
+            }
         }
         recommendationExpirationThread?.start()
-    }
-
-    private fun cancelRecommendation() {
-        recommendedBroadcastId = null
-        recommendationExpirationThread?.interrupt()
-        hideRecommendation()
     }
 
     private fun addLocalMessage() {
@@ -499,25 +542,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         releasePlayer()
     }
 
-    private fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
-        view.apply {
-            visibility = View.VISIBLE
-            alpha = initialAlpha
-            animate()
-                .alpha(finalAlpha)
-                .setDuration(1000)
-                .setListener((object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        view.visibility = finalState
-                    }
-                }))
-        }
-    }
-
     override fun onDestroy() {
         Broadcast.leave()
         updater.cancel(true)
         super.onDestroy()
+        player?.release()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
@@ -535,22 +564,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        // Since we are using custom layouts for different configurations, we need to manually code state persistence
-        val recommendationVisibility = recommendationView?.visibility
-        val recommendationExpirationProgress = recommendationTimeout?.progress
+        // Destroy recommendation thread
+        recommendationExpirationThread?.interrupt()
 
         // Bind new content view
         bindContentView()
-
-        // Restore state
-        recommendationVisibility?.let { recommendationView?.visibility = it }
-        recommendationExpirationProgress?.let { recommendationTimeout?.progress = it }
-        updateRecommendationThumbnail()
-    }
-
-    private fun acceptRecommendation() {
-        cancelRecommendation()
-        recommendedBroadcastId?.let { changeBroadcast(it) }
     }
 
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
@@ -619,6 +637,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun changeBroadcast(id: String) {
+        // If this broadcast is recommended then interrupt the recommendation
+        currentRecommendationFragment?.broadcast?.run {
+            if (this == id) {
+                this@PlayerActivity.recommendationExpirationThread?.interrupt()
+            }
+        }
+
+        // Register as a viewer
         broadcastId = id
         Broadcast.join(broadcastId)
 

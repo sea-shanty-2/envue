@@ -12,6 +12,7 @@
     <color type="color" name="envue_dark">#444B6E</color>
     <color type="color" name="envue_neutral">#708B75</color>
     <color type="color" name="envue_light">#9AB87A</color>
+    <color type="color" name="envue_blue_light">#7a7eb8</color>
     <color type="color" name="envue_very_light">#F8F991</color>
 
     <color type="color" name="red">#FF4136</color>
@@ -29,5 +30,9 @@
         <item>@color/purple</item>
         <item>@color/maroon</item>
     </array>
+
+    <color name="colorPrimary">#2196F3</color>
+    <color name="colorPrimaryDark">#1976D2</color>
+    <color name="colorAccent">#03A9F4</color>
 
 </resources>

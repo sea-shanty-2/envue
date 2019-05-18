@@ -5,18 +5,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.EditText
-import android.widget.ListView
-import android.widget.Toast
 import com.apollographql.apollo.ApolloCall
-import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.gson.GsonBuilder
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.type.AccountUpdateInputType
-import dk.cs.aau.envue.utility.EmojiIcon
 //import dk.cs.aau.envue.workers.BroadcastCategoryListAdapter
 import kotlinx.android.synthetic.main.activity_category_selection.*
 //import kotlinx.android.synthetic.main.activity_initialize_broadcast.*
@@ -67,7 +61,7 @@ class InterestsActivity : CategorySelectionActivity() {
                         if (!task.isSuccessful) {
                             msg = getString(R.string.msg_subscribe_failed)
                         }
-                        Log.d(ProfileActivity.TAG, msg)
+                        Log.d(ProfileFragment.TAG, msg)
                     }
             else
                 FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
@@ -76,7 +70,7 @@ class InterestsActivity : CategorySelectionActivity() {
                         if (!task.isSuccessful) {
                             msg = getString(R.string.msg_unsubscribe_failed)
                         }
-                        Log.d(ProfileActivity.TAG, msg)
+                        Log.d(ProfileFragment.TAG, msg)
                     }
         }
     }
