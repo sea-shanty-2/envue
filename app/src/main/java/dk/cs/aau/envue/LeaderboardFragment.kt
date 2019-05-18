@@ -22,9 +22,9 @@ import com.github.mikephil.charting.utils.Utils
 import dk.cs.aau.envue.shared.FormatDate
 import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.BarChartMarker
-import dk.cs.aau.envue.utility.calculateScoreFromViewTime
 import java.lang.Math
 import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class LeaderboardFragment : Fragment() {
@@ -43,14 +43,7 @@ class LeaderboardFragment : Fragment() {
                 val percentile = me.percentile() ?: 0.0
 
                 val scores: List<Pair<Date, Int>>? = me.broadcasts()?.items()?.map {
-
-                    val join = it.joinedTimeStamps()?.map { x -> Pair(x.id(), x.time())  }?.toMutableList()
-                        ?: mutableListOf()
-                    val left = it.leftTimeStamps()?.map { x -> Pair(x.id(), x.time())  }?.toMutableList()
-                        ?: mutableListOf()
-
-                    val date = FormatDate(it.activity() as String)
-                    Pair(date, calculateScoreFromViewTime(join, left, date))
+                    Pair(FormatDate(it.activity() as String), it.score())
                 }
 
                 activity?.runOnUiThread {

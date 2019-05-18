@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_margin="10dp"
+              android:orientation="vertical">
+    <android.support.constraint.ConstraintLayout android:layout_width="wrap_content"
+                                                 android:layout_height="wrap_content">
+        <ImageView android:layout_width="170dp"
+                   android:layout_height="0dp"
+                   android:id="@+id/recommendation_image"
+                   app:layout_constraintDimensionRatio="16:9"
+                   app:layout_constraintLeft_toLeftOf="parent"
+                   app:layout_constraintRight_toRightOf="parent"
+                   app:layout_constraintTop_toTopOf="parent"
+                   android:contentDescription="@string/recommendation_thumbnail"/>
+
+        <FrameLayout android:layout_width="170dp"
+                     android:layout_height="wrap_content"
+                     app:layout_constraintLeft_toLeftOf="parent"
+                     app:layout_constraintRight_toRightOf="parent"
+                     app:layout_constraintBottom_toBottomOf="parent"
+                     android:background="@color/black"
+                     android:alpha="0.75"
+                     android:layout_gravity="center">
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center"
+                      android:textColor="@color/white"
+                      android:shadowColor="@color/black"
+                      android:drawableStart="@drawable/ic_star_black_24dp"
+                      android:text="@string/recommended"
+                      android:textSize="16sp"/>
+        </FrameLayout>
+    </android.support.constraint.ConstraintLayout>
+
+    <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="4dp">
+
+        <ProgressBar
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_gravity="center"
+                android:max="200"
+                android:id="@+id/recommendation_timer"
+                android:progress="0"/>
+
+    </FrameLayout>
+</LinearLayout>

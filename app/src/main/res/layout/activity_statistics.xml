@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:background="@android:color/transparent"
-        android:text="Viewers"
+        android:text="@string/viewers"
         android:layout_gravity="center"
         android:textAlignment="center"
         android:textSize="36sp"
