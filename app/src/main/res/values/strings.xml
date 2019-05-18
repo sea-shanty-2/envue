@@ -125,5 +125,6 @@
     <string name="report_reason">Enter the reason for this report...</string>
     <string name="error_occurred">An error occurred, please try again.</string>
     <string name="broadcast_reported">The broadcast has been reported.</string>
+    <string name="switch_camera">Switch camera</string>
 
 </resources>

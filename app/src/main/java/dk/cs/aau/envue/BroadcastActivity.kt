@@ -39,7 +39,6 @@ import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import android.Manifest
 import android.content.Intent
-import android.speech.tts.TextToSpeech
 import android.support.v4.app.ActivityCompat
 import android.view.View
 import android.widget.ImageView
@@ -47,7 +46,6 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import com.google.gson.Gson
 import dk.cs.aau.envue.communication.packets.ChatStatePacket
-import dk.cs.aau.envue.type.AccountUpdateInputType
 import dk.cs.aau.envue.type.LocationInputType
 import dk.cs.aau.envue.utility.haversine
 import kotlin.concurrent.withLock
@@ -421,6 +419,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             setPreviewResolution(previewSize.width, previewSize.height)
             setOutputResolution(outputSize.width, outputSize.height)
             setVideoHDMode()
+            setVideoSmoothMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)
             startPublish(rtmp)
             startCamera()
@@ -482,6 +481,16 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
 
         Log.d(TAG, "Sensor enabled: ${sensor?.maxDelay}")
 
+        // Set switch camera listener
+        findViewById<ImageView>(R.id.switch_camera_button)?.apply {
+            setOnClickListener {
+                publisher?.run {
+                    switchCameraFace((cameraId + 1) % Camera.getNumberOfCameras())
+                }
+            }
+            visibility = if (Camera.getNumberOfCameras() > 1) View.VISIBLE else View.GONE
+        }
+
         // Set stop button listener
         findViewById<ImageView>(R.id.stop_broadcast_button)?.setOnClickListener {
             this.onBackPressed()
@@ -512,9 +521,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             .setTitle("Confirmation")
             .setMessage("Are you sure you want to stop the stream?")
             .setIcon(android.R.drawable.ic_dialog_alert)
-            .setPositiveButton(
-                android.R.string.yes
-            ) { _, _ ->
+            .setPositiveButton(android.R.string.yes) { _, _ ->
                 finish()
                 removeFromActiveEvents()
                 updater.cancel(true)
@@ -527,6 +534,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         super.onDestroy()
         lock.withLock { running = false }
         this.publisher?.stopPublish()
+        this.counterThread?.interrupt()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
@@ -554,24 +562,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         GatewayClient.query(viewerQuery).enqueue(object : ApolloCall.Callback<BroadcastStatsQuery.Data>() {
             override fun onResponse(response: Response<BroadcastStatsQuery.Data>) {
                 // Fetch and validate the query result data
-                val data = response.data()?.broadcasts()?.single()
-                if (data == null) {
-
-                    Log.d(
-                        "VIEWERCOUNT",
-                        "The viewer count query result was null"
-                    )
-                    return
-                }
-                else {
-
-                    Log.d(
-                        "VIEWERCOUNT",
-                        "Fetched viewer count for broadcast ($broadcastId):\n" +
-                            "current viewer count: ${data.current_viewer_count()}\n" +
-                            "total viewer count: ${data.total_viewer_count()}"
-                    )
-                }
+                val data = response.data()?.broadcasts()?.single() ?: return
 
                 runOnUiThread {
                     findViewById<TextView>(R.id.viewer_count)?.apply {
@@ -589,7 +580,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 }}
 
             override fun onFailure(e: ApolloException) {
-
             }
         })
     }
