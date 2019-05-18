@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -41,6 +42,7 @@ import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.Broadcast
 import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
+import java.util.*
 import kotlin.math.absoluteValue
 
 
@@ -76,7 +78,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
     private var recommendationExpirationThread: Thread? = null
     private var recommendationProgress: Int = 0
-    private var currentRecommendationFragment: Fragment? = null
+    private var currentRecommendationFragment: RecommendationFragment? = null
     private lateinit var updater: AsyncTask<Unit, Unit, Unit>
 
     private var broadcastId: String = "main"
@@ -149,7 +151,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
     override fun onRecommendationAccepted(broadcastId: String) {
         changeBroadcast(broadcastId)
-        recommendationExpirationThread?.interrupt()
     }
 
     override fun onChatStateChanged(enabled: Boolean) {
@@ -470,7 +471,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         // Start expiration thread
         recommendedBroadcastId = broadcastId
         recommendationExpirationThread = Thread {
-            recommendationProgress = 1000
+            recommendationProgress = 500
 
             while (recommendationProgress-- > 0) {
                 currentRecommendationFragment?.view?.findViewById<ProgressBar>(R.id.recommendation_timer)?.apply {
@@ -478,9 +479,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 }
 
                 try {
-                    Thread.sleep(5)
+                    Thread.sleep(50)
                 } catch (interruptedException: InterruptedException) {
-                    return@Thread
+                    break
                 }
             }
 
@@ -636,6 +637,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun changeBroadcast(id: String) {
+        // If this broadcast is recommended then interrupt the recommendation
+        currentRecommendationFragment?.broadcast?.run {
+            if (this == id) {
+                this@PlayerActivity.recommendationExpirationThread?.interrupt()
+            }
+        }
+
+        // Register as a viewer
         broadcastId = id
         Broadcast.join(broadcastId)
 

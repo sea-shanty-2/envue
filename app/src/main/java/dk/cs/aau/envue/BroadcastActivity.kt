@@ -39,6 +39,7 @@ import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import android.Manifest
 import android.content.Intent
+import android.speech.tts.TextToSpeech
 import android.support.v4.app.ActivityCompat
 import android.view.View
 import android.widget.ImageView

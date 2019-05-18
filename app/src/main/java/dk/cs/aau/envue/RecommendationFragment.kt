@@ -13,7 +13,7 @@ import com.squareup.picasso.Picasso
 private const val ARG_BROADCAST = "broadcast"
 
 class RecommendationFragment : Fragment() {
-    private var broadcast: String? = null
+    public var broadcast: String? = null
     private var listener: OnRecommendationFragmentListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,7 +68,7 @@ class RecommendationFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance(broadcast: String): Fragment =
+        fun newInstance(broadcast: String): RecommendationFragment =
             RecommendationFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_BROADCAST, broadcast)
