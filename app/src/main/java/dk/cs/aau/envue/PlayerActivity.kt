@@ -16,6 +16,8 @@ import android.support.v7.widget.RecyclerView
 import android.text.InputType
 import android.util.Log
 import android.view.*
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import com.apollographql.apollo.ApolloCall
@@ -143,17 +145,29 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    private fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     override fun onRecommendationDismissed(broadcastId: String) {
 
     }
 
     override fun onRecommendationAccepted(broadcastId: String) {
-        currentRecommendationFragment?.let {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.recommendation_view, Fragment())
-                .commit()
+        currentRecommendationFragment?.let { fragment ->
+            val animation = AnimationUtils.loadAnimation(this, R.anim.exit).apply {
+                setAnimationListener(object : Animation.AnimationListener {
+                    override fun onAnimationStart(animation: Animation?) {}
+
+                    override fun onAnimationRepeat(animation: Animation?) {}
+
+                    override fun onAnimationEnd(animation: Animation?) {
+                        supportFragmentManager.beginTransaction()
+                            .remove(fragment)
+                            .commit()
+                    }
+                })
+            }
+
+            findViewById<FrameLayout>(R.id.recommendation_view)?.startAnimation(animation)
         }
     }
 
@@ -423,6 +437,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         AlertDialog.Builder(this).apply {
             setTitle(getString(R.string.report_video))
+            setView(input)
             setPositiveButton("OK") { _, _ -> sendReport(input) }
             setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
             show()
@@ -465,22 +480,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
     }
 
-    private fun hideRecommendation() {
-        recommendationProgress = 0
-        recommendationView?.let { runOnUiThread { transitionView(it, 1f, 0f, View.GONE) } }
-    }
-
-    private fun updateRecommendationThumbnail() {
-        recommendedBroadcastId?.let { broadcast ->
-            recommendationImageView?.let {
-                Picasso
-                    .get()
-                    .load("https://envue.me/relay/$broadcast/thumbnail")
-                    .placeholder(R.drawable.ic_live_tv_48dp)
-                    .error(R.drawable.ic_live_tv_48dp)
-                    .into(recommendationImageView)
-            }
-        }
+    private fun replaceRecommendationFragment(withFragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(R.anim.enter, R.anim.exit)
+            .replace(R.id.recommendation_view, withFragment)
+            .commit()
     }
 
     private fun showRecommendation(broadcastId: String) {
@@ -488,25 +492,12 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             return
         }
 
-        // TOOD: Remove current
-
-        val transaction = supportFragmentManager.beginTransaction()
-        transaction.setCustomAnimations(R.animator.enter, R.animator.exit)
-
+        // Slide in new recommendation
         currentRecommendationFragment = RecommendationFragment.newInstance(broadcastId).also {
-            transaction.replace(R.id.recommendation_view, it)
-            transaction.commit()
-        }
-
-        if (recommendedBroadcastId == broadcastId) {
-            // TODO: Do not show if the user has rejected the recommendation
-            return
+            replaceRecommendationFragment(it)
         }
 
         recommendedBroadcastId = broadcastId
-        recommendationView?.let { transitionView(it, 0f, 1f, View.VISIBLE) }
-        updateRecommendationThumbnail()
-
         recommendationExpirationThread = Thread {
             recommendationTimeout?.let { recommendationProgress = it.max }
 
@@ -519,7 +510,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 }
             }
 
-            hideRecommendation()
+            recommendationProgress = 0
         }
         recommendationExpirationThread?.start()
     }
@@ -527,7 +518,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private fun cancelRecommendation() {
         recommendedBroadcastId = null
         recommendationExpirationThread?.interrupt()
-        hideRecommendation()
     }
 
     private fun addLocalMessage() {
@@ -558,21 +548,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     override fun onStop() {
         super.onStop()
         releasePlayer()
-    }
-
-    private fun transitionView(view: View, initialAlpha: Float, finalAlpha: Float, finalState: Int) {
-        view.apply {
-            visibility = View.VISIBLE
-            alpha = initialAlpha
-            animate()
-                .alpha(finalAlpha)
-                .setDuration(1000)
-                .setListener((object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        view.visibility = finalState
-                    }
-                }))
-        }
     }
 
     override fun onDestroy() {
