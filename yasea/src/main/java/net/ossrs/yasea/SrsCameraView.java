@@ -1,5 +1,6 @@
 package net.ossrs.yasea;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -10,6 +11,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.AttributeSet;
 
+import android.view.Surface;
 import com.seu.magicfilter.base.gpuimage.GPUImageFilter;
 import com.seu.magicfilter.utils.MagicFilterFactory;
 import com.seu.magicfilter.utils.MagicFilterType;
@@ -46,9 +48,9 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
 
     private Camera mCamera;
     private ByteBuffer mGLPreviewBuffer;
-    private int mCamId = -1;
+    private int mCamId = 0;
     private int mPreviewRotation = 90;
-    private int mPreviewOrientation = Configuration.ORIENTATION_PORTRAIT;
+    private int mPreviewOrientation = Configuration.ORIENTATION_LANDSCAPE;
 
     private Thread worker;
     private final Object writeLock = new Object();
@@ -207,6 +209,9 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
         mPreviewOrientation = orientation;
         Camera.CameraInfo info = new Camera.CameraInfo();
         Camera.getCameraInfo(mCamId, info);
+
+        int rotateDeg = getRotateDeg();
+
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                 mPreviewRotation = info.orientation % 360;
@@ -219,13 +224,38 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
                 mPreviewRotation = (info.orientation - 90) % 360;
                 mPreviewRotation = (360 - mPreviewRotation) % 360;  // compensate the mirror
             } else {
-                mPreviewRotation = (info.orientation - 90) % 360;
+                mPreviewRotation = (info.orientation + 90) % 360;
             }
         }
+
+        if(rotateDeg > 0){
+            mPreviewRotation = mPreviewRotation % rotateDeg;
+        }
+
     }
 
     public int getCameraId() {
         return mCamId;
+    }
+
+    protected int getRotateDeg() {
+        try {
+            int rotate = ((Activity) getContext()).getWindowManager().getDefaultDisplay().getRotation();
+            switch (rotate) {
+                case Surface.ROTATION_0:
+                    return 0;
+                case Surface.ROTATION_90:
+                    return 90;
+                case Surface.ROTATION_180:
+                    return 180;
+                case Surface.ROTATION_270:
+                    return 270;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return -1;
     }
 
     public void enableEncoding() {
@@ -279,7 +309,7 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
         }
 
         Camera.Parameters params = mCamera.getParameters();
-        params.setPictureSize(mPreviewWidth, mPreviewHeight);
+        //params.setPictureSize(mPreviewWidth, mPreviewHeight);
         params.setPreviewSize(mPreviewWidth, mPreviewHeight);
         int[] range = adaptFpsRange(SrsEncoder.VFPS, params.getSupportedPreviewFpsRange());
         params.setPreviewFpsRange(range[0], range[1]);
@@ -287,6 +317,7 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
         params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
         params.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_AUTO);
         params.setSceneMode(Camera.Parameters.SCENE_MODE_AUTO);
+        params.setRecordingHint(true);
 
         List<String> supportedFocusModes = params.getSupportedFocusModes();
         if (supportedFocusModes != null && !supportedFocusModes.isEmpty()) {
@@ -337,10 +368,47 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
         }
     }
 
-    private Camera openCamera() {
-        mCamId = Camera.CameraInfo.CAMERA_FACING_BACK;
+    protected Camera openCamera() {
+        Camera camera = null;
+        if (mCamId < 0) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            int numCameras = Camera.getNumberOfCameras();
+            int frontCamId = -1;
+            int backCamId = -1;
+            for (int i = 0; i < numCameras; i++) {
+                Camera.getCameraInfo(i, info);
+                if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                    backCamId = i;
+                } else if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                    frontCamId = i;
+                    break;
+                }
+            }
+            if (frontCamId != -1) {
+                mCamId = frontCamId;
+            } else if (backCamId != -1) {
+                mCamId = backCamId;
+            } else {
+                mCamId = 0;
+            }
+        }
 
-        return Camera.open(mCamId);
+        try {
+            camera = Camera.open(mCamId);
+
+            camera.setErrorCallback(new Camera.ErrorCallback(){
+                @Override
+                public void onError(int error, Camera camera) {
+                    //may be Camera.CAMERA_ERROR_EVICTED - Camera was disconnected due to use by higher priority user
+                    stopCamera();
+                }
+            });
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return camera;
     }
 
     private Camera.Size adaptPreviewResolution(Camera.Size resolution) {

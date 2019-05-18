@@ -32,8 +32,7 @@ import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.EmojiIcon
 import dk.cs.aau.envue.utility.Event
 import dk.cs.aau.envue.utility.textToBitmap
-import kotlinx.android.synthetic.main.activity_broadcast.view.*
-import kotlinx.android.synthetic.main.activity_map.*
+import kotlinx.android.synthetic.main.fragment_map.*
 
 
 class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListener, Style.OnStyleLoaded{
@@ -111,7 +110,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMarkerClickListe
         Mapbox.getInstance(context!!, "pk.eyJ1IjoidGo0NTc5NCIsImEiOiJjanRrMXpjeWcwejhyNDNscTR5NzYydXk0In0.LWi-WdfCtpvgEiOkHC7MMw")
 
         // Create fragment view
-        val fragment = inflater.inflate(R.layout.activity_map, container, false)
+        val fragment = inflater.inflate(R.layout.fragment_map, container, false)
 
         // Create mapview with options
         val mapView = fragment.findViewById<MapView>(R.id.map_view)
