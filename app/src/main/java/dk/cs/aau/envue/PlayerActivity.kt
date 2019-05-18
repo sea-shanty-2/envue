@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
+import android.support.animation.DynamicAnimation
+import android.support.animation.FlingAnimation
 import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -424,7 +426,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 Log.e("Report", "SuccessFully reported stream")
                 runOnUiThread {
                     Toast.makeText(
-                        findViewById<View>(R.id.player_linear_layout).context,
+                        this@PlayerActivity,
                         "The broadcast has been reported.",
                         Toast.LENGTH_LONG
                     ).show()
@@ -434,7 +436,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                 Log.e("Report", "Unsuccessfully reported stream")
                 runOnUiThread {
                     Toast.makeText(
-                        findViewById<View>(R.id.player_linear_layout).context,
+                        this@PlayerActivity,
                         "An error occurred, please try again.",
                         Toast.LENGTH_LONG
                     ).show()

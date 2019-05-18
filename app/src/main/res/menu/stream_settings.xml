@@ -10,14 +10,14 @@
 >
     <item
             android:id="@+id/enable_chat"
-            android:title="@string/enable_chat"
+            android:title="@string/show_chat"
             app:showAsAction="never"
             android:checkable="true"
     />
 
     <item
             android:id="@+id/enable_recommendations"
-            android:title="@string/enable_recommendations"
+            android:title="@string/show_recommendations"
             app:showAsAction="never"
             android:checkable="true"
     />

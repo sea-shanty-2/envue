@@ -1,12 +1,3 @@
 <resources>
     <string name="app_name">yasea</string>
-    <string-array name="allowed_reactions">
-        <item>👍</item> <!-- thumbs up -->
-        <item>👎</item> <!-- thumbs down -->
-        <item>❤</item> <!-- heart -->
-        <item>	🔥</item> <!-- fire -->
-        <item>	😂</item> <!-- face with tears of joy -->
-        <item>🍆</item> <!-- aubergine -->
-        <item>😠</item> <!-- angry face -->
-    </string-array>
 </resources>
