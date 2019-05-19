@@ -215,7 +215,6 @@ class ProfileFragment : Fragment() {
             }
 
             override fun onFailure(e: ApolloException) = onProfileFetchFailure(e)
-
         })
     }
 
