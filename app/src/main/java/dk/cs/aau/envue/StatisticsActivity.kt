@@ -21,9 +21,5 @@ class StatisticsActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_statistics)
-
-        findViewById<FloatingActionButton>(R.id.close_statistics_button).setOnClickListener {
-            onBackPressed()
-        }
     }
 }

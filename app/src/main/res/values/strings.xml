@@ -136,9 +136,7 @@
     <string name="broadcast_performance">Recent performance</string>
     <string name="dots">...</string>
     <string name="broadcast_finished">Broadcast finished</string>
-    <string name="well_done_your_score_has_increased_by_d_points_below_you_can_find_statistics_about_your_broadcast">
-        Well done, your score has increased by %d points. Below you can find statistics about your broadcast.
+    <string name="score_increased">
+        Well done, your score has been increased by %d points. Below you can find statistics about your broadcast.
     </string>
-    <string name="viewers">Viewers</string>
-
 </resources>
