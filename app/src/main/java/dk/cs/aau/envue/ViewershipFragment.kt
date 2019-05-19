@@ -114,7 +114,7 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             dataSet.setDrawIcons(false)
 
             // Draw dashed line
-            dataSet.enableDashedLine(10f, 5f, 0f)
+            dataSet.enableDashedLine(10f, 0f, 0f)
 
             // Black lines and points
             dataSet.color = Color.BLACK
@@ -132,8 +132,7 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             dataSet.formLineDashEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
             dataSet.formSize = 15f
 
-            // Text size of values
-            dataSet.valueTextSize = 9f
+            dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
 
             // Draw selection line as dashed
             dataSet.enableDashedHighlightLine(10f, 5f, 0f)
@@ -147,7 +146,7 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             // Set color of filled area
             if (Utils.getSDKInt() >= 18) {
                 // Drawables only supported on api level 18 and above
-                val drawable = ContextCompat.getDrawable(context!!, R.drawable.fade_green)
+                val drawable = ContextCompat.getDrawable(context!!, R.drawable.fade_blue)
                 dataSet.fillDrawable = drawable
             } else {
                 dataSet.fillColor = Color.BLACK
