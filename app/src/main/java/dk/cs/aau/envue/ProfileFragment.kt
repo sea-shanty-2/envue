@@ -47,6 +47,11 @@ class ProfileFragment : Fragment() {
 
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
 
+        // Register swipe to refresh
+        view.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)?.setOnRefreshListener {
+            fetchLeaderboard()
+        }
+
         // Register button listeners
         view.findViewById<ImageView>(R.id.logOutButton)?.setOnClickListener { this.logOut() }
         view.findViewById<TextView>(R.id.profileNameView)?.setOnClickListener { this.openDialog() }
@@ -62,15 +67,16 @@ class ProfileFragment : Fragment() {
         fetchLeaderboard()
     }
 
-
     fun setLeaderboardFields(rank: Int?, total_score: Int?, percentile: Double?, scores: List<Pair<Date, Int>>?) {
         val rankView = view?.findViewById<TextView>(R.id.rank)
         val scoreView = view?.findViewById<TextView>(R.id.total_score)
         val percentileView = view?.findViewById<TextView>(R.id.percentile)
 
         rankView?.text = rank?.let { "#$it" } ?: getString(R.string.dots)
-        scoreView?.text = total_score?.let { "${it / 1000}K" } ?: getString(R.string.dots)
-        percentileView?.text = percentile?.let {"${String.format("%.2f", it)}%"} ?: getString(R.string.dots)
+        scoreView?.text = total_score?.let {
+            if (it < 1000) "$it" else "${String.format("%.1f", it / 1000f)}k"
+        } ?: getString(R.string.dots)
+        percentileView?.text = percentile?.let {"${String.format("%.1f", it)}%"} ?: getString(R.string.dots)
 
         // If null or empty keep chart unchanged
         if (scores?.isEmpty() != false) return
@@ -141,7 +147,7 @@ class ProfileFragment : Fragment() {
             val mv = BarChartMarker(context, R.layout.marker_barchart)
 
             // Set the marker to the chart
-            mv.setChartView(chart)
+            mv.chartView = chart
             marker = mv
 
             // enable scaling and dragging
@@ -200,11 +206,13 @@ class ProfileFragment : Fragment() {
 
                 activity?.runOnUiThread {
                     setLeaderboardFields(rank, total, percentile, scores)
+                    view?.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)?.isRefreshing = false
                 }
             }
 
             override fun onFailure(e: ApolloException) {
                 Log.d("LEADERBOARD", "Something went wrong while fetching leaderboard: $e")
+                view?.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)?.isRefreshing = false
             }
         })
     }
@@ -218,7 +226,6 @@ class ProfileFragment : Fragment() {
             }
 
             override fun onFailure(e: ApolloException) = onProfileFetchFailure(e)
-
         })
     }
 

@@ -44,7 +44,7 @@
     <string name="initialize_broadcast_other_placeholder">Other?</string>
     <string name="search_for_emoji_text">Search for an emoji…</string>
     <string name="illegal_char_in_search_for_emoji_field">Emojis only! 😡</string>
-    <string name="no_categories_chosen">You must select at least 1 category!</string>
+    <string name="no_categories_chosen">You must select at least one category!</string>
     <string name="title_activity_interests">InterestsActivity</string>
     <string name="did_not_receive_location">We could not get your last position. Is your location turned on?</string>
     <string name="location_permission_not_granted">We need your permission to get your location before you can start a
@@ -135,5 +135,10 @@
     <string name="none">None</string>
     <string name="broadcast_performance">Recent performance</string>
     <string name="dots">...</string>
+    <string name="broadcast_finished">Broadcast finished</string>
+    <string name="well_done_your_score_has_increased_by_d_points_below_you_can_find_statistics_about_your_broadcast">
+        Well done, your score has increased by %d points. Below you can find statistics about your broadcast.
+    </string>
+    <string name="viewers">Viewers</string>
 
 </resources>

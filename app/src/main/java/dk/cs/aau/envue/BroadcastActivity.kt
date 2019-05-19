@@ -183,7 +183,6 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 })
 
                 updateViewerCount()
-
                 count = 0
 
                 Thread.sleep(15000)
