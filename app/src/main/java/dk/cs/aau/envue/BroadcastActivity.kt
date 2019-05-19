@@ -545,9 +545,10 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
                 val broadcast = response.data()?.broadcasts()?.stop()
                 val joinedTimeStamps = broadcast?.joinedTimeStamps()
                 val leftTimeStamps = broadcast?.leftTimeStamps()
+                val score = broadcast?.score() ?: 0
 
                 // Start statistics activity with viewer count stats
-                startStatisticsActivity(joinedTimeStamps?.toTypedArray(), leftTimeStamps?.toTypedArray())
+                startStatisticsActivity(joinedTimeStamps?.toTypedArray(), leftTimeStamps?.toTypedArray(), score)
             }
 
             override fun onFailure(e: ApolloException) {
@@ -584,7 +585,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
     }
 
     private fun startStatisticsActivity(joinedTimestamps: Array<BroadcastStopMutation.JoinedTimeStamp?>?,
-                                        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?) {
+                                        leftTimestamps: Array<BroadcastStopMutation.LeftTimeStamp?>?,
+                                        score: Int) {
         val joined =
             joinedTimestamps?.filter { i -> i != null }?.map { i -> i?.time() as Int }?.toTypedArray() as Array<Int>
         val left =
@@ -595,6 +597,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         val intent = Intent(this, StatisticsActivity::class.java).apply {
             putExtra("joinedTimestamps", joined)
             putExtra("leftTimestamps", left)
+            putExtra("score", score)
         }
 
         startActivity(intent)
