@@ -95,7 +95,6 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
         super.onActivityCreated(savedInstanceState)
     }
 
-
     private fun setData(u: Array<Int>, v: Array<Int>): Float? {
         val values = generateChartData(u, v)
         val maxY = values.map { i -> i.y }.max() ?: 0f
@@ -141,7 +140,7 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
 
             // Set the filled area
             dataSet.setDrawFilled(true)
-            dataSet.fillFormatter = IFillFormatter { dataSet, dataProvider -> chart!!.axisLeft.axisMinimum }
+            dataSet.fillFormatter = IFillFormatter { _, _ -> chart!!.axisLeft.axisMinimum }
             dataSet.setDrawCircles(false)
             dataSet.setDrawCircleHole(false)
 
@@ -161,15 +160,17 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             val data = LineData(dataSets.toList()).apply { setDrawValues(false) }
 
             // Set data
-            chart!!.data = data
-            chart!!.background = resources.getDrawable(android.R.color.transparent)
+            chart?.apply {
+                this.data = data
+                this.background = resources.getDrawable(android.R.color.transparent)
+            }
         }
 
         return maxY
     }
 
     override fun saveToGallery() {
-        saveToGallery(chart!!, "LineChartActivity1")
+        chart?.run { saveToGallery(this, "LineChartActivityI") }
     }
 
     override fun onValueSelected(e: Entry, h: Highlight) {
