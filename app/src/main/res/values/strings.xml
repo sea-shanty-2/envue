@@ -137,6 +137,7 @@
     <string name="dots">...</string>
     <string name="broadcast_finished">Broadcast finished</string>
     <string name="score_increased">
-        Well done, your score has been increased by %d points. Below you can find statistics about your broadcast.
+        Well done, your score has been increased by %d points! 🎉 Below you can find statistics about your broadcast.
     </string>
+    <string name="viewers_over_time">Viewers over time</string>
 </resources>
