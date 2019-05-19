@@ -2,8 +2,12 @@ package dk.cs.aau.envue
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.DashPathEffect
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.app.AlertDialog
 import android.view.View
 import com.apollographql.apollo.ApolloCall
@@ -15,36 +19,183 @@ import dk.cs.aau.envue.shared.GatewayClient
 import dk.cs.aau.envue.utility.EmojiIcon
 import kotlinx.android.synthetic.main.activity_profile.*
 import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
+import android.widget.*
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.IFillFormatter
+import com.github.mikephil.charting.utils.Utils
+import dk.cs.aau.envue.shared.FormatDate
 import dk.cs.aau.envue.type.AccountUpdateInputType
+import dk.cs.aau.envue.utility.BarChartMarker
+import java.util.*
 
 
 class ProfileFragment : Fragment() {
     companion object {
-        internal val SET_INTERESTS_REQUEST = 0
+        internal const val SET_INTERESTS_REQUEST = 0
         internal val TAG = ProfileFragment::class.java.simpleName ?: "ProfileFragment"
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreate(savedInstanceState)
 
-        val view = inflater.inflate(R.layout.activity_profile, container, false)
+        val view = inflater.inflate(R.layout.fragment_profile, container, false)
 
         // Register button listeners
-        view.findViewById<Button>(R.id.logOutButton)?.setOnClickListener { this.logOut() }
-        view.findViewById<Button>(R.id.changeDisplayName)?.setOnClickListener { this.openDialog() }
-        view.findViewById<Button>(R.id.interestsButton)?.setOnClickListener { this.onChangeInterests() }
+        view.findViewById<ImageView>(R.id.logOutButton)?.setOnClickListener { this.logOut() }
+        view.findViewById<TextView>(R.id.profileNameView)?.setOnClickListener { this.openDialog() }
+        view.findViewById<TextView>(R.id.interestsButton)?.setOnClickListener { this.onChangeInterests() }
 
         return view
     }
 
     override fun onStart() {
         super.onStart()
-        container.visibility = View.INVISIBLE
+
         fetchProfile()
+        fetchLeaderboard()
+    }
+
+
+    fun setLeaderboardFields(rank: Int?, total_score: Int?, percentile: Double?, scores: List<Pair<Date, Int>>?) {
+        val rankView = view?.findViewById<TextView>(R.id.rank)
+        val scoreView = view?.findViewById<TextView>(R.id.total_score)
+        val percentileView = view?.findViewById<TextView>(R.id.percentile)
+
+        rankView?.text = rank?.let { "#$it" } ?: getString(R.string.dots)
+        scoreView?.text = total_score?.let { "${it / 1000}K" } ?: getString(R.string.dots)
+        percentileView?.text = percentile?.let {"${String.format("%.2f", it)}%"} ?: getString(R.string.dots)
+
+        // If null or empty keep chart unchanged
+        if (scores?.isEmpty() != false) return
+
+        var index = 0f
+        val chart = view?.findViewById<View>(R.id.leaderboard_chart) as LineChart
+
+        val entries = scores.sortedByDescending { it.first }.map {
+            val e = Entry(index, it.second.toFloat())
+            index += 1
+            e
+        }
+
+        val dataSet = LineDataSet(entries, "Score for the last 30 broadcasts").apply {
+            setDrawIcons(false)
+
+            // Draw dashed line
+            enableDashedLine(10f, 5f, 0f)
+
+            // Black lines and points
+            color = Color.BLACK
+            setCircleColor(Color.BLACK)
+
+            // Line thickness and point size
+            lineWidth = 1f
+            circleRadius = 3f
+
+            // Draw points as solid circles
+            setDrawCircleHole(false)
+
+            // Customize legend entry
+            formLineWidth = 1f
+            formLineDashEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
+            formSize = 15f
+
+            // Text size of values
+            valueTextSize = 9f
+
+            // Draw selection line as dashed
+            enableDashedHighlightLine(10f, 5f, 0f)
+
+            // Set the filled area
+            setDrawFilled(true)
+            fillFormatter = IFillFormatter { _, _ -> chart.axisLeft.axisMinimum }
+            setDrawCircles(false)
+            setDrawCircleHole(false)
+        }
+
+
+        // Set color of filled area
+        if (Utils.getSDKInt() >= 18) {
+            // Drawables only supported on api level 18 and above
+            val drawable = ContextCompat.getDrawable(context!!, R.drawable.fade_blue)
+            dataSet.fillDrawable = drawable
+        } else {
+            dataSet.fillColor = Color.BLACK
+        }
+
+        // Get max
+        val yMax = scores.maxBy { it.second }?.second ?: 0
+        chart.apply {
+            description.isEnabled = false
+            setTouchEnabled(true)
+            setDrawGridBackground(false)
+
+            // create marker to display box when values are selected
+            val mv = BarChartMarker(context!!, R.layout.marker_barchart)
+
+            // Set the marker to the chart
+            mv.setChartView(chart)
+            marker = mv
+
+            // enable scaling and dragging
+            isDragEnabled = true
+            setScaleEnabled(true)
+
+            // force pinch zoom along both axis
+            setPinchZoom(true)
+
+            // Axis settings
+            xAxis.isEnabled = false
+
+            axisLeft.apply {
+                axisMinimum = 0f
+                axisMaximum = yMax + 1f
+                labelCount = Math.min(yMax, 5)
+                setDrawLabels(false)
+            }
+
+            axisRight.apply {
+                setDrawGridLines(false)
+                setDrawLabels(false)
+                isEnabled = false
+            }
+
+        }
+
+        chart.data = LineData(dataSet)
+        chart.background = resources.getDrawable(android.R.color.transparent)
+        chart.invalidate()
+    }
+
+    private fun fetchLeaderboard() {
+        val query: LeaderboardQuery = LeaderboardQuery.builder().build()
+        GatewayClient.query(query).enqueue(object: ApolloCall.Callback<LeaderboardQuery.Data>() {
+            override fun onResponse(response: Response<LeaderboardQuery.Data>) {
+                Log.d("LEADERBOARD", "Response ")
+                val me = response.data()?.accounts()?.me() ?: return
+
+                val rank = me.rank() ?: 0
+                val total = me.score()
+                val percentile = me.percentile() ?: 0.0
+
+                val scores: List<Pair<Date, Int>>? = me.broadcasts()?.items()?.map {
+                    Pair(FormatDate(it.activity() as String), it.score())
+                }
+
+                activity?.runOnUiThread {
+                    setLeaderboardFields(rank, total, percentile, scores)
+                }
+            }
+
+            override fun onFailure(e: ApolloException) {
+                Log.d("LEADERBOARD", "Something went wrong while fetching leaderboard: $e")
+            }
+        })
     }
 
     private fun fetchProfile() {
@@ -64,8 +215,7 @@ class ProfileFragment : Fragment() {
         activity?.runOnUiThread {
             profile.categories()?.let { oneHotVectorToEmoji(it) }
 
-            profileNameView.text = profile.displayName()
-            container.visibility = View.VISIBLE
+            view?.findViewById<TextView>(R.id.profileNameView)?.text = profile.displayName()
         }
     }
 
@@ -92,7 +242,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun onChangeInterests() {
-        val curInt: CharSequence = currentInterestsView.text
+        val curInt: CharSequence = view?.findViewById<TextView>(R.id.interests)?.text ?: ""
         val intent = Intent(this.activity, InterestsActivity::class.java)
         intent.putExtra(resources.getString(R.string.current_interests_key), curInt)
         startActivityForResult(intent, SET_INTERESTS_REQUEST)
@@ -103,7 +253,7 @@ class ProfileFragment : Fragment() {
         when (requestCode) {
             SET_INTERESTS_REQUEST ->
                 if (resultCode == Activity.RESULT_OK) {
-                    currentInterestsView.text = data?.getStringExtra(resources.getString(R.string.interests_response_key))
+                    view?.findViewById<TextView>(R.id.interests)?.text = data?.getStringExtra(resources.getString(R.string.interests_response_key))
                 }
         }
     }
@@ -118,14 +268,14 @@ class ProfileFragment : Fragment() {
         ) as ArrayList
 
 
-        var temp = ""
+        var concatenated = ""
         for (i in categories.indices) {
             if (categories[i] == 1.0) {
-                temp += allEmojis[i].char
+                concatenated += allEmojis[i].char
             }
         }
 
-        currentInterestsView.text = temp
+        view?.findViewById<TextView>(R.id.interests)?.text = if (concatenated.isEmpty()) getString(R.string.none) else concatenated
     }
 
     private fun openDialog() {
@@ -156,7 +306,7 @@ class ProfileFragment : Fragment() {
 
             override fun onResponse(response: Response<ProfileUpdateMutation.Data>) {
                 activity?.runOnUiThread{
-                    profileNameView.text = input.text.toString()
+                    view?.findViewById<TextView>(R.id.profileNameView)?.text = input.text.toString()
                 }
             }
         })

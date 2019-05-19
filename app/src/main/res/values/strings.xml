@@ -82,8 +82,8 @@
     <string name="report">Report</string>
     <string name="percentage">%d%%</string>
     <string name="likes">%d%% (%d)</string>
-    <string name="rank">Rank:</string>
-    <string name="percentile">Percentile:</string>
+    <string name="rank">Rank</string>
+    <string name="percentile">Percentile</string>
     <string name="total_score">Total score:</string>
     <string name="leaderboards">Leaderboards</string>
     <string name="loading">Loading..</string>
@@ -126,5 +126,14 @@
     <string name="error_occurred">An error occurred, please try again.</string>
     <string name="broadcast_reported">The broadcast has been reported.</string>
     <string name="switch_camera">Switch camera</string>
+    <string name="envuer">Envuer</string>
+    <string name="sign_out">Sign out</string>
+    <string name="score">SCORE</string>
+    <string name="score_lower">Score</string>
+    <string name="interests">Interests</string>
+    <string name="edit">Edit</string>
+    <string name="none">None</string>
+    <string name="broadcast_performance">Recent performance</string>
+    <string name="dots">...</string>
 
 </resources>
