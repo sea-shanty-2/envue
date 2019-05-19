@@ -1,152 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<LinearLayout android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical">
-    <RelativeLayout android:layout_width="match_parent" android:layout_height="210dp">
-        <LinearLayout android:background="@drawable/profile_gradient"
-                      android:layout_width="match_parent"
-                      android:layout_height="120dp"
-                      android:orientation="vertical">
-            <ImageView android:layout_width="32dp"
-                       android:layout_height="32dp"
-                       android:layout_margin="5dp"
-                       android:id="@+id/logOutButton"
-                       android:background="@drawable/ic_exit_24dp"
-                       android:layout_gravity="top|end"
-                       android:contentDescription="@string/sign_out"/>
-            <TextView android:id="@+id/profileNameView"
-                      android:layout_gravity="center_horizontal"
-                      android:layout_width="wrap_content"
+
+<android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                              android:id="@+id/swipe_refresh"
+                                              android:layout_width="wrap_content"
+                                              android:layout_height="wrap_content">
+    <LinearLayout android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:orientation="vertical">
+        <RelativeLayout android:layout_width="match_parent" android:layout_height="210dp">
+            <LinearLayout android:background="@drawable/profile_gradient"
+                          android:layout_width="match_parent"
+                          android:layout_height="120dp"
+                          android:orientation="vertical">
+                <ImageView android:layout_width="32dp"
+                           android:layout_height="32dp"
+                           android:layout_margin="5dp"
+                           android:id="@+id/logOutButton"
+                           android:background="@drawable/ic_exit_24dp"
+                           android:layout_gravity="top|end"
+                           android:contentDescription="@string/sign_out"/>
+                <TextView android:id="@+id/profileNameView"
+                          android:layout_gravity="center_horizontal"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="@string/envuer"
+                          android:textColor="#fff"
+                          android:textStyle="bold"
+                          android:drawableEnd="@drawable/ic_edit_24dp"
+                          android:drawablePadding="5dp"
+                          android:textSize="32sp"/>
+            </LinearLayout>
+            <android.support.v7.widget.CardView android:layout_width="300dp"
+                                                android:layout_height="80dp"
+                                                android:layout_centerHorizontal="true"
+                                                android:elevation="16dp"
+                                                android:layout_marginTop="90dp">
+
+                <LinearLayout android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:orientation="horizontal"
+                              android:weightSum="3">
+                    <LinearLayout android:gravity="center"
+                                  android:orientation="vertical"
+                                  android:layout_width="0dp"
+                                  android:layout_weight="1"
+                                  android:layout_height="match_parent">
+                        <TextView android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="@string/rank"
+                                  android:textSize="20sp"
+                        />
+                        <TextView android:layout_width="wrap_content"
+                                  android:id="@+id/rank"
+                                  android:layout_height="wrap_content"
+                                  android:text="@string/dots"
+                                  android:textStyle="bold"
+                                  android:textSize="20sp"
+                                  android:paddingTop="10dp"
+                                  android:textColor="@color/black"/>
+                    </LinearLayout>
+
+                    <LinearLayout android:gravity="center"
+                                  android:orientation="vertical"
+                                  android:layout_width="0dp"
+                                  android:layout_weight="1"
+                                  android:layout_height="match_parent">
+                        <TextView android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="@string/score_lower"
+                                  android:textSize="20sp"
+                        />
+                        <TextView android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="@string/dots"
+                                  android:textStyle="bold"
+                                  android:textSize="20sp"
+                                  android:id="@+id/total_score"
+                                  android:paddingTop="10dp"
+                                  android:textColor="@color/black"/>
+                    </LinearLayout>
+
+                    <LinearLayout android:gravity="center"
+                                  android:orientation="vertical"
+                                  android:layout_width="0dp"
+                                  android:layout_weight="1"
+                                  android:layout_height="match_parent">
+                        <TextView android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="@string/percentile"
+                                  android:textSize="20sp"
+                        />
+                        <TextView android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="@string/dots"
+                                  android:id="@+id/percentile"
+                                  android:textStyle="bold"
+                                  android:textSize="20sp"
+                                  android:paddingTop="10dp"
+                                  android:textColor="@color/black"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </android.support.v7.widget.CardView>
+
+        </RelativeLayout>
+
+        <LinearLayout android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:text="@string/envuer"
-                      android:textColor="#fff"
-                      android:textStyle="bold"
-                      android:drawableEnd="@drawable/ic_edit_24dp"
-                      android:drawablePadding="5dp"
-                      android:textSize="32sp"/>
-        </LinearLayout>
-        <android.support.v7.widget.CardView android:layout_width="300dp"
-                                            android:layout_height="80dp"
-                                            android:layout_centerHorizontal="true"
-                                            android:elevation="16dp"
-                                            android:layout_marginTop="90dp">
+                      android:layout_margin="10dp"
+                      android:layout_marginTop="15dp"
+                      android:orientation="vertical">
 
-            <LinearLayout android:layout_width="match_parent"
-                          android:layout_height="match_parent"
-                          android:orientation="horizontal"
-                          android:weightSum="3">
-                <LinearLayout android:gravity="center"
-                              android:orientation="vertical"
-                              android:layout_width="0dp"
-                              android:layout_weight="1"
-                              android:layout_height="match_parent">
-                    <TextView android:layout_width="wrap_content"
-                              android:layout_height="wrap_content"
-                              android:text="@string/rank"
-                              android:textSize="20sp"
-                    />
-                    <TextView android:layout_width="wrap_content"
-                              android:id="@+id/rank"
-                              android:layout_height="wrap_content"
-                              android:text="@string/dots"
-                              android:textStyle="bold"
-                              android:textSize="20sp"
-                              android:paddingTop="10dp"
-                              android:textColor="@color/black"/>
-                </LinearLayout>
-
-                <LinearLayout android:gravity="center"
-                              android:orientation="vertical"
-                              android:layout_width="0dp"
-                              android:layout_weight="1"
-                              android:layout_height="match_parent">
-                    <TextView android:layout_width="wrap_content"
-                              android:layout_height="wrap_content"
-                              android:text="@string/score_lower"
-                              android:textSize="20sp"
-                    />
-                    <TextView android:layout_width="wrap_content"
-                              android:layout_height="wrap_content"
-                              android:text="@string/dots"
-                              android:textStyle="bold"
-                              android:textSize="20sp"
-                              android:id="@+id/total_score"
-                              android:paddingTop="10dp"
-                              android:textColor="@color/black"/>
-                </LinearLayout>
-
-                <LinearLayout android:gravity="center"
-                              android:orientation="vertical"
-                              android:layout_width="0dp"
-                              android:layout_weight="1"
-                              android:layout_height="match_parent">
-                    <TextView android:layout_width="wrap_content"
-                              android:layout_height="wrap_content"
-                              android:text="@string/percentile"
-                              android:textSize="20sp"
-                    />
-                    <TextView android:layout_width="wrap_content"
-                              android:layout_height="wrap_content"
-                              android:text="@string/dots"
-                              android:id="@+id/percentile"
-                              android:textStyle="bold"
-                              android:textSize="20sp"
-                              android:paddingTop="10dp"
-                              android:textColor="@color/black"/>
-                </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:orientation="horizontal">
+                <TextView android:id="@+id/interestsButton"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="@string/interests"
+                          android:drawableEnd="@drawable/ic_edit_black_24dp"
+                          android:textSize="20sp" />
 
             </LinearLayout>
-        </android.support.v7.widget.CardView>
 
-    </RelativeLayout>
-
-    <LinearLayout android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:layout_margin="10dp"
-                  android:layout_marginTop="15dp"
-                  android:orientation="vertical">
-
-        <LinearLayout android:layout_width="wrap_content"
+            <TextView android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:orientation="horizontal">
-            <TextView android:id="@+id/interestsButton"
-                      android:layout_width="wrap_content"
+                      android:fontFamily="sans-serif-light"
+                      android:text="@string/none"
+                      android:id="@+id/interests"
+                      android:textColor="#000000"
+                      android:textSize="18sp" />
+
+
+            <View android:layout_width="match_parent"
+                  android:layout_height="1dp"
+                  android:layout_marginTop="5dp"
+                  android:layout_marginBottom="5dp"
+                  android:background="#D3D3D3" />
+
+            <TextView android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:text="@string/interests"
-                      android:drawableEnd="@drawable/ic_edit_black_24dp"
+                      android:text="@string/broadcast_performance"
                       android:textSize="20sp" />
 
+            <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/leaderboard_chart"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="5dp"
+                    android:paddingTop="15dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp" />
         </LinearLayout>
-
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:fontFamily="sans-serif-light"
-                  android:text="@string/none"
-                  android:id="@+id/interests"
-                  android:textColor="#000000"
-                  android:textSize="18sp" />
-
-
-        <View android:layout_width="match_parent"
-              android:layout_height="1dp"
-              android:layout_marginTop="5dp"
-              android:layout_marginBottom="5dp"
-              android:background="#D3D3D3" />
-
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:text="@string/broadcast_performance"
-                  android:textSize="20sp" />
-
-        <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/leaderboard_chart"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="5dp"
-                android:paddingTop="15dp"
-                android:layout_width="match_parent"
-                android:layout_height="150dp" />
     </LinearLayout>
-</LinearLayout>
+</android.support.v4.widget.SwipeRefreshLayout>
