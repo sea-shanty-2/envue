@@ -24,6 +24,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.*
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -83,11 +84,11 @@ class ProfileFragment : Fragment() {
             e
         }
 
-        val dataSet = LineDataSet(entries, "Score for the last 30 broadcasts").apply {
+        val dataSet = LineDataSet(entries, "Score for the last 10 broadcasts").apply {
             setDrawIcons(false)
 
             // Draw dashed line
-            enableDashedLine(10f, 5f, 0f)
+            enableDashedLine(10f, 0f, 0f)
 
             // Black lines and points
             color = Color.BLACK
@@ -105,8 +106,9 @@ class ProfileFragment : Fragment() {
             formLineDashEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
             formSize = 15f
 
-            // Text size of values
-            valueTextSize = 9f
+            setDrawValues(false)
+
+            mode = LineDataSet.Mode.CUBIC_BEZIER
 
             // Draw selection line as dashed
             enableDashedHighlightLine(10f, 5f, 0f)
@@ -136,7 +138,7 @@ class ProfileFragment : Fragment() {
             setDrawGridBackground(false)
 
             // create marker to display box when values are selected
-            val mv = BarChartMarker(context!!, R.layout.marker_barchart)
+            val mv = BarChartMarker(context, R.layout.marker_barchart)
 
             // Set the marker to the chart
             mv.setChartView(chart)
@@ -153,10 +155,12 @@ class ProfileFragment : Fragment() {
             xAxis.isEnabled = false
 
             axisLeft.apply {
+                // Horizontal grid lines
+                enableAxisLineDashedLine(10f, 10f, 0f)
+
                 axisMinimum = 0f
                 axisMaximum = yMax + 1f
                 labelCount = Math.min(yMax, 5)
-                setDrawLabels(false)
             }
 
             axisRight.apply {
@@ -168,6 +172,13 @@ class ProfileFragment : Fragment() {
         }
 
         chart.data = LineData(dataSet)
+
+        // Get the legend (only possible after setting data)
+        val legend = chart.legend
+
+        // Draw legend entries as lines
+        legend.form = Legend.LegendForm.LINE
+
         chart.background = resources.getDrawable(android.R.color.transparent)
         chart.invalidate()
     }

@@ -76,7 +76,7 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             // Axis range
             axisMaximum = maxY!! + 1
             axisMinimum = 0f
-            labelCount = maxY.toInt()
+            labelCount = Math.min(maxY.toInt(), 5)
         }
 
         chart!!.axisRight.apply {
