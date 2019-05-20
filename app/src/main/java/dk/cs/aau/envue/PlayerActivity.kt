@@ -77,6 +77,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var showRecommendations: Boolean = true
 
     // Broadcast selection and recommendation
+    private var lastQueriedId: String? = null
     private var nearbyBroadcastsList: RecyclerView? = null
     private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
     private var recommendationExpirationThread: Thread? = null
@@ -116,7 +117,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             this.nearbyBroadcastsAdapter?.apply {
                 if (this.broadcastList.isNotEmpty()) {
                     val newValue = if (value < 0) this.broadcastList.size - 1 else value
-                    this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
+                    changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
                 }
             }
         }
@@ -593,7 +594,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         loading?.visibility = if (playbackState == Player.STATE_BUFFERING) View.VISIBLE else View.GONE
     }
 
+    private fun removeBroadcast(withId: String) {
+        this.nearbyBroadcasts = this.nearbyBroadcasts.filter { it.id() != withId }
+    }
+
     private fun updateEventIds() {
+        lastQueriedId = broadcastId
+
         val eventQuery = EventBroadcastsWithStatsQuery.builder().id(broadcastId).build()
         GatewayClient.query(eventQuery).enqueue(object : ApolloCall.Callback<EventBroadcastsWithStatsQuery.Data>() {
             override fun onResponse(response: Response<EventBroadcastsWithStatsQuery.Data>) {
@@ -608,6 +615,30 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
 
             override fun onFailure(e: ApolloException) {
+                // Assume that the broadcast has ended
+                // As a future work, ensure that this only happens if we know that the broadcast is closed
+                lastQueriedId?.run {
+                    if (this != broadcastId) {
+                        return
+                    }
+
+                    removeBroadcast(this)
+
+                    if (nearbyBroadcasts.isEmpty()) {
+                        runOnUiThread {
+                            Toast.makeText(this@PlayerActivity, getString(R.string.event_ended), Toast.LENGTH_LONG).show()
+
+                            finish()
+                        }
+                    } else {
+                        changeBroadcast(nearbyBroadcasts.random().id())
+
+                        runOnUiThread {
+                            Toast.makeText(this@PlayerActivity, getString(R.string.broadcast_ended), Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+
                 Log.d("EVENTUPDATE", "Something went wrong while fetching broadcasts in the event: ${e.message}")
             }
         })
