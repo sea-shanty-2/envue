@@ -46,6 +46,9 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.absoluteValue
 
 
+private const val REC_DELAY_BASE = 120000
+private const val REC_DELAY_INC = 1000
+
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener, RecommendationFragment.OnRecommendationFragmentListener {
     private var fingerX1 = 0.0f
     private var fingerX2 = 0.0f
@@ -155,6 +158,8 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         }
 
         numDismisses++
+
+        Log.i("DISMISSES", "Now at $numDismisses dismisses")
     }
 
     override fun onRecommendationAccepted(broadcastId: String) {
@@ -527,7 +532,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
 
             // Determine when we can recommend this broadcast again
-            nextRecommendation[broadcastId] = (pow(2.0, numDismisses.toDouble()) * 1000 + 30000 + System.currentTimeMillis()).toLong()
+            nextRecommendation[broadcastId] = (pow(2.0, numDismisses.toDouble()) * REC_DELAY_INC + REC_DELAY_BASE + System.currentTimeMillis()).toLong()
 
             recommendationAccepted = false
         }
@@ -572,17 +577,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         super.onDestroy()
         player?.release()
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
-    }
-
-    private fun releasePlayer() {
-        player?.let {
-            playbackPosition = it.currentPosition
-            currentWindow = it.currentWindowIndex
-            playWhenReady = it.playWhenReady
-            it.release()
-        }
-
-        player = null
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -662,6 +656,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun changeBroadcast(id: String) {
+        // Update player source
+        changePlayerSource(id)
+
+        // If we are changing to the same id, we need not to do the rest
+        if (broadcastId == id) {
+            return
+        }
+
         // If this broadcast is recommended then interrupt the recommendation
         currentRecommendationFragment?.broadcast?.run {
             if (this == id) {
@@ -669,12 +671,15 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
+        // We should not recommend the broadcast we are switching from for a while
+        val recommendOldAt = nextRecommendation[broadcastId] ?: 0
+        if (recommendOldAt - System.currentTimeMillis() < REC_DELAY_BASE) {
+            nextRecommendation[broadcastId] = System.currentTimeMillis() + REC_DELAY_BASE
+        }
+
         // Register as a viewer
         broadcastId = id
         Broadcast.join(broadcastId)
-
-        // Update player source
-        changePlayerSource(broadcastId)
 
         // Close current comm socket
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Changed broadcast")

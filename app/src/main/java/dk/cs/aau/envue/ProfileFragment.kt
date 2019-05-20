@@ -84,7 +84,7 @@ class ProfileFragment : Fragment() {
         var index = 0f
         val chart = view?.findViewById<View>(R.id.leaderboard_chart) as LineChart
 
-        val entries = scores.sortedByDescending { it.first }.map {
+        val entries = scores.sortedBy { it.first }.map {
             val e = Entry(index, it.second.toFloat())
             index += 1
             e
