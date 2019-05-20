@@ -158,6 +158,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     override fun onRecommendationAccepted(broadcastId: String) {
+        recommendationAccepted = true
         changeBroadcast(broadcastId)
     }
 
