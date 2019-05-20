@@ -4,7 +4,7 @@ query LeaderboardQuery{
             rank
             score
             percentile
-            broadcasts(first: 30){
+            broadcasts(first: 10){
                 items{
                     activity
                     score

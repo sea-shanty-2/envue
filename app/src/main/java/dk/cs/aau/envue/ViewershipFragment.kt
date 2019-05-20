@@ -76,7 +76,7 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             // Axis range
             axisMaximum = maxY!! + 1
             axisMinimum = 0f
-            labelCount = maxY.toInt()
+            labelCount = Math.min(maxY.toInt(), 5)
         }
 
         chart!!.axisRight.apply {
@@ -94,7 +94,6 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
 
         super.onActivityCreated(savedInstanceState)
     }
-
 
     private fun setData(u: Array<Int>, v: Array<Int>): Float? {
         val values = generateChartData(u, v)
@@ -115,7 +114,7 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             dataSet.setDrawIcons(false)
 
             // Draw dashed line
-            dataSet.enableDashedLine(10f, 5f, 0f)
+            dataSet.enableDashedLine(10f, 0f, 0f)
 
             // Black lines and points
             dataSet.color = Color.BLACK
@@ -133,22 +132,21 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             dataSet.formLineDashEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
             dataSet.formSize = 15f
 
-            // Text size of values
-            dataSet.valueTextSize = 9f
+            dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER
 
             // Draw selection line as dashed
             dataSet.enableDashedHighlightLine(10f, 5f, 0f)
 
             // Set the filled area
             dataSet.setDrawFilled(true)
-            dataSet.fillFormatter = IFillFormatter { dataSet, dataProvider -> chart!!.axisLeft.axisMinimum }
+            dataSet.fillFormatter = IFillFormatter { _, _ -> chart!!.axisLeft.axisMinimum }
             dataSet.setDrawCircles(false)
             dataSet.setDrawCircleHole(false)
 
             // Set color of filled area
             if (Utils.getSDKInt() >= 18) {
                 // Drawables only supported on api level 18 and above
-                val drawable = ContextCompat.getDrawable(context!!, R.drawable.fade_green)
+                val drawable = ContextCompat.getDrawable(context!!, R.drawable.fade_blue)
                 dataSet.fillDrawable = drawable
             } else {
                 dataSet.fillColor = Color.BLACK
@@ -161,15 +159,17 @@ class ViewershipFragment : ChartBase(), OnChartValueSelectedListener {
             val data = LineData(dataSets.toList()).apply { setDrawValues(false) }
 
             // Set data
-            chart!!.data = data
-            chart!!.background = resources.getDrawable(android.R.color.transparent)
+            chart?.apply {
+                this.data = data
+                this.background = resources.getDrawable(android.R.color.transparent)
+            }
         }
 
         return maxY
     }
 
     override fun saveToGallery() {
-        saveToGallery(chart!!, "LineChartActivity1")
+        chart?.run { saveToGallery(this, "LineChartActivityI") }
     }
 
     override fun onValueSelected(e: Entry, h: Highlight) {
