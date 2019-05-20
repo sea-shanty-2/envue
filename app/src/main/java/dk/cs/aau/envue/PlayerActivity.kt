@@ -40,7 +40,9 @@ import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.Broadcast
 import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
+import java.lang.Math.pow
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.absoluteValue
 
 
@@ -77,6 +79,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var recommendationExpirationThread: Thread? = null
     private var recommendationProgress: Int = 0
     private var currentRecommendationFragment: RecommendationFragment? = null
+    private val nextRecommendation: ConcurrentHashMap<String, Long> = ConcurrentHashMap()
+    private var recommendationAccepted: Boolean = false
+    private var numDismisses: Int = 0
     private lateinit var updater: AsyncTask<Unit, Unit, Unit>
 
     private var broadcastId: String = "main"
@@ -145,6 +150,11 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     override fun onRecommendationDismissed(broadcastId: String) {
+        if (recommendationProgress > 0) {
+            recommendationExpirationThread?.interrupt()
+        }
+
+        numDismisses++
     }
 
     override fun onRecommendationAccepted(broadcastId: String) {
@@ -173,9 +183,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         ownDisplayName = name
         ownSequenceId = sequenceId
 
-        runOnUiThread {
-            editMessageView?.hint = getString(R.string.write_a_message_as, name)
-        }
+        runOnUiThread { editMessageView?.hint = getString(R.string.write_a_message_as, name) }
     }
 
     override fun onMessage(message: Message) {
@@ -251,14 +259,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Launch background task for updating event ids
         updater = UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
-    }
-
-    private fun updateRecommendedBroadcast(broadcastId: String) {
-        this.recommendedBroadcastId = broadcastId
-        this.nearbyBroadcastsAdapter?.apply {
-            recommendedBroadcastId = this@PlayerActivity.recommendedBroadcastId
-            notifyDataSetChanged()
-        }
     }
 
     private fun scrollToCurrentBroadcast() {
@@ -463,7 +463,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun showRecommendation(broadcastId: String) {
-        if (!isLandscape() || broadcastId == this.broadcastId || recommendationProgress > 0 || !showRecommendations) {
+        val allowedAt = nextRecommendation[broadcastId] ?: 0
+        if (!isLandscape() || broadcastId == this.broadcastId || recommendationProgress > 0|| !showRecommendations ||
+                System.currentTimeMillis() < allowedAt) {
             return
         }
 
@@ -515,7 +517,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                     findViewById<FrameLayout>(R.id.recommendation_view)?.startAnimation(animation)
                 }
             }
+
+            // Check if it was dismissed or accepted
+            if (!recommendationAccepted) {
+                onRecommendationDismissed(broadcastId)
+            } else {
+                numDismisses = 0
+            }
+
+            // Determine when we can recommend this broadcast again
+            nextRecommendation[broadcastId] = (pow(2.0, numDismisses.toDouble()) * 1000 + 30000 + System.currentTimeMillis()).toLong()
+
+            recommendationAccepted = false
         }
+
         recommendationExpirationThread?.start()
     }
 

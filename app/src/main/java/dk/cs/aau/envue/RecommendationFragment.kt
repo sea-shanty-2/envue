@@ -1,7 +1,6 @@
 package dk.cs.aau.envue
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
@@ -42,6 +41,11 @@ class RecommendationFragment : Fragment() {
         // Attach click listener to thumbnail
         layout.findViewById<ImageView>(R.id.recommendation_image)?.setOnClickListener {
             broadcast?.let { listener?.onRecommendationAccepted(it) }
+        }
+
+        // Attach click listener to back button
+        layout.findViewById<ImageView>(R.id.dismiss_recommendation)?.setOnClickListener {
+            broadcast?.let { listener?.onRecommendationDismissed(it) }
         }
 
         return layout
