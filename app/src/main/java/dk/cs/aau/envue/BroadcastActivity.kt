@@ -404,8 +404,7 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // Get supported resolutions
-        val previewSize = Camera.open().parameters.previewSize
-        val outputSize = previewSize  // TODO: This is not optimal, but works fine.
+        val videoSize = Camera.open().parameters.previewSize
 
         // Initialize publisher
         this.publisher = SrsPublisher(this.findViewById(R.id.camera_view))
@@ -415,8 +414,8 @@ class BroadcastActivity : AppCompatActivity(), RtmpHandler.RtmpListener, SrsEnco
             setEncodeHandler(encodeHandler)
             setRtmpHandler(rtmpHandler)
             setRecordHandler(null)
-            setPreviewResolution(previewSize.width, previewSize.height)
-            setOutputResolution(outputSize.width, outputSize.height)
+            setPreviewResolution(videoSize.width, videoSize.height)
+            setOutputResolution(videoSize.width, videoSize.height)
             setVideoHDMode()
             setVideoSmoothMode()
             setScreenOrientation(Configuration.ORIENTATION_LANDSCAPE)

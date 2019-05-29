@@ -140,4 +140,7 @@
         Well done, your score has been increased by %d points! 🎉 Below you can find statistics about your broadcast.
     </string>
     <string name="viewers_over_time">Viewers over time</string>
+    <string name="reject_recommendation">Reject recommendation</string>
+    <string name="event_ended">The event you were watching has ended.</string>
+    <string name="broadcast_ended">The broadcast you were watching has ended.</string>
 </resources>

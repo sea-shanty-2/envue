@@ -40,9 +40,14 @@ import dk.cs.aau.envue.nearby.NearbyBroadcastsAdapter
 import dk.cs.aau.envue.shared.Broadcast
 import dk.cs.aau.envue.shared.GatewayClient
 import okhttp3.WebSocket
+import java.lang.Math.pow
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.absoluteValue
 
+
+private const val REC_DELAY_BASE = 120000
+private const val REC_DELAY_INC = 1000
 
 class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener, RecommendationFragment.OnRecommendationFragmentListener {
     private var fingerX1 = 0.0f
@@ -72,11 +77,15 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private var showRecommendations: Boolean = true
 
     // Broadcast selection and recommendation
+    private var lastQueriedId: String? = null
     private var nearbyBroadcastsList: RecyclerView? = null
     private var nearbyBroadcastsAdapter: NearbyBroadcastsAdapter? = null
     private var recommendationExpirationThread: Thread? = null
     private var recommendationProgress: Int = 0
     private var currentRecommendationFragment: RecommendationFragment? = null
+    private val nextRecommendation: ConcurrentHashMap<String, Long> = ConcurrentHashMap()
+    private var recommendationAccepted: Boolean = false
+    private var numDismisses: Int = 0
     private lateinit var updater: AsyncTask<Unit, Unit, Unit>
 
     private var broadcastId: String = "main"
@@ -108,7 +117,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             this.nearbyBroadcastsAdapter?.apply {
                 if (this.broadcastList.isNotEmpty()) {
                     val newValue = if (value < 0) this.broadcastList.size - 1 else value
-                    this@PlayerActivity.changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
+                    changeBroadcast(this.broadcastList[newValue % this.broadcastList.size].id())
                 }
             }
         }
@@ -145,9 +154,17 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     private fun isLandscape(): Boolean = this@PlayerActivity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     override fun onRecommendationDismissed(broadcastId: String) {
+        if (recommendationProgress > 0) {
+            recommendationExpirationThread?.interrupt()
+        }
+
+        numDismisses++
+
+        Log.i("DISMISSES", "Now at $numDismisses dismisses")
     }
 
     override fun onRecommendationAccepted(broadcastId: String) {
+        recommendationAccepted = true
         changeBroadcast(broadcastId)
     }
 
@@ -173,9 +190,7 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         ownDisplayName = name
         ownSequenceId = sequenceId
 
-        runOnUiThread {
-            editMessageView?.hint = getString(R.string.write_a_message_as, name)
-        }
+        runOnUiThread { editMessageView?.hint = getString(R.string.write_a_message_as, name) }
     }
 
     override fun onMessage(message: Message) {
@@ -251,14 +266,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
 
         // Launch background task for updating event ids
         updater = UpdateEventIdsTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
-    }
-
-    private fun updateRecommendedBroadcast(broadcastId: String) {
-        this.recommendedBroadcastId = broadcastId
-        this.nearbyBroadcastsAdapter?.apply {
-            recommendedBroadcastId = this@PlayerActivity.recommendedBroadcastId
-            notifyDataSetChanged()
-        }
     }
 
     private fun scrollToCurrentBroadcast() {
@@ -463,7 +470,9 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun showRecommendation(broadcastId: String) {
-        if (!isLandscape() || broadcastId == this.broadcastId || recommendationProgress > 0 || !showRecommendations) {
+        val allowedAt = nextRecommendation[broadcastId] ?: 0
+        if (!isLandscape() || broadcastId == this.broadcastId || recommendationProgress > 0|| !showRecommendations ||
+                System.currentTimeMillis() < allowedAt) {
             return
         }
 
@@ -515,7 +524,20 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
                     findViewById<FrameLayout>(R.id.recommendation_view)?.startAnimation(animation)
                 }
             }
+
+            // Check if it was dismissed or accepted
+            if (!recommendationAccepted) {
+                onRecommendationDismissed(broadcastId)
+            } else {
+                numDismisses = 0
+            }
+
+            // Determine when we can recommend this broadcast again
+            nextRecommendation[broadcastId] = (pow(2.0, numDismisses.toDouble()) * REC_DELAY_INC + REC_DELAY_BASE + System.currentTimeMillis()).toLong()
+
+            recommendationAccepted = false
         }
+
         recommendationExpirationThread?.start()
     }
 
@@ -558,17 +580,6 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Activity stopped")
     }
 
-    private fun releasePlayer() {
-        player?.let {
-            playbackPosition = it.currentPosition
-            currentWindow = it.currentWindowIndex
-            playWhenReady = it.playWhenReady
-            it.release()
-        }
-
-        player = null
-    }
-
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -583,7 +594,13 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
         loading?.visibility = if (playbackState == Player.STATE_BUFFERING) View.VISIBLE else View.GONE
     }
 
+    private fun removeBroadcast(withId: String) {
+        this.nearbyBroadcasts = this.nearbyBroadcasts.filter { it.id() != withId }
+    }
+
     private fun updateEventIds() {
+        lastQueriedId = broadcastId
+
         val eventQuery = EventBroadcastsWithStatsQuery.builder().id(broadcastId).build()
         GatewayClient.query(eventQuery).enqueue(object : ApolloCall.Callback<EventBroadcastsWithStatsQuery.Data>() {
             override fun onResponse(response: Response<EventBroadcastsWithStatsQuery.Data>) {
@@ -598,6 +615,30 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
 
             override fun onFailure(e: ApolloException) {
+                // Assume that the broadcast has ended
+                // As a future work, ensure that this only happens if we know that the broadcast is closed
+                lastQueriedId?.run {
+                    if (this != broadcastId) {
+                        return
+                    }
+
+                    removeBroadcast(this)
+
+                    if (nearbyBroadcasts.isEmpty()) {
+                        runOnUiThread {
+                            Toast.makeText(this@PlayerActivity, getString(R.string.event_ended), Toast.LENGTH_LONG).show()
+
+                            finish()
+                        }
+                    } else {
+                        changeBroadcast(nearbyBroadcasts.random().id())
+
+                        runOnUiThread {
+                            Toast.makeText(this@PlayerActivity, getString(R.string.broadcast_ended), Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+
                 Log.d("EVENTUPDATE", "Something went wrong while fetching broadcasts in the event: ${e.message}")
             }
         })
@@ -646,6 +687,14 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
     }
 
     private fun changeBroadcast(id: String) {
+        // Update player source
+        changePlayerSource(id)
+
+        // If we are changing to the same id, we need not to do the rest
+        if (broadcastId == id) {
+            return
+        }
+
         // If this broadcast is recommended then interrupt the recommendation
         currentRecommendationFragment?.broadcast?.run {
             if (this == id) {
@@ -653,12 +702,15 @@ class PlayerActivity : AppCompatActivity(), EventListener, CommunicationListener
             }
         }
 
+        // We should not recommend the broadcast we are switching from for a while
+        val recommendOldAt = nextRecommendation[broadcastId] ?: 0
+        if (recommendOldAt - System.currentTimeMillis() < REC_DELAY_BASE) {
+            nextRecommendation[broadcastId] = System.currentTimeMillis() + REC_DELAY_BASE
+        }
+
         // Register as a viewer
         broadcastId = id
         Broadcast.join(broadcastId)
-
-        // Update player source
-        changePlayerSource(broadcastId)
 
         // Close current comm socket
         this.socket?.close(StreamCommunicationListener.NORMAL_CLOSURE_STATUS, "Changed broadcast")

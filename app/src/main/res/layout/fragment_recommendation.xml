@@ -16,6 +16,15 @@
                    app:layout_constraintTop_toTopOf="parent"
                    android:contentDescription="@string/recommendation_thumbnail"/>
 
+        <ImageView android:id="@+id/dismiss_recommendation"
+                   android:layout_width="24dp"
+                   android:layout_height="24dp"
+                   android:layout_margin="4dp"
+                   app:layout_constraintLeft_toLeftOf="parent"
+                   app:layout_constraintTop_toTopOf="parent"
+                   android:background="@drawable/ic_arrow_back_24dp"
+                   android:contentDescription="@string/reject_recommendation" />
+
         <FrameLayout android:layout_width="170dp"
                      android:layout_height="wrap_content"
                      app:layout_constraintLeft_toLeftOf="parent"
@@ -44,7 +53,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="4dp"
                 android:layout_gravity="center"
-                android:max="200"
+                android:max="500"
                 android:id="@+id/recommendation_timer"
                 android:progress="0"/>
 
